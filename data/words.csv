@@ -1,0 +1,501 @@
+id,block,german,spanish,pos,note
+1,1,ja,sí,func,
+2,1,nein / nicht,no,func,
+3,1,und,y,func,
+4,1,oder,o,func,
+5,1,aber,pero,func,
+6,1,weil,porque,func,
+7,1,mit,con,func,
+8,1,ohne,sin,func,
+9,1,für / um zu,para,func,
+10,1,von / aus,de,func,
+11,1,in / auf,en,func,
+12,1,zu / nach,a,func,
+13,1,sehr,muy,adv,
+14,1,mehr,más,adv,
+15,1,weniger,menos,adv,
+16,1,auch,también,adv,
+17,1,jetzt,ahora,adv,
+18,1,danach / später,después,adv,después de = nach
+19,1,immer,siempre,adv,
+20,1,nie,nunca,adv,
+21,1,hier,acá,adv,porteño für aquí
+22,1,dort / da drüben,allá,adv,porteño für allí
+23,1,heute,hoy,adv,
+24,1,morgen,mañana,adv,Adverb; der Morgen = la mañana
+25,1,gestern,ayer,adv,
+26,1,etwas,algo,func,
+27,1,nichts,nada,func,
+28,1,alles,todo,func,
+29,1,ein anderer / noch ein,otro,adj,
+30,1,derselbe / gleich,mismo,adj,lo mismo = das Gleiche
+31,1,schon,ya,adv,
+32,1,noch,todavía,adv,
+33,1,fast,casi,adv,
+34,1,nur,solo,adv,ohne Akzent
+35,1,ziemlich / genug,bastante,adv,
+36,1,zu viel / zu sehr,demasiado,adv,
+37,1,der,el,func,Artikel m
+38,1,die,la,func,Artikel f
+39,1,ein,un,func,Artikel m
+40,1,eine,una,func,Artikel f
+41,1,ich,yo,func,
+42,1,du,vos,func,Rioplatense statt tú
+43,1,er,él,func,mit Akzent; el = der
+44,1,sie,ella,func,
+45,1,"dass / der, die, das",que,func,ohne Akzent; ¿qué? = was
+46,1,mein,mi,func,
+47,1,dein,tu,func,"Possessiv zu vos, ohne Akzent"
+48,1,sein / ihr,su,func,
+49,2,ich bin,soy,verb,yo
+50,2,du bist,sos,verb,vos
+51,2,er/sie ist,es,verb,él/ella
+52,2,ich bin (Zustand / Ort),estoy,verb,yo
+53,2,du bist (Zustand / Ort),estás,verb,vos
+54,2,er/sie ist (Zustand / Ort),está,verb,él/ella
+55,2,ich habe,tengo,verb,yo
+56,2,du hast,tenés,verb,vos
+57,2,er/sie hat,tiene,verb,él/ella
+58,2,ich will / ich möchte,quiero,verb,yo
+59,2,du willst / du möchtest,querés,verb,vos
+60,2,er/sie will,quiere,verb,él/ella
+61,2,ich gehe / ich fahre,voy,verb,yo
+62,2,du gehst / du fährst,vas,verb,vos
+63,2,er/sie geht / fährt,va,verb,él/ella
+64,2,ich kann,puedo,verb,yo
+65,2,du kannst,podés,verb,vos
+66,2,er/sie kann,puede,verb,él/ella
+67,2,ich weiß,sé,verb,yo
+68,2,du weißt,sabés,verb,vos
+69,2,er/sie weiß,sabe,verb,él/ella
+70,2,ich mache,hago,verb,yo
+71,2,du machst,hacés,verb,vos
+72,2,er/sie macht,hace,verb,él/ella
+73,2,ich sage,digo,verb,yo
+74,2,du sagst,decís,verb,vos
+75,2,er/sie sagt,dice,verb,él/ella
+76,2,ich sehe,veo,verb,yo
+77,2,du siehst,ves,verb,vos
+78,2,er/sie sieht,ve,verb,él/ella
+79,2,ich gebe,doy,verb,yo
+80,2,du gibst,das,verb,vos
+81,2,er/sie gibt,da,verb,él/ella
+82,2,ich komme,vengo,verb,yo
+83,2,du kommst,venís,verb,vos
+84,2,er/sie kommt,viene,verb,él/ella
+85,2,ich gehe raus / ich gehe aus,salgo,verb,yo
+86,2,du gehst raus / du gehst aus,salís,verb,vos
+87,2,er/sie geht raus / geht aus,sale,verb,él/ella
+88,2,ich komme an,llego,verb,yo
+89,2,du kommst an,llegás,verb,vos
+90,2,er/sie kommt an,llega,verb,él/ella
+91,2,ich komme zurück,vuelvo,verb,yo
+92,2,du kommst zurück,volvés,verb,vos
+93,2,er/sie kommt zurück,vuelve,verb,él/ella
+94,2,ich warte,espero,verb,yo
+95,2,du wartest,esperás,verb,vos
+96,2,er/sie wartet,espera,verb,él/ella
+97,2,ich schaue,miro,verb,yo
+98,2,du schaust,mirás,verb,vos
+99,2,er/sie schaut,mira,verb,él/ella
+100,2,ich höre (zu),escucho,verb,yo
+101,2,du hörst (zu),escuchás,verb,vos
+102,2,er/sie hört (zu),escucha,verb,él/ella
+103,2,ich spreche,hablo,verb,yo
+104,2,du sprichst,hablás,verb,vos
+105,2,er/sie spricht,habla,verb,él/ella
+106,2,ich esse,como,verb,yo
+107,2,du isst,comés,verb,vos
+108,2,er/sie isst,come,verb,él/ella
+109,2,ich nehme / ich trinke,tomo,verb,yo
+110,2,du nimmst / du trinkst,tomás,verb,vos
+111,2,er/sie nimmt / trinkt,toma,verb,él/ella
+112,2,ich kaufe,compro,verb,yo
+113,2,du kaufst,comprás,verb,vos
+114,2,er/sie kauft,compra,verb,él/ella
+115,2,ich zahle,pago,verb,yo
+116,2,du zahlst,pagás,verb,vos
+117,2,er/sie zahlt,paga,verb,él/ella
+118,2,ich suche,busco,verb,yo
+119,2,du suchst,buscás,verb,vos
+120,2,er/sie sucht,busca,verb,él/ella
+121,2,ich verstehe,entiendo,verb,yo
+122,2,du verstehst,entendés,verb,vos
+123,2,er/sie versteht,entiende,verb,él/ella
+124,2,ich brauche,necesito,verb,yo
+125,2,du brauchst,necesitás,verb,vos
+126,2,er/sie braucht,necesita,verb,él/ella
+127,2,mir gefällt / ich mag,me gusta,verb,yo
+128,2,dir gefällt / du magst,te gusta,verb,vos
+129,2,ihm/ihr gefällt / er mag,le gusta,verb,él/ella
+130,2,es gibt,hay,verb,unpersönlich
+131,2,ich war / ich ging,fui,verb,pretérito yo (ser e ir)
+132,2,ich war (Zustand / Ort),estuve,verb,pretérito yo
+133,2,ich hatte,tuve,verb,pretérito yo
+134,2,ich wollte,quise,verb,pretérito yo
+135,3,was?,qué,func,Fragewort
+136,3,wer?,quién,func,Fragewort; Plural: quiénes
+137,3,wo?,dónde,func,Fragewort
+138,3,wann?,cuándo,func,Fragewort
+139,3,wie?,cómo,func,Fragewort
+140,3,wie viel?,cuánto,func,Fragewort; auch cuánta / cuántos / cuántas
+141,3,warum?,por qué,func,Fragewort; Antwort: porque
+142,3,welcher? / welche?,cuál,func,Fragewort; Plural: cuáles
+143,3,klar / natürlich,claro,adv,als Antwort: ¡claro!
+144,3,okay / los geht's,dale,phrase,umgangssprachlich; typisch porteño
+145,3,na gut / okay,bueno,phrase,als Antwort; Adjektiv „gut“ in Block 7
+146,3,toll / super,bárbaro,adj,umgangssprachlich; als Antwort: ¡bárbaro!
+147,3,so lala / mehr oder weniger,más o menos,phrase,
+148,3,keine Ahnung,ni idea,phrase,umgangssprachlich
+149,3,und du?,¿y vos?,phrase,voseo
+150,3,kann sein / vielleicht,puede ser,phrase,
+151,3,na klar / logisch,obvio,adj,umgangssprachlich; als Antwort: ¡obvio!
+152,3,im Ernst? / echt?,¿en serio?,phrase,
+153,3,ich weiß nicht,no sé,phrase,sé = ich weiß (Block 2)
+154,3,kommt drauf an,depende,phrase,wörtlich: es hängt ab
+155,4,das Haus / das Zuhause,casa,noun,f; en casa = zu Hause
+156,4,das Zimmer,cuarto,noun,m; porteño auch: pieza; auch: das Viertel (1/4)
+157,4,die Straße,calle,noun,f
+158,4,das Viertel / der Stadtteil,barrio,noun,m
+159,4,der Bus,colectivo,noun,m; porteño für autobús (auch: bondi)
+160,4,die U-Bahn,subte,noun,"m; porteño, kurz für subterráneo"
+161,4,das Geld,plata,noun,f; porteño für dinero
+162,4,das Essen,comida,noun,f
+163,4,das Wasser,agua,noun,f; el agua
+164,4,der Kaffee,café,noun,m
+165,4,das Brot,pan,noun,m
+166,4,das Fleisch,carne,noun,f
+167,4,der Wein,vino,noun,m
+168,4,das Bier,cerveza,noun,f
+169,4,der Morgen / der Vormittag,mañana,noun,f; la mañana (als Adverb = morgen)
+170,4,der Nachmittag,tarde,noun,f; la tarde
+171,4,die Nacht / der Abend,noche,noun,f
+172,4,die Stunde / die Uhrzeit,hora,noun,f; ¿qué hora es?
+173,4,die Woche,semana,noun,f
+174,4,der Monat,mes,noun,m
+175,4,das Jahr,año,noun,m
+176,4,der Montag,lunes,noun,m; el lunes = am Montag
+177,4,der Dienstag,martes,noun,m
+178,4,der Mittwoch,miércoles,noun,m
+179,4,der Donnerstag,jueves,noun,m
+180,4,der Freitag,viernes,noun,m
+181,4,der Samstag,sábado,noun,m
+182,4,der Sonntag,domingo,noun,m
+183,4,der Januar,enero,noun,m; en enero = im Januar
+184,4,der Februar,febrero,noun,m
+185,4,der März,marzo,noun,m
+186,4,der April,abril,noun,m
+187,4,der Mai,mayo,noun,m
+188,4,der Juni,junio,noun,m
+189,4,der Juli,julio,noun,m
+190,4,der August,agosto,noun,m
+191,4,der September,septiembre,noun,m
+192,4,der Oktober,octubre,noun,m
+193,4,der November,noviembre,noun,m
+194,4,der Dezember,diciembre,noun,m
+195,4,null,cero,func,
+196,4,eins,uno,func,vor Nomen: un / una
+197,4,zwei,dos,func,
+198,4,drei,tres,func,
+199,4,vier,cuatro,func,
+200,4,fünf,cinco,func,
+201,4,sechs,seis,func,
+202,4,sieben,siete,func,
+203,4,acht,ocho,func,Zahl (in B6: die Tangofigur)
+204,4,neun,nueve,func,
+205,4,zehn,diez,func,
+206,4,elf,once,func,
+207,4,zwölf,doce,func,
+208,4,dreizehn,trece,func,
+209,4,vierzehn,catorce,func,
+210,4,fünfzehn,quince,func,
+211,4,sechzehn,dieciséis,func,
+212,4,siebzehn,diecisiete,func,
+213,4,achtzehn,dieciocho,func,
+214,4,neunzehn,diecinueve,func,
+215,4,zwanzig,veinte,func,"21 = veintiuno, 22 = veintidós …"
+216,4,dreißig,treinta,func,31 = treinta y uno
+217,4,vierzig,cuarenta,func,
+218,4,fünfzig,cincuenta,func,
+219,4,sechzig,sesenta,func,
+220,4,siebzig,setenta,func,
+221,4,achtzig,ochenta,func,
+222,4,neunzig,noventa,func,
+223,4,hundert,cien,func,101 = ciento uno
+224,4,nah / in der Nähe,cerca,adv,cerca de = nahe bei
+225,4,weit / weit weg,lejos,adv,lejos de = weit von
+226,4,links / die linke Seite,izquierda,noun,f; a la izquierda = nach links
+227,4,rechts / die rechte Seite,derecha,noun,f; a la derecha = nach rechts
+228,4,vorwärts / nach vorne,adelante,adv,auch: „herein!“
+229,4,hinten / zurück,atrás,adv,para atrás = rückwärts
+230,4,die Ecke / die Straßenecke,esquina,noun,f
+231,4,der Platz,plaza,noun,f
+232,4,der Park,parque,noun,m
+233,4,das Taxi,taxi,noun,m
+234,4,der Bahnhof / die Station,estación,noun,f; auch U-Bahn-Station
+235,4,die Fahrkarte / das Ticket,boleto,noun,m
+236,4,die Stadt,ciudad,noun,f
+237,4,das Zentrum / die Innenstadt,centro,noun,m; el centro = Stadtzentrum
+238,4,die Avenue / die Hauptstraße,avenida,noun,f; Av. Corrientes
+239,4,der Häuserblock,cuadra,noun,f; porteño Entfernungsmaß: a dos cuadras
+240,4,die Minute,minuto,noun,m
+241,4,der Tag,día,noun,m; buen día
+242,4,das Frühstück,desayuno,noun,m
+243,4,der Mate,mate,noun,"m; Mate-Tee, argentinisches Nationalgetränk"
+244,4,die Empanada,empanada,noun,f; gefüllte Teigtasche
+245,5,der Mann,hombre,noun,m
+246,5,die Frau,mujer,noun,f
+247,5,der Junge,chico,noun,m; als Adjektiv: klein
+248,5,das Mädchen,chica,noun,f
+249,5,der Herr,señor,noun,m; Anrede
+250,5,die Frau / die Dame,señora,noun,f; Anrede
+251,5,der Freund,amigo,noun,m
+252,5,die Freundin,amiga,noun,f
+253,5,die Leute,gente,noun,f; im Spanischen Singular
+254,5,die Familie,familia,noun,f
+255,5,der Vater,padre,noun,m; umgangssprachlich: papá
+256,5,die Mutter,madre,noun,f; umgangssprachlich: mamá
+257,5,der Bruder,hermano,noun,m
+258,5,die Schwester,hermana,noun,f
+259,5,der Name,nombre,noun,m
+260,5,der Kopf,cabeza,noun,f
+261,5,das Auge,ojo,noun,m
+262,5,die Hand,mano,noun,f; trotz -o feminin
+263,5,der Arm,brazo,noun,m
+264,5,der Fuß,pie,noun,m
+265,5,das Bein,pierna,noun,f
+266,5,die Brust,pecho,noun,m
+267,5,der Rücken,espalda,noun,f
+268,5,die Schulter,hombro,noun,m
+269,5,das Gewicht,peso,noun,m; auch die Währung (der Peso)
+270,5,der Sohn,hijo,noun,m
+271,5,die Tochter,hija,noun,f
+272,5,der Ehemann,marido,noun,m
+273,5,die Ehefrau,esposa,noun,f; im Alltag meist: mi mujer
+274,5,der feste Freund,novio,noun,m; auch: der Bräutigam
+275,5,die feste Freundin,novia,noun,f; auch: die Braut
+276,5,der Großvater / der Opa,abuelo,noun,m
+277,5,die Großmutter / die Oma,abuela,noun,f
+278,5,der Partner / die Partnerin,pareja,noun,"f; Lebenspartner, auch: das Paar"
+279,5,der Nachbar,vecino,noun,m
+280,5,der Bursche / der Kerl,pibe,noun,"m; Lunfardo, umgangssprachlich für chico"
+281,5,das Mädel,piba,noun,"f; Lunfardo, umgangssprachlich für chica"
+282,5,der Mund,boca,noun,f
+283,5,die Nase,nariz,noun,f
+284,5,das Ohr,oreja,noun,f
+285,5,das Haar / die Haare,pelo,noun,m
+286,5,das Gesicht,cara,noun,f
+287,5,der Hals,cuello,noun,m
+288,5,der Finger,dedo,noun,m; auch: die Zehe
+289,5,das Knie,rodilla,noun,f
+290,5,die Taille,cintura,noun,f
+291,5,das Herz,corazón,noun,m
+292,5,der Körper,cuerpo,noun,m
+293,5,das Alter,edad,noun,f
+294,5,groß (gewachsen) / hoch,alto,adj,
+295,5,klein (gewachsen) / niedrig,bajo,adj,
+296,5,dünn / schlank,flaco,adj,"umgangssprachlich auch Anrede: che, flaco"
+297,5,jung,joven,adj,auch: der/die Jugendliche
+298,5,der Porteño (aus Buenos Aires),porteño,noun,"m; Bewohner von Buenos Aires, auch Adjektiv"
+299,5,deutsch / der Deutsche,alemán,adj,"auch Nomen, m"
+300,5,argentinisch / der Argentinier,argentino,adj,"auch Nomen, m"
+301,5,der Ausländer / ausländisch,extranjero,noun,m; auch Adjektiv
+302,5,ich heiße,me llamo,phrase,yo
+303,5,wie heißt du?,¿cómo te llamás?,phrase,vos
+304,5,ich bin aus / ich komme aus,soy de,phrase,yo
+305,6,ich tanze,bailo,verb,yo
+306,6,du tanzt,bailás,verb,vos
+307,6,er/sie tanzt,baila,verb,él/ella
+308,6,ich gehe (zu Fuß),camino,verb,yo
+309,6,du gehst (zu Fuß),caminás,verb,vos
+310,6,er/sie geht (zu Fuß),camina,verb,él/ella
+311,6,die Umarmung,abrazo,noun,m; auch die Tanzhaltung
+312,6,die Tanzfläche,pista,noun,f
+313,6,der Tisch,mesa,noun,f
+314,6,die Tanda,tanda,noun,f; Set aus 3–4 Stücken
+315,6,die Cortina,cortina,noun,"f; Zwischenmusik zwischen zwei Tandas, wörtlich Vorhang"
+316,6,das Orchester,orquesta,noun,f
+317,6,der Liedtext,letra,noun,f; auch: der Buchstabe
+318,6,der Takt,compás,noun,m
+319,6,die Pause,pausa,noun,f
+320,6,die Milonga,milonga,noun,f; Tanzabend und Tanzstil
+321,6,der Walzer,vals,noun,m; Tango-Vals
+322,6,der Tango,tango,noun,m
+323,6,das Kopfnicken,cabeceo,noun,m; Aufforderung per Blick und Nicken
+324,6,der Blick,mirada,noun,f
+325,6,die Erlaubnis / darf ich?,permiso,noun,m; als Floskel beim Vorbeigehen oder Auffordern
+326,6,danke,gracias,phrase,
+327,6,tanzt du? (Tanzaufforderung),¿bailás?,phrase,Einladung an der Mesa; auch: ¿bailamos?
+328,6,noch ein Tango,un tango más,phrase,
+329,6,langsam (Adverb),despacio,adv,
+330,6,hör zu,escuchá,verb,imperativo vos
+331,6,noch nicht,todavía no,phrase,
+332,6,entschuldige,disculpá,verb,imperativo vos
+333,6,schön / hübsch,lindo,adj,sehr häufig in Buenos Aires; auch als Kompliment
+334,6,ich fühle / ich spüre,siento,verb,yo
+335,6,du fühlst / du spürst,sentís,verb,vos
+336,6,er/sie fühlt / spürt,siente,verb,él/ella
+337,6,ich folge / ich mache weiter,sigo,verb,yo
+338,6,du folgst / du machst weiter,seguís,verb,vos
+339,6,er/sie folgt / macht weiter,sigue,verb,él/ella
+340,6,ich führe / ich bringe,llevo,verb,yo; beim Tanz: führen
+341,6,du führst / du bringst,llevás,verb,vos; beim Tanz: führen
+342,6,er/sie führt / bringt,lleva,verb,él/ella; beim Tanz: führen
+343,6,ich drehe mich,giro,verb,yo
+344,6,du drehst dich,girás,verb,vos
+345,6,er/sie dreht sich,gira,verb,él/ella
+346,6,ich kreuze,cruzo,verb,yo; beim Tanz: Kreuzschritt
+347,6,du kreuzt,cruzás,verb,vos; beim Tanz: Kreuzschritt
+348,6,er/sie kreuzt,cruza,verb,él/ella; beim Tanz: Kreuzschritt
+349,6,ich halte an,paro,verb,yo
+350,6,du hältst an,parás,verb,vos
+351,6,er/sie hält an,para,verb,él/ella; nicht die Präposition para
+352,6,der Schritt,paso,noun,m
+353,6,die Drehung,vuelta,noun,f; auch: die Runde / der Rückweg
+354,6,der Ocho,ocho,noun,"m; Tangofigur (Achterschritt), nicht die Zahl"
+355,6,die Ronda,ronda,noun,"f; Tanzrichtung, der Kreis auf der Pista"
+356,6,das Bandoneon,bandoneón,noun,m
+357,6,der Milonguero,milonguero,noun,m; f: milonguera; erfahrener Milonga-Tänzer
+358,6,die letzte Tanda,la última tanda,phrase,meist La Cumparsita
+359,6,gehen wir?,¿vamos?,phrase,auch: auf die Pista?
+360,6,noch einmal,otra vez,phrase,
+361,6,schau,mirá,verb,imperativo vos; auch Füllwort wie „schau mal“
+362,6,warte,esperá,verb,imperativo vos
+363,6,folg mir,seguime,verb,imperativo vos
+364,6,fühl / spür,sentí,verb,imperativo vos
+365,7,gut (Adverb),bien,adv,
+366,7,schlecht (Adverb),mal,adv,
+367,7,gut (Adjektiv),bueno,adj,
+368,7,schlecht / böse,malo,adj,
+369,7,wunderschön,hermoso,adj,
+370,7,hässlich,feo,adj,
+371,7,groß,grande,adj,
+372,7,klein,chico,adj,porteño für pequeño; auch: der Junge (Block 5)
+373,7,müde,cansado,adj,
+374,7,ruhig,tranquilo,adj,
+375,7,zufrieden / froh,contento,adj,
+376,7,traurig,triste,adj,
+377,7,schwierig,difícil,adj,
+378,7,leicht / einfach,fácil,adj,
+379,7,die Wahrheit,verdad,noun,f
+380,7,die Lüge,mentira,noun,f
+381,7,neu,nuevo,adj,
+382,7,alt,viejo,adj,
+383,7,teuer,caro,adj,
+384,7,billig,barato,adj,
+385,7,heiß,caliente,adj,nur für Sachen (agua caliente); bei Personen = wütend / erregt (vermeiden!); mir ist heiß = tengo calor; Wetter: hace calor
+386,7,kalt,frío,adj,
+387,7,schnell,rápido,adj,
+388,7,langsam (Adjektiv),lento,adj,
+389,7,früh,temprano,adv,
+390,7,spät,tarde,adv,auch: der Nachmittag (Block 4)
+391,7,offen / geöffnet,abierto,adj,
+392,7,geschlossen,cerrado,adj,
+393,7,voll,lleno,adj,
+394,7,leer,vacío,adj,
+395,7,die Tür,puerta,noun,f
+396,7,der Stuhl,silla,noun,f
+397,7,das Bett,cama,noun,f
+398,7,das Licht,luz,noun,f
+399,7,die Kleidung,ropa,noun,f
+400,7,der Schuh,zapato,noun,m
+401,7,das Hemd,camisa,noun,f
+402,7,das Sakko / der Blazer,saco,noun,m; die Jacke = campera
+403,7,das Telefon,teléfono,noun,m
+404,7,der Schlüssel,llave,noun,f
+405,7,das Papier,papel,noun,m
+406,7,das Buch,libro,noun,m
+407,7,die Musik,música,noun,f
+408,7,die Arbeit,trabajo,noun,m
+409,7,der Unterricht / die Klasse,clase,noun,f
+410,7,der Lehrer,profesor,noun,m
+411,7,der Arzt,médico,noun,m
+412,7,das Krankenhaus,hospital,noun,m
+413,7,die Apotheke,farmacia,noun,f
+414,7,die Bank,banco,noun,m; Geldinstitut und Sitzbank
+415,7,der Markt,mercado,noun,m
+416,7,der Laden,tienda,noun,f; porteño im Alltag meist: negocio
+417,7,die Bar,bar,noun,m
+418,7,das Restaurant,restaurante,noun,m
+419,7,bitte,por favor,phrase,
+420,7,Entschuldigung / Verzeihung,perdón,phrase,
+421,7,gern geschehen,de nada,phrase,
+422,7,freut mich,mucho gusto,phrase,
+423,7,bis später,hasta luego,phrase,
+424,7,tschüss,chau,phrase,porteño; umgangssprachlich
+425,7,guten Tag / guten Morgen,buen día,phrase,porteño für buenos días
+426,7,gute Nacht / guten Abend,buenas noches,phrase,
+427,7,nervös,nervioso,adj,
+428,7,wütend / sauer,enojado,adj,
+429,7,gelangweilt / langweilig,aburrido,adj,
+430,7,glücklich,feliz,adj,
+431,7,cool / toll,copado,adj,porteño; umgangssprachlich
+432,7,das Bad / die Toilette,baño,noun,m
+433,7,die Küche,cocina,noun,f
+434,7,das Fenster,ventana,noun,f
+435,7,das Handy,celular,noun,m; porteño für móvil
+436,7,der Computer,computadora,noun,f; porteño für ordenador
+437,7,das T-Shirt,remera,noun,f; porteño für camiseta
+438,7,die Jacke,campera,noun,f; porteño für chaqueta
+439,7,der Rock,pollera,noun,f; porteño für falda
+440,7,die Tasche,bolso,noun,m; Handtasche = cartera
+441,7,die Uhr,reloj,noun,m
+442,7,das Geschenk,regalo,noun,m
+443,7,das Foto,foto,noun,f
+444,7,das Problem,problema,noun,m
+445,7,die Frage,pregunta,noun,f
+446,7,die Antwort,respuesta,noun,f
+447,7,die Sache / das Ding,cosa,noun,f
+448,7,der Moment,momento,noun,m
+449,7,das Mal,vez,noun,f
+450,7,der Ort,lugar,noun,m
+451,7,die Welt,mundo,noun,m
+452,7,das Leben,vida,noun,f
+453,7,die Liebe,amor,noun,m
+454,7,die Party / das Fest,fiesta,noun,f
+455,7,der Geburtstag,cumpleaños,noun,m
+456,7,der Club / die Disco,boliche,noun,m; porteño
+457,7,der Job / die Arbeit (ugs.),laburo,noun,m; Lunfardo
+458,7,ich wohne / lebe,vivo,verb,yo
+459,7,du wohnst / lebst,vivís,verb,vos
+460,7,er wohnt / lebt,vive,verb,él/ella
+461,7,ich glaube,creo,verb,yo
+462,7,du glaubst,creés,verb,vos
+463,7,er glaubt,cree,verb,él/ella
+464,7,ich denke,pienso,verb,yo
+465,7,du denkst,pensás,verb,vos
+466,7,er denkt,piensa,verb,él/ella
+467,7,ich kenne,conozco,verb,yo
+468,7,du kennst,conocés,verb,vos
+469,7,er kennt,conoce,verb,él/ella
+470,7,ich bevorzuge / mir ist lieber,prefiero,verb,yo
+471,7,du bevorzugst / dir ist lieber,preferís,verb,vos
+472,7,er bevorzugt / ihm ist lieber,prefiere,verb,él/ella
+473,7,ich schlafe,duermo,verb,yo
+474,7,du schläfst,dormís,verb,vos
+475,7,er schläft,duerme,verb,él/ella
+476,7,ich bestelle / bitte um,pido,verb,yo
+477,7,du bestellst / bittest um,pedís,verb,vos
+478,7,er bestellt / bittet um,pide,verb,él/ella
+479,7,viel / sehr,mucho,adv,
+480,7,wenig,poco,adv,
+481,7,so viel / so sehr,tanto,adv,
+482,7,so / auf diese Weise,así,adv,
+483,7,dann / also,entonces,adv,
+484,7,auch nicht,tampoco,adv,
+485,7,vielleicht,quizás,adv,porteño umgangssprachlich auch: capaz
+486,7,sicher / bestimmt,seguro,adv,
+487,7,hallo,hola,phrase,
+488,7,guten Tag (nachmittags),buenas tardes,phrase,
+489,7,wie geht's dir?,¿cómo estás?,phrase,porteño auch: ¿cómo andás?
+490,7,wie geht's? / na?,¿qué tal?,phrase,
+491,7,alles gut?,¿todo bien?,phrase,
+492,7,wir sehen uns / bis dann,nos vemos,phrase,
+493,7,bis morgen,hasta mañana,phrase,
+494,7,pass auf dich auf,cuidate,phrase,imperativo vos (cuidarse); Abschiedsgruß
+495,7,wie schön!,¡qué lindo!,phrase,
+496,7,wie toll! / super!,¡qué bueno!,phrase,
+497,7,wie schade!,¡qué pena!,phrase,auch: ¡qué lástima!
+498,7,genial! / super!,¡genial!,phrase,
+499,7,Achtung! / Vorsicht!,¡ojo!,phrase,umgangssprachlich
+500,7,he / du (Anrede),che,func,porteño; Anrede unter Freunden

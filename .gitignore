@@ -1,0 +1,17 @@
+# Local TTS environment and caches
+.venv/
+__pycache__/
+*.pyc
+# Personal reference voice stays local (voice data); generated clips ARE committed
+data/reference.wav
+data/reference_snippet.wav
+data/reference.txt
+data/reference_meta.json
+data/test_clips/
+data/tmp_wav/
+data/regen.txt
+data/gen_failures.txt
+# Scratch
+*.log
+.DS_Store
+Thumbs.db
