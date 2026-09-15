@@ -2,7 +2,7 @@
 
 Audio zuerst, Text danach. Eine PWA fürs iPhone, komplett offline, FSRS-Wiederholung, drei Kartentypen (Wort, Lückensatz, Satz bauen). 500 Wörter in 7 Blöcken und über 300 Beispielsätze im Spanisch von Buenos Aires (`vos`, `acá`, `plata`, `colectivo`). Die Audio-Clips werden einmalig lokal mit F5-TTS aus einer Referenzstimme erzeugt und ins Repo committet.
 
-**App:** __APP_URL__
+**App:** https://aeneassoft.github.io/tango-vocab/
 
 ## Auf dem iPhone installieren
 
