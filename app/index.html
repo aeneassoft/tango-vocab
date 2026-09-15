@@ -1,0 +1,2430 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Tango</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Tango">
+<meta name="theme-color" content="#000000">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="./manifest.json">
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+<link rel="icon" href="./icons/icon-192.png">
+<style>
+/* ---------------------------------------------------------------- tokens */
+:root {
+  --bg: #000;
+  --surface: #111;
+  --surface2: #1a1a1a;
+  --line: #2a2a2a;
+  --text: #f3ede4;
+  --muted: #9a938a;
+  --accent: #8f1d22;
+  --accent-hi: #a8262c;
+  --ok: #3f7d4e;
+  --warn: #b5842d;
+}
+* { box-sizing: border-box; }
+html {
+  background: var(--bg);
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+  height: 100%;
+}
+body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 17px/1.4 -apple-system, system-ui, "Segoe UI", Roboto, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+[hidden] { display: none !important; }
+button { font: inherit; color: inherit; margin: 0; }
+h1, h2, h3, p { margin: 0; }
+
+#app {
+  min-height: 100vh;
+  min-height: -webkit-fill-available;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+.screen {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 12px 16px 28px;
+  transition: opacity .15s;
+}
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+.center { text-align: center; }
+.ok { color: var(--ok); }
+.warn { color: var(--warn); }
+.bad { color: var(--accent-hi); }
+
+/* ---------------------------------------------------------------- buttons */
+.btn {
+  display: block;
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 17px;
+  cursor: pointer;
+  transition: opacity .15s;
+  text-align: center;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); font-weight: 600; }
+.btn.primary:hover, .btn.primary:active { background: var(--accent-hi); border-color: var(--accent-hi); }
+.btn.secondary:hover, .btn.secondary:active, .btn:not(.primary):not(.link):active { background: var(--surface2); }
+.btn:disabled { opacity: .4; cursor: default; }
+.btn.big { min-height: 64px; font-size: 22px; }
+.btn.link {
+  background: none;
+  border: none;
+  color: var(--muted);
+  width: auto;
+  min-height: 48px;
+  padding: 10px 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.btn.danger { border-color: var(--accent); color: var(--accent-hi); }
+.btn + .btn { margin-top: 10px; }
+.btn-row { display: flex; gap: 10px; }
+.btn-row .btn { flex: 1; margin: 0; }
+:focus-visible { outline: 2px solid var(--accent-hi); outline-offset: 2px; }
+:focus:not(:focus-visible) { outline: none; }
+.icon-btn {
+  min-width: 48px;
+  min-height: 48px;
+  border: none;
+  background: none;
+  color: var(--muted);
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 22px;
+  transition: opacity .15s;
+}
+.icon-btn:active { opacity: .6; }
+
+/* ---------------------------------------------------------------- inputs */
+input[type=text], input[type=number] {
+  font: inherit;
+  font-size: 18px;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  min-height: 52px;
+  padding: 10px 14px;
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type=text]::placeholder { color: var(--muted); opacity: .8; }
+input[type=number] { width: 92px; text-align: center; }
+.switch {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 52px;
+  height: 32px;
+  border-radius: 16px;
+  background: var(--line);
+  position: relative;
+  flex: none;
+  margin: 0;
+  border: none;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.switch::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--text);
+}
+.switch:checked { background: var(--accent); }
+.switch:checked::after { left: 23px; }
+
+/* ---------------------------------------------------------------- banner / toast / dialog */
+/* The banner lives outside #app (in-flow, sticky) and carries its own safe-area padding, so it never
+   slides under the translucent status bar when the page is scrolled. */
+.banner {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  padding: calc(4px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 4px max(12px, env(safe-area-inset-left));
+  background: var(--accent);
+  text-align: center;
+  transition: opacity .15s;
+}
+.banner button {
+  background: none;
+  border: none;
+  color: var(--text);
+  font-weight: 600;
+  min-height: 48px;
+  width: 100%;
+  max-width: 560px;
+  cursor: pointer;
+}
+html.banner-open #app { padding-top: 0; }
+.toasts {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 30;
+  pointer-events: none;
+}
+.toast {
+  background: var(--surface2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 15px;
+  max-width: 560px;
+  margin: 0 auto;
+  width: 100%;
+  opacity: 1;
+  transition: opacity .15s;
+  word-break: break-word;
+}
+.toast.err { border-color: var(--accent); }
+.toast.out { opacity: 0; }
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(0, 0, 0, .75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.dialog {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 20px;
+  width: 100%;
+  max-width: 400px;
+}
+.dialog p { margin-bottom: 16px; font-size: 18px; }
+
+/* ---------------------------------------------------------------- start */
+.start-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 16px; padding: 24px 0; }
+.title { font-size: 52px; font-weight: 700; letter-spacing: .5px; text-align: center; line-height: 1.1; }
+.subtitle { text-align: center; color: var(--muted); font-size: 15px; margin-top: -8px; }
+.today { text-align: center; font-size: 22px; margin-top: 8px; }
+.today-sub { text-align: center; color: var(--muted); font-size: 15px; min-height: 1.4em; margin-top: -8px; }
+.stats-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px 14px;
+  color: var(--muted);
+  font-size: 14px;
+  text-align: center;
+  margin-top: 8px;
+}
+.nav { display: flex; justify-content: center; gap: 8px; }
+
+/* ---------------------------------------------------------------- session */
+.bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-height: 48px;
+  margin: 0 -6px 8px;
+}
+.bar-mid { flex: 1; text-align: center; color: var(--muted); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.bar-mid .dot { margin: 0 6px; }
+.type-label { color: var(--muted); font-size: 13px; min-width: 48px; text-align: right; padding-right: 6px; }
+.session-main { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+.card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 26px 20px;
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  cursor: pointer;
+  text-align: center;
+  -webkit-user-select: none;
+  user-select: none;
+  transition: opacity .15s;
+}
+.card:active { opacity: .85; }
+.speaker { color: var(--muted); display: flex; transition: opacity .15s; }
+.speaker svg { width: 36px; height: 36px; }
+.speaker.big svg { width: 84px; height: 84px; }
+.speaker.big { color: var(--text); }
+.tag {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 12px;
+  color: var(--muted);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 2px 8px;
+}
+.prompt { width: 100%; }
+.german { font-size: 26px; font-weight: 600; line-height: 1.25; }
+.note { color: var(--muted); font-size: 15px; margin-top: 6px; }
+.sentence { font-size: 24px; line-height: 1.35; font-weight: 500; }
+.sentence .gap { color: var(--accent-hi); letter-spacing: 1px; }
+.sentence .hit { color: var(--accent-hi); font-weight: 700; }
+.sent-german { color: var(--muted); font-size: 17px; margin-top: 10px; }
+.build-words { display: flex; flex-direction: column; gap: 8px; width: 100%; }
+.bw { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+.bw:last-child { border-bottom: none; }
+.bw .es { font-size: 26px; font-weight: 600; }
+.bw .de { color: var(--muted); font-size: 15px; text-align: right; }
+.answer { display: flex; flex-direction: column; gap: 10px; }
+.input-row { display: flex; gap: 8px; align-items: stretch; }
+.input-row input { flex: 1; min-width: 0; }
+.mic {
+  width: 56px;
+  min-width: 56px;
+  min-height: 52px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+}
+.mic.listening { color: var(--accent-hi); animation: pulse 1s ease-in-out infinite alternate; }
+@keyframes pulse { from { opacity: 1; } to { opacity: .35; } }
+.feedback { text-align: center; display: flex; flex-direction: column; gap: 8px; padding: 4px 0; }
+.fb-result { font-size: 18px; font-weight: 600; }
+.fb-target { font-size: 32px; font-weight: 700; line-height: 1.25; }
+.fb-target.sentence-mode { font-size: 24px; }
+.fb-sub { font-size: 18px; color: var(--muted); }
+.fb-input { color: var(--muted); font-size: 18px; }
+.fb-input .bad { text-decoration: underline; text-underline-offset: 3px; }
+.rating { display: flex; flex-direction: column; gap: 10px; margin-top: auto; }
+.rating-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.rate {
+  min-height: 60px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 6px 2px;
+  cursor: pointer;
+  font-size: 15px;
+  transition: opacity .15s;
+}
+.rate small { font-size: 12px; color: var(--muted); }
+.rate.selected { border-color: var(--accent-hi); background: var(--accent); }
+.rate.selected small { color: var(--text); }
+.rate:active { opacity: .7; }
+
+/* ---------------------------------------------------------------- end / stats / settings */
+.end-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 18px; text-align: center; }
+.end-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px 6px; }
+.stat b { display: block; font-size: 30px; }
+.stat span { color: var(--muted); font-size: 14px; }
+h2 { font-size: 26px; font-weight: 700; }
+h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: .6px; margin: 22px 0 8px; }
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 56px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--line);
+}
+.row .lbl { flex: 1; }
+.row .cnt { color: var(--muted); font-size: 14px; margin-left: 6px; }
+.block-row { display: flex; flex-direction: column; gap: 4px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.block-head { display: flex; justify-content: space-between; gap: 8px; font-size: 15px; }
+.block-head .nums { color: var(--muted); font-size: 14px; white-space: nowrap; }
+.bar-track { position: relative; height: 10px; background: var(--surface2); border-radius: 5px; overflow: hidden; }
+.bar-fill { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 5px; }
+.bar-fill.learned { background: var(--warn); }
+.bar-fill.secured { background: var(--ok); }
+.legend { display: flex; gap: 14px; color: var(--muted); font-size: 13px; margin-top: 8px; }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+.lat-row { display: grid; grid-template-columns: 64px 1fr 56px; align-items: center; gap: 8px; padding: 4px 0; font-size: 14px; }
+.lat-row .lbl { color: var(--muted); }
+.lat-row .val { text-align: right; }
+.lat-bar { height: 12px; background: var(--surface2); border-radius: 6px; overflow: hidden; }
+.lat-bar i { display: block; height: 100%; background: var(--accent); border-radius: 6px; }
+.err-list { list-style: none; margin: 0; padding: 0; }
+.err-list li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.err-list .es { font-weight: 600; }
+.err-list .de { color: var(--muted); font-size: 14px; }
+.err-list .n { color: var(--accent-hi); font-weight: 700; white-space: nowrap; }
+.totals { display: flex; gap: 10px; }
+.totals .stat { flex: 1; }
+.version { color: var(--muted); font-size: 13px; margin-top: 18px; line-height: 1.6; word-break: break-word; }
+.version b { color: var(--text); font-weight: 600; }
+.confirm-box { background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 14px; margin-top: 10px; }
+.confirm-box p { margin-bottom: 12px; }
+
+/* ---------------------------------------------------------------- listen */
+.listen-main { flex: 1; display: flex; flex-direction: column; gap: 16px; justify-content: center; }
+.listen-card {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 36px 20px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  text-align: center;
+}
+.listen-es { font-size: 32px; font-weight: 700; line-height: 1.25; }
+.listen-de { font-size: 18px; color: var(--muted); }
+
+/* ---------------------------------------------------------------- error */
+.error-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; text-align: center; }
+.error-wrap pre { white-space: pre-wrap; color: var(--muted); font-size: 13px; text-align: left; background: var(--surface); padding: 12px; border-radius: 12px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; }
+  .mic.listening { opacity: .5; }
+}
+</style>
+</head>
+<body>
+<div id="update-banner" class="banner" hidden>
+  <button type="button" id="btn-update">Update verfügbar – neu laden</button>
+</div>
+<div id="app">
+  <!-- ============================================================ Loading -->
+  <section id="scr-loading" class="screen">
+    <div class="start-wrap center">
+      <h1 class="title">Tango</h1>
+      <p class="muted">Lade …</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ Start -->
+  <section id="scr-start" class="screen" hidden>
+    <div class="start-wrap">
+      <h1 class="title">Tango</h1>
+      <p class="subtitle">Rioplatense · Produktion statt Wiedererkennung</p>
+      <p id="today-line" class="today">Heute: – neu, – fällig</p>
+      <p id="today-sub" class="today-sub"></p>
+      <button type="button" id="btn-start" class="btn primary big">Start</button>
+      <button type="button" id="btn-listen" class="btn secondary">Nur hören</button>
+      <div class="stats-row">
+        <span id="st-streak">Streak 0 Tage</span>
+        <span>·</span>
+        <span id="st-learned">0 Wörter gelernt</span>
+        <span>·</span>
+        <span id="st-audio">Audio …</span>
+      </div>
+      <nav class="nav">
+        <button type="button" id="nav-stats" class="btn link">Statistik</button>
+        <button type="button" id="nav-settings" class="btn link">Einstellungen</button>
+      </nav>
+    </div>
+  </section>
+
+  <!-- ============================================================ Session -->
+  <section id="scr-session" class="screen" hidden>
+    <header class="bar">
+      <button type="button" id="btn-leave" class="icon-btn" aria-label="Session verlassen">✕</button>
+      <div class="bar-mid"><span id="progress">1 / 1</span><span class="dot">·</span><span id="block-name"></span></div>
+      <span id="type-label" class="type-label"></span>
+    </header>
+    <main class="session-main">
+      <div id="card" class="card" role="button" tabindex="0" aria-label="Audio erneut abspielen">
+        <span id="no-audio" class="tag" hidden>kein Audio</span>
+        <div id="speaker" class="speaker big">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/>
+          </svg>
+        </div>
+        <div id="prompt" class="prompt" hidden>
+          <div id="p-word" hidden>
+            <div id="p-german" class="german"></div>
+            <div id="p-note" class="note"></div>
+          </div>
+          <div id="p-cloze" hidden>
+            <div id="p-sentence" class="sentence"></div>
+            <div id="p-sent-german" class="sent-german"></div>
+            <div id="p-cloze-hint" class="note" hidden></div>
+          </div>
+          <div id="p-build" hidden>
+            <div id="p-build-words" class="build-words"></div>
+            <div class="note">Bilde einen Satz mit diesen Wörtern – sprich oder tipp ihn.</div>
+          </div>
+        </div>
+      </div>
+
+      <form id="answer-form" class="answer" hidden autocomplete="off">
+        <div class="input-row">
+          <input id="answer" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="spanische Form" enterkeyhint="done" aria-label="Antwort">
+          <button type="button" id="btn-mic" class="mic" aria-label="Sprechen" hidden>
+            <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+              <rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0"/><path d="M12 18v3"/>
+            </svg>
+          </button>
+        </div>
+        <button type="submit" id="btn-check" class="btn primary">Prüfen</button>
+      </form>
+
+      <div id="feedback" class="feedback" hidden>
+        <div id="fb-result" class="fb-result"></div>
+        <div id="fb-target" class="fb-target"></div>
+        <div id="fb-sub" class="fb-sub" hidden></div>
+        <div id="fb-input" class="fb-input" hidden></div>
+      </div>
+
+      <div id="rating" class="rating" hidden>
+        <div class="rating-grid">
+          <button type="button" class="rate" data-rating="1"><span>Nochmal</span><small></small></button>
+          <button type="button" class="rate" data-rating="2"><span>Schwer</span><small></small></button>
+          <button type="button" class="rate" data-rating="3"><span>Gut</span><small></small></button>
+          <button type="button" class="rate" data-rating="4"><span>Leicht</span><small></small></button>
+        </div>
+        <button type="button" id="btn-next" class="btn primary">Weiter</button>
+      </div>
+    </main>
+  </section>
+
+  <!-- ============================================================ Session end -->
+  <section id="scr-end" class="screen" hidden>
+    <div class="end-wrap">
+      <h2>Session beendet</h2>
+      <div class="end-grid">
+        <div class="stat"><b id="end-right" class="ok">0</b><span>richtig</span></div>
+        <div class="stat"><b id="end-near" class="warn">0</b><span>fast</span></div>
+        <div class="stat"><b id="end-wrong" class="bad">0</b><span>falsch</span></div>
+      </div>
+      <p id="end-meta" class="muted"></p>
+      <button type="button" id="btn-again" class="btn primary" hidden>Nochmal fällige</button>
+      <button type="button" id="btn-done" class="btn secondary">Fertig</button>
+    </div>
+  </section>
+
+  <!-- ============================================================ Statistik -->
+  <section id="scr-stats" class="screen" hidden>
+    <header class="bar">
+      <button type="button" id="btn-stats-back" class="icon-btn" aria-label="Zurück">‹</button>
+      <div class="bar-mid">Statistik</div>
+      <span class="type-label"></span>
+    </header>
+    <div class="totals" id="stats-totals"></div>
+    <h3>Diese Woche</h3>
+    <div class="totals" id="stats-week"></div>
+    <h3>Wörter pro Block</h3>
+    <div id="stats-blocks"></div>
+    <div class="legend"><span><i style="background:var(--ok)"></i>gesichert</span><span><i style="background:var(--warn)"></i>gelernt</span><span><i style="background:var(--surface2)"></i>gesamt</span></div>
+    <h3>Mittlere Latenz · letzte 8 Wochen</h3>
+    <div id="stats-latency"></div>
+    <h3>Fehlerliste · letzte 7 Tage</h3>
+    <ul id="stats-errors" class="err-list"></ul>
+  </section>
+
+  <!-- ============================================================ Einstellungen -->
+  <section id="scr-settings" class="screen" hidden>
+    <header class="bar">
+      <button type="button" id="btn-settings-back" class="icon-btn" aria-label="Zurück">‹</button>
+      <div class="bar-mid">Einstellungen</div>
+      <span class="type-label"></span>
+    </header>
+    <label class="row"><span class="lbl">Neue Wörter pro Tag</span><input id="set-new" type="number" min="1" max="30" step="1" inputmode="numeric"></label>
+    <label class="row"><span class="lbl">Auto-Play</span><input id="set-autoplay" type="checkbox" class="switch"></label>
+    <label class="row" id="row-voice"><span class="lbl">Spracheingabe</span><input id="set-voice" type="checkbox" class="switch"></label>
+    <h3>Blöcke</h3>
+    <div id="block-toggles"></div>
+    <h3>Daten</h3>
+    <button type="button" id="btn-export" class="btn">Export</button>
+    <button type="button" id="btn-import" class="btn">Import</button>
+    <input type="file" id="file-import" accept="application/json,.json" hidden>
+    <button type="button" id="btn-reset" class="btn danger">Reset</button>
+    <div id="reset-confirm" class="confirm-box" hidden>
+      <p>Wirklich alles löschen? Karten, Reviews und Einstellungen werden entfernt.</p>
+      <div class="btn-row">
+        <button type="button" id="btn-reset-no" class="btn">Abbrechen</button>
+        <button type="button" id="btn-reset-yes" class="btn primary">Ja, löschen</button>
+      </div>
+    </div>
+    <div id="version-line" class="version"></div>
+    <button type="button" id="btn-update-check" class="btn link">Update prüfen</button>
+  </section>
+
+  <!-- ============================================================ Nur hören -->
+  <section id="scr-listen" class="screen" hidden>
+    <header class="bar">
+      <button type="button" id="btn-listen-close" class="icon-btn" aria-label="Stop">✕</button>
+      <div class="bar-mid"><span id="listen-progress">–</span></div>
+      <span class="type-label">Nur hören</span>
+    </header>
+    <main class="listen-main">
+      <div class="listen-card">
+        <span id="listen-noaudio" class="tag" hidden>kein Audio</span>
+        <div id="listen-es" class="listen-es"></div>
+        <div id="listen-de" class="listen-de"></div>
+      </div>
+      <p class="note center">Bildschirm anlassen — iOS pausiert im Hintergrund</p>
+      <div class="btn-row">
+        <button type="button" id="btn-listen-pause" class="btn">Pause</button>
+        <button type="button" id="btn-listen-stop" class="btn secondary">Stop</button>
+      </div>
+    </main>
+  </section>
+
+  <!-- ============================================================ Fehler -->
+  <section id="scr-error" class="screen" hidden>
+    <div class="error-wrap">
+      <h2>Tango konnte nicht starten</h2>
+      <p id="error-sub" class="muted">Die App-Daten konnten nicht geladen werden.</p>
+      <pre id="error-text"></pre>
+      <button type="button" id="btn-reload" class="btn primary">Neu laden</button>
+    </div>
+  </section>
+
+  <div id="dialog" class="dialog-backdrop" hidden>
+    <div class="dialog" role="dialog" aria-modal="true">
+      <p id="dialog-text"></p>
+      <div class="btn-row">
+        <button type="button" id="dialog-cancel" class="btn">Abbrechen</button>
+        <button type="button" id="dialog-ok" class="btn primary">OK</button>
+      </div>
+    </div>
+  </div>
+  <div id="toasts" class="toasts" aria-live="polite"></div>
+</div>
+
+<script>
+(function () {
+'use strict';
+
+/* ================================================================ constants & utils */
+const DAY = 86400000;
+const MIN = 60000;
+const BLOCK_NAMES = { 1: 'Skelett', 2: 'Kernverben', 3: 'Fragen & Antworten', 4: 'Stadt, Tag, Zahlen', 5: 'Menschen & Körper', 6: 'Milonga', 7: 'Alltag & Gefühle' };
+const TYPE_LABELS = { word: 'Produktion', cloze: 'Lückensatz', build: 'Satz bauen' };
+const TYPE_SUFFIX = { word: 'w', cloze: 'c', build: 'b' };
+const DEFAULT_SETTINGS = { newPerDay: 7, autoplay: true, blocks: [1, 2, 3, 4, 5, 6, 7], voice: true };
+const RATING_NAMES = { 1: 'Nochmal', 2: 'Schwer', 3: 'Gut', 4: 'Leicht' };
+
+const $ = (id) => document.getElementById(id);
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const noop = () => {};
+
+function lsGet(key) { try { return localStorage.getItem(key); } catch (e) { return null; } }
+function lsSet(key, val) { try { localStorage.setItem(key, val); } catch (e) { /* private mode */ } }
+
+/** Every "now" goes through here so the scheduler can be time-travelled in tests. */
+function nowMs() { return Date.now() + (Number(lsGet('tango_time_offset_ms')) || 0); }
+
+function pad2(n) { return (n < 10 ? '0' : '') + n; }
+/** Local day key YYYY-MM-DD. */
+function dayKey(ms) { const d = new Date(ms); return d.getFullYear() + '-' + pad2(d.getMonth() + 1) + '-' + pad2(d.getDate()); }
+function addDaysKey(key, n) { const p = key.split('-').map(Number); return dayKey(new Date(p[0], p[1] - 1, p[2] + n).getTime()); }
+function startOfDay(ms) { const d = new Date(ms); return new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime(); }
+/** Start of the local week (Monday 00:00). */
+function startOfWeek(ms) { const d = new Date(startOfDay(ms)); const wd = (d.getDay() + 6) % 7; return new Date(d.getFullYear(), d.getMonth(), d.getDate() - wd).getTime(); }
+/** "15.9.2026" for an ISO timestamp or ms value; falls back to the raw input. */
+function fmtDate(v) {
+  const ms = typeof v === 'number' ? v : Date.parse(String(v || ''));
+  if (!Number.isFinite(ms)) return String(v || '?');
+  try { return new Date(ms).toLocaleDateString('de-DE'); } catch (e) { return dayKey(ms); }
+}
+/** Human duration for hints ("Nächste Karte fällig in …"). */
+function fmtDuration(ms) {
+  if (!(ms > 0) || ms < MIN) return 'unter 1 Min';
+  const mins = Math.round(ms / MIN);
+  if (mins < 60) return mins + ' Min';
+  const hours = Math.round(ms / 3600000);
+  if (hours < 24) return hours + ' Std';
+  const days = Math.round(ms / DAY);
+  return days + (days === 1 ? ' Tag' : ' Tage');
+}
+function plural(n, one, many) { return n + ' ' + (n === 1 ? one : many); }
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+function fmtSeconds(ms) { return (Math.max(0, ms) / 1000).toFixed(1).replace('.', ',') + ' s'; }
+function fmtInterval(ms) {
+  if (!(ms > 0)) return '–';
+  const mins = Math.round(ms / MIN);
+  if (mins < 60) return Math.max(1, mins) + ' Min';
+  const hours = ms / 3600000;
+  if (hours < 24) return Math.round(hours) + ' Std';
+  const days = ms / DAY;
+  if (days < 30) return Math.round(days) + ' T';
+  if (days < 365) return Math.round(days / 30) + ' Mo';
+  return (days / 365).toFixed(1).replace('.', ',') + ' J';
+}
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
+  return arr;
+}
+function withTimeout(promise, ms, fallback) {
+  return new Promise((resolve) => {
+    let done = false;
+    const t = setTimeout(() => { if (!done) { done = true; resolve(fallback); } }, ms);
+    Promise.resolve(promise).then((v) => { if (!done) { done = true; clearTimeout(t); resolve(v); } }, () => { if (!done) { done = true; clearTimeout(t); resolve(fallback); } });
+  });
+}
+
+/* ================================================================ toast & error reporting */
+function toast(msg, kind) {
+  try {
+    const box = $('toasts');
+    if (!box) return;
+    const el = document.createElement('div');
+    el.className = 'toast' + (kind ? ' ' + kind : '');
+    el.textContent = String(msg);
+    box.appendChild(el);
+    while (box.children.length > 3) box.removeChild(box.firstChild);
+    setTimeout(() => { el.classList.add('out'); setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 200); }, 3200);
+  } catch (e) { /* never throw from toast */ }
+}
+function errMessage(err) { return err && err.message ? err.message : String(err); }
+function reportError(err) { try { console.error(err); } catch (e) { /* ignore */ } toast('Fehler: ' + errMessage(err), 'err'); }
+/** Wrap an (async) handler so any exception ends up in a toast instead of the void. */
+function guard(fn) {
+  return function () {
+    try {
+      const r = fn.apply(this, arguments);
+      if (r && typeof r.then === 'function') r.then(null, reportError);
+      return r;
+    } catch (err) { reportError(err); return undefined; }
+  };
+}
+window.addEventListener('error', (e) => { toast('Fehler: ' + (e && e.message ? e.message : 'unbekannt'), 'err'); });
+window.addEventListener('unhandledrejection', (e) => { toast('Fehler: ' + errMessage(e && e.reason), 'err'); });
+
+/* ================================================================ IndexedDB */
+const DB_NAME = 'tango';
+const DB_VERSION = 1;
+let dbPromise = null;
+
+function openDB() {
+  if (dbPromise) return dbPromise;
+  dbPromise = new Promise((resolve, reject) => {
+    let req;
+    try { req = indexedDB.open(DB_NAME, DB_VERSION); } catch (e) { reject(e); return; }
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains('cards')) {
+        const s = db.createObjectStore('cards', { keyPath: 'id' });
+        s.createIndex('due', 'due');
+      }
+      if (!db.objectStoreNames.contains('reviews')) {
+        const s = db.createObjectStore('reviews', { keyPath: 'id', autoIncrement: true });
+        s.createIndex('ts', 'ts');
+      }
+      if (!db.objectStoreNames.contains('meta')) db.createObjectStore('meta', { keyPath: 'key' });
+    };
+    req.onsuccess = () => {
+      const db = req.result;
+      db.onversionchange = () => { try { db.close(); } catch (e) { /* ignore */ } dbPromise = null; };
+      // Safari may drop the connection under storage pressure: forget it so the next call reopens.
+      db.onclose = () => { dbPromise = null; };
+      resolve(db);
+    };
+    req.onerror = () => reject(req.error || new Error('IndexedDB konnte nicht geöffnet werden'));
+    // `blocked` is transient (older connections still closing); onsuccess/onerror settle the promise later.
+    req.onblocked = () => toast('Datenbank blockiert – andere Tabs schließen', 'err');
+  });
+  dbPromise.then(null, () => { dbPromise = null; });
+  return dbPromise;
+}
+function reqP(req) {
+  return new Promise((resolve, reject) => {
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error || new Error('DB-Anfrage fehlgeschlagen'));
+  });
+}
+/** Run fn(tx) inside one transaction; resolves with fn's (awaited) result once the transaction completed. */
+function runTx(stores, mode, fn) {
+  return openDB().then((db) => new Promise((resolve, reject) => {
+    let tx;
+    try { tx = db.transaction(stores, mode); } catch (e) { reject(e); return; }
+    let result;
+    tx.oncomplete = () => resolve(result);
+    tx.onerror = () => reject(tx.error || new Error('DB-Transaktion fehlgeschlagen'));
+    tx.onabort = () => reject(tx.error || new Error('DB-Transaktion abgebrochen'));
+    try {
+      const r = fn(tx);
+      if (r && typeof r.then === 'function') {
+        r.then((v) => { result = v; }, (err) => { reject(err); try { tx.abort(); } catch (e) { /* ignore */ } });
+      } else result = r;
+    } catch (e) { reject(e); try { tx.abort(); } catch (e2) { /* ignore */ } }
+  }));
+}
+const dbGet = (store, key) => runTx(store, 'readonly', (tx) => reqP(tx.objectStore(store).get(key)));
+const dbPut = (store, val) => runTx(store, 'readwrite', (tx) => reqP(tx.objectStore(store).put(val)));
+const dbAdd = (store, val) => runTx(store, 'readwrite', (tx) => reqP(tx.objectStore(store).add(val)));
+const dbGetAll = (store) => runTx(store, 'readonly', (tx) => reqP(tx.objectStore(store).getAll()));
+const dbDelete = (store, key) => runTx(store, 'readwrite', (tx) => reqP(tx.objectStore(store).delete(key)));
+const dbClear = (store) => runTx(store, 'readwrite', (tx) => reqP(tx.objectStore(store).clear()));
+const dbCount = (store) => runTx(store, 'readonly', (tx) => reqP(tx.objectStore(store).count()));
+const dbBulkPut = (store, items) => runTx(store, 'readwrite', (tx) => { const s = tx.objectStore(store); items.forEach((it) => s.put(it)); return items.length; });
+const metaGet = (key) => dbGet('meta', key).then((row) => (row ? row.value : undefined));
+const metaSet = (key, value) => dbPut('meta', { key, value });
+
+/* ================================================================ FSRS (port of ts-fsrs 4.x / FSRS-5) */
+const fsrs = (function () {
+  const w = [0.40255, 1.18385, 3.173, 15.69105, 7.1949, 0.5345, 1.4604, 0.0046, 1.54575, 0.1192, 1.01925, 1.9395, 0.11, 0.29605, 2.2698, 0.2315, 2.9898, 0.51655, 0.6621];
+  const REQUEST_RETENTION = 0.9;
+  const MAX_INTERVAL = 36500;
+  const DECAY = -0.5;
+  const FACTOR = 19 / 81;
+  const State = { New: 0, Learning: 1, Review: 2, Relearning: 3 };
+  const Rating = { Again: 1, Hard: 2, Good: 3, Easy: 4 };
+
+  const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
+  // NaN guards for corrupted imports only — no floors beyond the spec formulas.
+  const safe = (v, fallback) => (Number.isFinite(v) ? v : fallback);
+  const positive = (v, fallback) => (Number.isFinite(v) && v > 0 ? v : fallback);
+  const initStability = (g) => Math.max(w[g - 1], 0.1);
+  const initDifficulty = (g) => clamp(w[4] - Math.exp(w[5] * (g - 1)) + 1, 1, 10);
+  const forgettingCurve = (t, s) => Math.pow(1 + FACTOR * t / s, DECAY);
+  const nextInterval = (s) => clamp(Math.round(s / FACTOR * (Math.pow(REQUEST_RETENTION, 1 / DECAY) - 1)), 1, MAX_INTERVAL);
+  const nextDifficulty = (d, g) => clamp(w[7] * initDifficulty(4) + (1 - w[7]) * (d + (-w[6] * (g - 3)) * (10 - d) / 9), 1, 10);
+  const nextRecallStability = (d, s, r, g) => s * (1 + Math.exp(w[8]) * (11 - d) * Math.pow(s, -w[9]) * (Math.exp((1 - r) * w[10]) - 1) * (g === 2 ? w[15] : 1) * (g === 4 ? w[16] : 1));
+  const nextForgetStability = (d, s, r) => Math.min(w[11] * Math.pow(d, -w[12]) * (Math.pow(s + 1, w[13]) - 1) * Math.exp((1 - r) * w[14]), s);
+  const nextShortTermStability = (s, g) => s * Math.exp(w[17] * (g - 3 + w[18]));
+
+  /** All four candidate outcomes for a card at `now` (pure). */
+  function candidates(card, now) {
+    const state = card.state | 0;
+    const last = card.last_review;
+    const elapsed = (state === State.New || !last) ? 0 : Math.max(0, Math.floor((now - last) / DAY));
+    const base = (fields) => Object.assign({}, card, {
+      reps: (card.reps || 0) + 1,
+      lapses: card.lapses || 0,
+      last_review: now,
+      elapsed_days: elapsed
+    }, fields);
+    const out = {};
+    if (state === State.New) {
+      for (let g = 1; g <= 4; g++) {
+        const d = initDifficulty(g);
+        const s = initStability(g);
+        if (g === Rating.Easy) {
+          const ivl = nextInterval(s);
+          out[g] = base({ difficulty: d, stability: s, state: State.Review, scheduled_days: ivl, due: now + ivl * DAY });
+        } else {
+          const mins = g === Rating.Again ? 1 : g === Rating.Hard ? 5 : 10;
+          out[g] = base({ difficulty: d, stability: s, state: State.Learning, scheduled_days: 0, due: now + mins * MIN });
+        }
+      }
+    } else if (state === State.Learning || state === State.Relearning) {
+      const d0 = safe(card.difficulty, initDifficulty(3));
+      const s0 = positive(card.stability, initStability(3));
+      const goodIvl = nextInterval(nextShortTermStability(s0, Rating.Good));
+      for (let g = 1; g <= 4; g++) {
+        const d = nextDifficulty(d0, g);
+        const s = nextShortTermStability(s0, g);
+        if (g === Rating.Again) out[g] = base({ difficulty: d, stability: s, state, scheduled_days: 0, due: now + 5 * MIN });
+        else if (g === Rating.Hard) out[g] = base({ difficulty: d, stability: s, state, scheduled_days: 0, due: now + 10 * MIN });
+        else if (g === Rating.Good) out[g] = base({ difficulty: d, stability: s, state: State.Review, scheduled_days: goodIvl, due: now + goodIvl * DAY });
+        else {
+          const ivl = Math.max(nextInterval(s), goodIvl + 1);
+          out[g] = base({ difficulty: d, stability: s, state: State.Review, scheduled_days: ivl, due: now + ivl * DAY });
+        }
+      }
+    } else {
+      const d0 = safe(card.difficulty, initDifficulty(3));
+      const s0 = positive(card.stability, initStability(3));
+      const r = forgettingCurve(elapsed, s0);
+      const sAgain = safe(nextForgetStability(d0, s0, r), s0);
+      const sHard = safe(nextRecallStability(d0, s0, r, Rating.Hard), s0);
+      const sGood = safe(nextRecallStability(d0, s0, r, Rating.Good), s0);
+      const sEasy = safe(nextRecallStability(d0, s0, r, Rating.Easy), s0);
+      let hard = nextInterval(sHard);
+      let good = nextInterval(sGood);
+      let easy = nextInterval(sEasy);
+      hard = Math.min(hard, good);
+      good = Math.max(good, hard + 1);
+      easy = Math.max(easy, good + 1);
+      out[1] = base({ difficulty: nextDifficulty(d0, 1), stability: sAgain, state: State.Relearning, scheduled_days: 0, due: now + 5 * MIN, lapses: (card.lapses || 0) + 1 });
+      out[2] = base({ difficulty: nextDifficulty(d0, 2), stability: sHard, state: State.Review, scheduled_days: hard, due: now + hard * DAY });
+      out[3] = base({ difficulty: nextDifficulty(d0, 3), stability: sGood, state: State.Review, scheduled_days: good, due: now + good * DAY });
+      out[4] = base({ difficulty: nextDifficulty(d0, 4), stability: sEasy, state: State.Review, scheduled_days: easy, due: now + easy * DAY });
+    }
+    return out;
+  }
+  /** Pure: returns the new card fields for `rating` (1–4). */
+  function schedule(card, rating, now) {
+    const g = clamp(rating | 0, 1, 4);
+    return candidates(card, now)[g];
+  }
+  /** Interval preview for the four rating buttons. */
+  function preview(card, now) {
+    const c = candidates(card, now);
+    const out = {};
+    for (let g = 1; g <= 4; g++) out[g] = { due: c[g].due, ms: c[g].due - now, label: fmtInterval(c[g].due - now), state: c[g].state };
+    return out;
+  }
+  return { w, REQUEST_RETENTION, MAX_INTERVAL, DECAY, FACTOR, State, Rating, initStability, initDifficulty, forgettingCurve, nextInterval, nextDifficulty, nextRecallStability, nextForgetStability, nextShortTermStability, candidates, schedule, preview };
+})();
+
+/* ================================================================ answer matching */
+const PUNCT_RE = /[¿?¡!.,;:"'()«»…\-–—“”‘’\[\]]/g;
+function normalizeAnswer(s) {
+  return String(s == null ? '' : s).normalize('NFC').toLowerCase().replace(PUNCT_RE, ' ').replace(/\s+/g, ' ').trim();
+}
+function levenshtein(a, b) {
+  if (a === b) return 0;
+  if (!a.length) return b.length;
+  if (!b.length) return a.length;
+  let prev = new Array(b.length + 1);
+  let cur = new Array(b.length + 1);
+  for (let j = 0; j <= b.length; j++) prev[j] = j;
+  for (let i = 1; i <= a.length; i++) {
+    cur[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    const t = prev; prev = cur; cur = t;
+  }
+  return prev[b.length];
+}
+/** → {result:'exact'|'near'|'wrong', distance} */
+function match(input, target) {
+  const a = normalizeAnswer(input);
+  const b = normalizeAnswer(target);
+  if (a === b) return { result: 'exact', distance: 0 };
+  const distance = levenshtein(a, b);
+  if (b.length >= 6 && distance <= 1) return { result: 'near', distance };
+  return { result: 'wrong', distance };
+}
+/** Character-level diff of the (normalised) input against the target; wrong/extra chars marked, missing chars shown as "_". */
+function diffHtml(input, target) {
+  const a = normalizeAnswer(input);
+  const b = normalizeAnswer(target);
+  if (!a) return '<span class="muted">–</span>';
+  if (a.length > 120 || b.length > 120) return escapeHtml(a);
+  const n = a.length, m = b.length;
+  const dp = [];
+  for (let i = 0; i <= n; i++) { dp[i] = new Array(m + 1); dp[i][0] = i; }
+  for (let j = 0; j <= m; j++) dp[0][j] = j;
+  for (let i = 1; i <= n; i++) for (let j = 1; j <= m; j++) {
+    dp[i][j] = Math.min(dp[i - 1][j] + 1, dp[i][j - 1] + 1, dp[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+  }
+  const ops = []; // from the end: {ch, bad, missing}
+  let i = n, j = m;
+  while (i > 0 || j > 0) {
+    if (i > 0 && j > 0 && a[i - 1] === b[j - 1] && dp[i][j] === dp[i - 1][j - 1]) { ops.push({ ch: a[i - 1] }); i--; j--; }
+    else if (i > 0 && j > 0 && dp[i][j] === dp[i - 1][j - 1] + 1) { ops.push({ ch: a[i - 1], bad: true }); i--; j--; }
+    else if (i > 0 && dp[i][j] === dp[i - 1][j] + 1) { ops.push({ ch: a[i - 1], bad: true }); i--; }
+    else { ops.push({ ch: '_', missing: true }); j--; }
+  }
+  ops.reverse();
+  return ops.map((o) => (o.bad || o.missing) ? '<span class="bad">' + escapeHtml(o.ch) + '</span>' : escapeHtml(o.ch)).join('');
+}
+
+/* ================================================================ cloze gap building */
+const TOKEN_RE = /^([¿¡«"'“‘(\[]*)([\s\S]*?)([?!.,;:»"'”’)\]…\-–—]*)$/;
+function splitToken(t) {
+  const m = TOKEN_RE.exec(t) || [t, '', t, ''];
+  return { pre: m[1], core: m[2], post: m[3] };
+}
+/** Replace the target word's surface tokens in the sentence by a gap; keep surrounding punctuation.
+ *  Exact token match first; for a single target token (≥ 4 chars) an inflected surface form within
+ *  edit distance 1 (linda ↔ lindo) is accepted as the gap. `surface` is the text that was gapped and
+ *  `inflected` tells whether it differs from the dictionary form (the answer check accepts both). */
+function buildCloze(sentence, targetForm) {
+  const raw = String(sentence || '');
+  const targetTokens = normalizeAnswer(targetForm).split(' ').filter(Boolean);
+  const pieces = raw.split(/(\s+)/).map((t) => (/^\s+$/.test(t) ? { sep: t } : splitToken(t)));
+  const wordIdx = [];
+  pieces.forEach((p, i) => { if (p.sep === undefined) wordIdx.push(i); });
+  let hitStart = -1, hitEnd = -1;
+  if (targetTokens.length) {
+    for (let k = 0; k + targetTokens.length <= wordIdx.length; k++) {
+      let ok = true;
+      for (let j = 0; j < targetTokens.length; j++) {
+        if (normalizeAnswer(pieces[wordIdx[k + j]].core) !== targetTokens[j]) { ok = false; break; }
+      }
+      if (ok) { hitStart = wordIdx[k]; hitEnd = wordIdx[k + targetTokens.length - 1]; break; }
+    }
+  }
+  if (hitStart < 0 && targetTokens.length === 1 && Array.from(targetTokens[0]).length >= 4) {
+    const t = targetTokens[0];
+    for (const idx of wordIdx) {
+      const core = normalizeAnswer(pieces[idx].core);
+      if (core && Math.abs(Array.from(core).length - Array.from(t).length) <= 1 && levenshtein(core, t) <= 1) { hitStart = hitEnd = idx; break; }
+    }
+  }
+  if (hitStart < 0) {
+    return { found: false, gapped: raw, gappedHtml: escapeHtml(raw), highlightHtml: escapeHtml(raw), surface: '', inflected: false };
+  }
+  let gapped = '', gappedHtml = '', highlightHtml = '', surface = '';
+  for (let i = 0; i < pieces.length; i++) {
+    const p = pieces[i];
+    if (i < hitStart || i > hitEnd) {
+      const txt = p.sep !== undefined ? p.sep : p.pre + p.core + p.post;
+      gapped += txt; gappedHtml += escapeHtml(txt); highlightHtml += escapeHtml(txt);
+    } else if (i === hitStart) {
+      const last = pieces[hitEnd];
+      const inner = pieces.slice(hitStart, hitEnd + 1).map((q) => (q.sep !== undefined ? q.sep : (q === p ? q.core : q === last ? q.core : q.pre + q.core + q.post))).join('');
+      surface = hitStart === hitEnd ? p.core : inner;
+      gapped += p.pre + '____' + last.post;
+      gappedHtml += escapeHtml(p.pre) + '<span class="gap">____</span>' + escapeHtml(last.post);
+      highlightHtml += escapeHtml(p.pre) + '<span class="hit">' + escapeHtml(surface) + '</span>' + escapeHtml(last.post);
+    }
+    // pieces strictly inside the hit run are consumed by the hitStart branch
+  }
+  return { found: true, gapped, gappedHtml, highlightHtml, surface, inflected: normalizeAnswer(surface) !== normalizeAnswer(targetForm) };
+}
+
+/* ================================================================ audio engine */
+const audio = (function () {
+  const AC = window.AudioContext || window.webkitAudioContext;
+  const MAX_CACHE = 200;
+  const cache = new Map();      // key → AudioBuffer (insertion order = LRU order)
+  const missing = new Set();    // keys known to be unavailable (this page load)
+  const inflight = new Map();   // key → Promise<AudioBuffer|null>
+  let known = null;             // Set of keys listed in audio/manifest.json (null = unknown → always try)
+  let ctx = null;
+  let unlocked = false;
+  let el = null;                // <audio> fallback
+  let current = null;           // {stop(), resolveEnded}
+  let playToken = 0;
+  let seqToken = 0;
+
+  // Clip names are accepted with or without the extension ("w_12" and "w_12.m4a" are the same clip).
+  const keyOf = (name) => String(name || '').replace(/\.m4a$/i, '');
+  const urlOf = (key) => './audio/' + key + '.m4a';
+  /** Feed the clip list from audio/manifest.json: unknown clips are tagged without a 404 round trip. */
+  function setKnown(names) {
+    known = Array.isArray(names) ? new Set(names.map(keyOf)) : null;
+    if (known) known.forEach((k) => missing.delete(k)); // the manifest may have gained clips since the last miss
+  }
+
+  function silentWavUrl() {
+    // 44-byte header + 2 samples of silence, 8 kHz mono 16-bit.
+    const bytes = new Uint8Array(48);
+    const dv = new DataView(bytes.buffer);
+    const str = (o, s) => { for (let i = 0; i < s.length; i++) bytes[o + i] = s.charCodeAt(i); };
+    str(0, 'RIFF'); dv.setUint32(4, 40, true); str(8, 'WAVE'); str(12, 'fmt '); dv.setUint32(16, 16, true);
+    dv.setUint16(20, 1, true); dv.setUint16(22, 1, true); dv.setUint32(24, 8000, true); dv.setUint32(28, 16000, true);
+    dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); str(36, 'data'); dv.setUint32(40, 4, true);
+    let bin = ''; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return 'data:audio/wav;base64,' + btoa(bin);
+  }
+
+  /** Must be called synchronously inside a user gesture (Start tap) — iOS unlock. */
+  function unlock() {
+    try {
+      if (AC) {
+        if (!ctx) ctx = new AC();
+        if (ctx.state !== 'running') ctx.resume().catch(noop);
+        if (!unlocked) {
+          const buf = ctx.createBuffer(1, 1, 22050);
+          const src = ctx.createBufferSource();
+          src.buffer = buf; src.connect(ctx.destination); src.start(0);
+          unlocked = true;
+        }
+      } else {
+        ensureEl();
+        if (!unlocked) {
+          unlocked = true;
+          el.src = silentWavUrl();
+          const p = el.play(); if (p && p.catch) p.catch(noop);
+        }
+      }
+    } catch (e) { /* never throw */ }
+  }
+  function ensureEl() {
+    if (!el) { el = document.createElement('audio'); el.setAttribute('playsinline', ''); el.preload = 'auto'; }
+    return el;
+  }
+  function decode(ab) {
+    return new Promise((resolve) => {
+      try {
+        const p = ctx.decodeAudioData(ab, (buf) => resolve(buf), () => resolve(null));
+        if (p && typeof p.then === 'function') p.then(resolve, () => resolve(null));
+      } catch (e) { resolve(null); }
+    });
+  }
+  function fetchBuffer(key) {
+    if (cache.has(key)) { const b = cache.get(key); cache.delete(key); cache.set(key, b); return Promise.resolve(b); }
+    if (missing.has(key)) return Promise.resolve(null);
+    if (known && !known.has(key)) { missing.add(key); return Promise.resolve(null); }
+    if (inflight.has(key)) return inflight.get(key);
+    const p = (async () => {
+      try {
+        const res = await fetch(urlOf(key));
+        // Only a 404 (or undecodable data) is a permanent miss; a 503 from the worker while offline
+        // just means "not synced yet", so a later tap retries.
+        if (!res.ok) { if (res.status === 404) missing.add(key); return null; }
+        const ab = await res.arrayBuffer();
+        const buf = await decode(ab);
+        if (!buf) { missing.add(key); return null; }
+        cache.set(key, buf);
+        while (cache.size > MAX_CACHE) cache.delete(cache.keys().next().value);
+        return buf;
+      } catch (e) {
+        return null; // network failure: not permanently marked missing
+      } finally { inflight.delete(key); }
+    })();
+    inflight.set(key, p);
+    return p;
+  }
+  function stopCurrent() {
+    if (current) { const c = current; current = null; try { c.stop(); } catch (e) { /* ignore */ } try { c.resolveEnded(); } catch (e) { /* ignore */ } }
+  }
+  /** Play one clip; resolves when playback started: {ok, duration, ended} or {ok:false}. Never throws. */
+  async function playOne(name) {
+    stopCurrent();
+    const token = ++playToken;
+    const key = keyOf(name);
+    if (!key) return { ok: false };
+    try {
+      if (AC) {
+        if (!ctx) ctx = new AC();
+        if (ctx.state !== 'running') await withTimeout(ctx.resume().catch(noop), 300, null);
+        const buf = await fetchBuffer(key);
+        if (token !== playToken) return { ok: false, cancelled: true };
+        if (!buf) return { ok: false };
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.connect(ctx.destination);
+        let resolveEnded = noop;
+        const ended = new Promise((r) => { resolveEnded = r; });
+        src.onended = () => { if (current && current.src === src) current = null; resolveEnded(); };
+        src.start(0);
+        current = { src, resolveEnded, stop: () => { src.onended = null; src.stop(0); } };
+        return { ok: true, duration: buf.duration, ended };
+      }
+      return await playEl(key, token);
+    } catch (e) {
+      return { ok: false };
+    }
+  }
+  function playEl(name, token) {
+    return new Promise((resolve) => {
+      if (missing.has(name) || (known && !known.has(name))) { missing.add(name); resolve({ ok: false }); return; }
+      ensureEl();
+      let settled = false;
+      let resolveEnded = noop;
+      const ended = new Promise((r) => { resolveEnded = r; });
+      const finish = (v) => { if (!settled) { settled = true; resolve(v); } };
+      el.onended = () => { if (current && current.el === el) current = null; resolveEnded(); };
+      el.onerror = () => { missing.add(name); finish({ ok: false }); resolveEnded(); };
+      el.onplaying = () => { if (token === playToken) finish({ ok: true, duration: el.duration || 1, ended }); };
+      el.src = urlOf(name);
+      current = { el, resolveEnded, stop: () => { el.onended = null; el.pause(); } };
+      const p = el.play();
+      if (p && p.catch) p.catch(() => finish({ ok: false }));
+      setTimeout(() => finish({ ok: false }), 4000);
+    });
+  }
+  function play(name) { seqToken++; return playOne(name); }
+  function stop() { seqToken++; playToken++; stopCurrent(); }
+  /** Play clips one after another with gapMs between them; cancellable via stop(). */
+  async function playSequence(names, gapMs) {
+    stop();
+    const token = seqToken;
+    let played = 0;
+    for (let i = 0; i < names.length; i++) {
+      if (token !== seqToken) return { ok: played > 0, cancelled: true, played };
+      const r = await playOne(names[i]);
+      if (token !== seqToken) return { ok: played > 0, cancelled: true, played };
+      if (r.ok) { played++; await r.ended; if (token !== seqToken) return { ok: played > 0, cancelled: true, played }; }
+      if (i < names.length - 1) await sleep(gapMs);
+    }
+    return { ok: played > 0, played };
+  }
+  /** True when the clip is known to be unavailable (404/decode failure seen, or absent from the manifest). */
+  function isKnownMissing(name) { const k = keyOf(name); return missing.has(k) || (!!known && !known.has(k)); }
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && ctx && ctx.state !== 'running') { try { ctx.resume().catch(noop); } catch (e) { /* ignore */ } } });
+  return { unlock, play, stop, playSequence, isKnownMissing, setKnown, get context() { return ctx; }, get unlocked() { return unlocked; } };
+})();
+
+/* ================================================================ app state */
+const S = {
+  data: null,
+  wordsById: new Map(),
+  sentencesByWord: new Map(),
+  cards: new Map(),
+  settings: Object.assign({}, DEFAULT_SETTINGS),
+  daily: null,
+  streak: null,
+  audioManifest: null,
+  audioStatus: null,
+  swVersion: null,
+  updateAvailable: false,
+  screen: 'start',
+  session: null,
+  currentCard: null
+};
+
+/* ================================================================ data & cards */
+async function loadData() {
+  let res;
+  try { res = await fetch('./data.json'); } catch (e) { throw new Error('data.json nicht erreichbar: ' + errMessage(e)); }
+  if (!res.ok) throw new Error('data.json: HTTP ' + res.status);
+  let data;
+  try { data = await res.json(); } catch (e) { throw new Error('data.json ist kein gültiges JSON: ' + errMessage(e)); }
+  if (!data || !Array.isArray(data.words)) throw new Error('data.json: Feld "words" fehlt');
+  const words = data.words.filter((w) => w && Number.isFinite(Number(w.id)) && typeof w.spanish === 'string').map((w) => ({
+    id: Number(w.id), block: Number(w.block) || 1, german: String(w.german || ''), spanish: String(w.spanish), pos: String(w.pos || ''), note: String(w.note || '')
+  }));
+  const sentences = (Array.isArray(data.sentences) ? data.sentences : []).filter((s) => s && Number.isFinite(Number(s.id)) && typeof s.spanish === 'string').map((s) => ({
+    id: Number(s.id), word_ids: (Array.isArray(s.word_ids) ? s.word_ids : String(s.word_ids || '').split(/[;,]/)).map(Number).filter(Number.isFinite),
+    spanish: String(s.spanish), german: String(s.german || ''), note: String(s.note || '')
+  }));
+  return { version: String(data.version || '–'), words, sentences };
+}
+function indexData() {
+  S.wordsById.clear(); S.sentencesByWord.clear();
+  S.data.words.forEach((w) => S.wordsById.set(w.id, w));
+  S.data.sentences.forEach((s) => { s.word_ids.forEach((id) => { if (!S.sentencesByWord.has(id)) S.sentencesByWord.set(id, []); S.sentencesByWord.get(id).push(s); }); });
+  S.sentencesByWord.forEach((list) => list.sort((a, b) => a.id - b.id));
+}
+/** Optional: audio/manifest.json (may not exist before audio has been generated). Feeds the audio engine's
+ *  known-clip set so missing clips are tagged "kein Audio" without a 404 round trip. */
+async function loadAudioManifest() {
+  let manifest = null;
+  try {
+    const res = await fetch('./audio/manifest.json', { cache: 'no-cache' });
+    if (res.ok) {
+      const m = await res.json();
+      if (m && Array.isArray(m.files)) manifest = m;
+    }
+  } catch (e) { /* optional */ }
+  S.audioManifest = manifest;
+  audio.setKnown(manifest ? manifest.files.map((f) => f && f.name).filter((n) => typeof n === 'string') : null);
+  return manifest;
+}
+function cardId(wordId, type) { return wordId + ':' + TYPE_SUFFIX[type]; }
+function newCard(wordId, type) {
+  return { id: cardId(wordId, type), word_id: wordId, type, state: 0, due: null, stability: 0, difficulty: 0, elapsed_days: 0, scheduled_days: 0, reps: 0, lapses: 0, last_review: null, introduced: null, suspended: false };
+}
+/** Insert missing card records; never overwrites existing ones. */
+async function ensureCards() {
+  const existing = await dbGetAll('cards');
+  S.cards.clear();
+  existing.forEach((c) => { if (c && c.id) S.cards.set(c.id, c); });
+  const missing = [];
+  for (const w of S.data.words) {
+    for (const t of ['word', 'cloze', 'build']) {
+      const id = cardId(w.id, t);
+      if (!S.cards.has(id)) { const c = newCard(w.id, t); S.cards.set(id, c); missing.push(c); }
+    }
+  }
+  if (missing.length) await dbBulkPut('cards', missing);
+}
+function sanitizeSettings(obj) {
+  const s = Object.assign({}, DEFAULT_SETTINGS, obj && typeof obj === 'object' ? obj : {});
+  s.newPerDay = Math.min(30, Math.max(1, Math.round(Number(s.newPerDay)) || 7));
+  s.autoplay = s.autoplay !== false;
+  s.voice = s.voice !== false;
+  s.blocks = Array.isArray(s.blocks) ? s.blocks.map(Number).filter((b) => b >= 1 && b <= 7) : DEFAULT_SETTINGS.blocks.slice();
+  return s;
+}
+async function loadMeta() {
+  S.settings = sanitizeSettings(await metaGet('settings'));
+  S.daily = (await metaGet('daily')) || null;
+  S.streak = (await metaGet('streak')) || null;
+  const st = await metaGet('audio_status');
+  if (st && (st.total || st.synced)) S.audioStatus = st;
+}
+async function saveSettings() { S.settings = sanitizeSettings(S.settings); await metaSet('settings', S.settings); }
+const wordOf = (card) => S.wordsById.get(card.word_id);
+function enabledBlocks() { return new Set(S.settings.blocks); }
+function isLearnedWord(wordId) { const wc = S.cards.get(cardId(wordId, 'word')); return !!wc && (wc.reps || 0) >= 1; }
+function learnedCount() { let n = 0; for (const w of S.data.words) if (isLearnedWord(w.id)) n++; return n; }
+function currentDaily(now) {
+  const key = dayKey(now);
+  if (S.daily && S.daily.date === key) return { date: key, new_words: S.daily.new_words || 0, new_cloze: S.daily.new_cloze || 0, new_build: S.daily.new_build || 0 };
+  return { date: key, new_words: 0, new_cloze: 0, new_build: 0 };
+}
+function nextStreak(streak, today) {
+  if (!streak || !streak.last_date) return { count: 1, last_date: today };
+  if (streak.last_date === today) return { count: streak.count || 1, last_date: today };
+  if (streak.last_date === addDaysKey(today, -1)) return { count: (streak.count || 0) + 1, last_date: today };
+  return { count: 1, last_date: today };
+}
+function streakDisplay() {
+  const s = S.streak;
+  if (!s || !s.last_date) return 0;
+  const today = dayKey(nowMs());
+  return (s.last_date === today || s.last_date === addDaysKey(today, -1)) ? (s.count || 0) : 0;
+}
+
+/* ================================================================ queue */
+function cardOrder(a, b) {
+  const wa = S.wordsById.get(a.word_id), wb = S.wordsById.get(b.word_id);
+  return (wa.block - wb.block) || (wa.id - wb.id) || (a.type < b.type ? -1 : 1);
+}
+function clozeUnlocked(c) {
+  const wc = S.cards.get(cardId(c.word_id, 'word'));
+  return !!wc && wc.state !== 0 && (S.sentencesByWord.get(c.word_id) || []).length > 0;
+}
+function buildUnlocked(c, learned) {
+  const wc = S.cards.get(cardId(c.word_id, 'word'));
+  return !!wc && wc.state === fsrs.State.Review && learned >= 3;
+}
+/** Insert `minor` evenly into `major` at positions ≥ 1 (deterministic). */
+function spread(major, minor) {
+  const out = major.slice();
+  const m = major.length, n = minor.length;
+  for (let i = n - 1; i >= 0; i--) {
+    const pos = Math.max(1, Math.min(m, Math.floor((i + 1) * (m + 1) / (n + 1))));
+    out.splice(pos, 0, minor[i]);
+  }
+  return out;
+}
+/** Light, deterministic interleave: the session opens with a due card, new cards are spread through the due ones
+ *  (never all at the start, never all at the end). */
+function interleave(due, news) {
+  if (!due.length) return news.slice();
+  if (!news.length) return due.slice();
+  if (due.length >= news.length) return spread(due, news);
+  const out = spread(news, due.slice(1));
+  out.unshift(due[0]);
+  return out;
+}
+/** The exact queue a session would start with at `now`. */
+function computeQueue(now) {
+  const blocks = enabledBlocks();
+  const daily = currentDaily(now);
+  const active = [];
+  for (const c of S.cards.values()) {
+    const w = S.wordsById.get(c.word_id);
+    if (!w || c.suspended || !blocks.has(w.block)) continue;
+    active.push(c);
+  }
+  const due = active.filter((c) => c.state !== 0 && c.due != null && c.due <= now).sort((a, b) => (a.due - b.due) || cardOrder(a, b));
+  const learned = learnedCount();
+  const quota = (used) => Math.max(0, S.settings.newPerDay - (used || 0));
+  const newWords = active.filter((c) => c.type === 'word' && c.state === 0).sort(cardOrder).slice(0, quota(daily.new_words));
+  const newCloze = active.filter((c) => c.type === 'cloze' && c.state === 0 && clozeUnlocked(c)).sort(cardOrder).slice(0, quota(daily.new_cloze));
+  const newBuild = active.filter((c) => c.type === 'build' && c.state === 0 && buildUnlocked(c, learned)).sort(cardOrder).slice(0, quota(daily.new_build));
+  const news = newWords.concat(newCloze, newBuild);
+  return { due, newWords, newCloze, newBuild, queue: interleave(due, news).map((c) => c.id) };
+}
+/** Earliest future due time among active cards (null when nothing is scheduled) — for the "fällig in …" hints. */
+function nextDueMs(now) {
+  const blocks = enabledBlocks();
+  let best = null;
+  for (const c of S.cards.values()) {
+    const w = S.wordsById.get(c.word_id);
+    if (!w || c.suspended || !blocks.has(w.block) || c.state === 0 || c.due == null) continue;
+    if (c.due > now && (best === null || c.due < best)) best = c.due;
+  }
+  return best;
+}
+
+/* ================================================================ screens */
+const SCREENS = ['loading', 'start', 'session', 'end', 'stats', 'settings', 'listen', 'error'];
+function showScreen(name) {
+  for (const s of SCREENS) {
+    const el = $('scr-' + s);
+    if (!el) continue;
+    if (s === name) {
+      if (el.hidden) { el.style.opacity = '0'; el.hidden = false; void el.offsetHeight; el.style.opacity = '1'; }
+    } else el.hidden = true;
+  }
+  S.screen = name;
+  try { window.scrollTo(0, 0); } catch (e) { /* ignore */ }
+}
+const dialogState = { close: null };
+/** In-app confirmation dialog (no native dialogs): resolves true/false. Esc or a backdrop tap cancels. */
+function showDialog(text, okLabel) {
+  return new Promise((resolve) => {
+    const box = $('dialog'), ok = $('dialog-ok'), cancel = $('dialog-cancel');
+    if (dialogState.close) dialogState.close(false);
+    $('dialog-text').textContent = text;
+    ok.textContent = okLabel || 'OK';
+    const done = (v) => { dialogState.close = null; box.hidden = true; ok.onclick = null; cancel.onclick = null; box.onclick = null; resolve(v); };
+    dialogState.close = done;
+    ok.onclick = () => done(true);
+    cancel.onclick = () => done(false);
+    box.onclick = (e) => { if (e.target === box) done(false); };
+    box.hidden = false;
+    try { cancel.focus(); } catch (e) { /* ignore */ }
+  });
+}
+/** Boot failure screen; `step` names the phase that failed (data, database, …). */
+function showError(err, step) {
+  try {
+    $('error-sub').textContent = step ? 'Schritt „' + step + '“ ist fehlgeschlagen.' : 'Die App-Daten konnten nicht geladen werden.';
+    $('error-text').textContent = errMessage(err);
+  } catch (e) { /* ignore */ }
+  showScreen('error');
+}
+
+/* ================================================================ start screen */
+function audioStatusText() {
+  if (!('serviceWorker' in navigator) || S.swFailed) return 'kein Offline-Cache';
+  const st = S.audioStatus;
+  if (!st) return 'Audio …';
+  if (!st.total) return st.synced ? 'kein Audio' : 'Audio …';
+  if (st.running || st.done + st.failed < st.total) return 'Audio ' + st.done + '/' + st.total;
+  if (st.failed) return 'Audio ' + st.done + '/' + st.total + ' (' + st.failed + ' fehlen)';
+  return 'offline bereit ✓';
+}
+function renderStart() {
+  if (!S.data) return;
+  const now = nowMs();
+  const q = computeQueue(now);
+  const nothing = q.queue.length === 0;
+  const counts = 'Heute: ' + q.newWords.length + ' neu, ' + q.due.length + ' fällig';
+  const extra = [];
+  if (q.newCloze.length) extra.push(plural(q.newCloze.length, 'Lückensatz', 'Lückensätze'));
+  if (q.newBuild.length) extra.push(plural(q.newBuild.length, 'Satzbau-Karte', 'Satzbau-Karten'));
+  if (nothing) {
+    $('today-line').textContent = 'Heute alles erledigt';
+    const nd = nextDueMs(now);
+    $('today-sub').textContent = nd ? 'Nächste Karte fällig in ' + fmtDuration(nd - now)
+      : (S.settings.blocks.length ? 'Morgen gibt es neue Wörter.' : 'Keine Blöcke aktiv – siehe Einstellungen.');
+  } else {
+    $('today-line').textContent = counts;
+    $('today-sub').textContent = extra.length ? '+ ' + extra.join(', ') : '';
+  }
+  $('btn-start').disabled = nothing;
+  const streak = streakDisplay();
+  $('st-streak').textContent = 'Streak ' + streak + (streak === 1 ? ' Tag' : ' Tage');
+  const learned = learnedCount();
+  $('st-learned').textContent = learned + (learned === 1 ? ' Wort gelernt' : ' Wörter gelernt');
+  $('st-audio').textContent = audioStatusText();
+}
+function refreshUI() {
+  if (S.screen === 'start') renderStart();
+  else if (S.screen === 'stats') renderStats().catch(reportError);
+  else if (S.screen === 'settings') renderSettings();
+}
+
+/* ================================================================ session */
+function setHidden(id, hidden) { const el = $(id); if (el) el.hidden = !!hidden; }
+function micAvailable() { return !!SR && S.settings.voice !== false; }
+
+function newSession(queue, now) {
+  return { queue: queue.slice(), pending: [], done: 0, reviews: [], startedAt: now, token: 0, phase: 'idle', card: null, ctx: null, latencyStart: 0, autoRating: null, selectedRating: null, result: null };
+}
+function startSession() {
+  audio.unlock();
+  const now = nowMs();
+  const q = computeQueue(now);
+  if (!q.queue.length) { toast('Heute ist nichts zu tun.'); renderStart(); return; }
+  S.session = newSession(q.queue, now);
+  showScreen('session');
+  nextCard();
+}
+function leaveSession() {
+  audio.stop();
+  stopListening();
+  S.session = null;
+  S.currentCard = null;
+  renderStart();
+  showScreen('start');
+}
+function nextCard() {
+  const ses = S.session;
+  if (!ses) return;
+  const now = nowMs();
+  // Learning cards that came due during the session go to the end of the queue.
+  ses.pending.sort((a, b) => a.due - b.due);
+  const ready = ses.pending.filter((p) => p.due <= now);
+  if (ready.length) { ready.forEach((p) => ses.queue.push(p.id)); ses.pending = ses.pending.filter((p) => p.due > now); }
+  if (!ses.queue.length) {
+    const soon = ses.pending.filter((p) => p.due <= now + 60000);
+    if (soon.length) { ses.queue.push(soon[0].id); ses.pending = ses.pending.filter((p) => p !== soon[0]); }
+  }
+  while (ses.queue.length) {
+    const id = ses.queue.shift();
+    const card = S.cards.get(id);
+    if (card && wordOf(card)) { showCard(card); return; }
+  }
+  endSession();
+}
+function buildCardContext(card, word) {
+  const ctx = { audioNames: [], sentence: null, cloze: null, buildWords: null };
+  if (card.type === 'word') {
+    ctx.audioNames = ['w_' + word.id];
+  } else if (card.type === 'cloze') {
+    const sents = S.sentencesByWord.get(word.id) || [];
+    if (sents.length) {
+      ctx.sentence = sents[(card.reps || 0) % sents.length];
+      ctx.cloze = buildCloze(ctx.sentence.spanish, word.spanish);
+      ctx.audioNames = ['s_' + ctx.sentence.id];
+    } else {
+      ctx.audioNames = ['w_' + word.id];
+    }
+  } else {
+    const blocks = enabledBlocks();
+    const others = S.data.words.filter((w) => w.id !== word.id && isLearnedWord(w.id));
+    let pool = others.filter((w) => blocks.has(w.block));
+    if (pool.length < 2) pool = others;
+    if (pool.length < 2) pool = S.data.words.filter((w) => w.id !== word.id);
+    const picked = shuffle(pool.slice()).slice(0, 2);
+    ctx.buildWords = shuffle([word].concat(picked));
+    ctx.audioNames = ctx.buildWords.map((w) => 'w_' + w.id);
+  }
+  return ctx;
+}
+function renderPrompt(card, word, ctx) {
+  setHidden('p-word', card.type !== 'word');
+  setHidden('p-cloze', card.type !== 'cloze');
+  setHidden('p-build', card.type !== 'build');
+  if (card.type === 'word') {
+    $('p-german').textContent = word.german;
+    $('p-note').textContent = word.note || '';
+    setHidden('p-note', !word.note);
+  } else if (card.type === 'cloze') {
+    if (ctx.sentence && ctx.cloze.found) {
+      $('p-sentence').innerHTML = ctx.cloze.gappedHtml;
+      $('p-sent-german').textContent = ctx.sentence.german;
+      setHidden('p-cloze-hint', true);
+    } else if (ctx.sentence) {
+      // The gap could not be placed: never print the sentence (it would expose the target) — ask for the
+      // word via the sentence translation plus a "Gesucht:" hint; the feedback shows the full sentence.
+      $('p-sentence').innerHTML = '<span class="gap">____</span>';
+      $('p-sent-german').textContent = ctx.sentence.german;
+      $('p-cloze-hint').textContent = 'Gesucht: ' + word.german + (word.note ? ' (' + word.note + ')' : '');
+      setHidden('p-cloze-hint', false);
+    } else {
+      $('p-sentence').innerHTML = '<span class="gap">____</span>';
+      $('p-sent-german').textContent = word.german;
+      setHidden('p-cloze-hint', true);
+    }
+  } else {
+    $('p-build-words').innerHTML = ctx.buildWords.map((w) => '<div class="bw"><span class="es">' + escapeHtml(w.spanish) + '</span><span class="de">' + escapeHtml(w.german) + '</span></div>').join('');
+  }
+}
+function showCard(card) {
+  const ses = S.session;
+  const word = wordOf(card);
+  ses.card = card;
+  ses.token++;
+  const token = ses.token;
+  ses.phase = 'loading';
+  ses.result = null; ses.autoRating = null; ses.selectedRating = null;
+  S.currentCard = { id: card.id, type: card.type };
+  stopListening();
+  audio.stop();
+
+  $('progress').textContent = (ses.done + 1) + ' / ' + (ses.done + 1 + ses.queue.length);
+  $('block-name').textContent = BLOCK_NAMES[word.block] || ('Block ' + word.block);
+  $('type-label').textContent = TYPE_LABELS[card.type] || '';
+
+  const ctx = buildCardContext(card, word);
+  ses.ctx = ctx;
+  renderPrompt(card, word, ctx);
+  setHidden('prompt', true);
+  setHidden('no-audio', true);
+  $('speaker').classList.add('big');
+  setHidden('answer-form', true);
+  setHidden('feedback', true);
+  setHidden('rating', true);
+  $('answer').value = '';
+  $('btn-check').disabled = false;
+  document.querySelectorAll('.rate').forEach((b) => b.classList.remove('selected'));
+  // Clips absent from the manifest (or already seen as 404) are tagged right away, even with Auto-Play off.
+  const primary = card.type === 'build' ? ctx.audioNames.every(audio.isKnownMissing) : audio.isKnownMissing(ctx.audioNames[0]);
+  if (primary) setHidden('no-audio', false);
+
+  if (card.type === 'build') {
+    revealPrompt(token);
+    if (S.settings.autoplay) audio.playSequence(ctx.audioNames, 400).then((r) => { if (S.session && S.session.token === token && !r.ok && !r.cancelled) setHidden('no-audio', false); });
+    return;
+  }
+  if (!S.settings.autoplay) { revealPrompt(token); return; }
+  playFirst(token);
+}
+/** Audio-first: play the clip, reveal the prompt 1.5 s after playback started (immediately when there is no audio). */
+async function playFirst(token) {
+  const ses = S.session;
+  if (!ses) return;
+  let res;
+  try { res = await withTimeout(audio.play(ses.ctx.audioNames[0]), 3000, { ok: false, timeout: true }); } catch (e) { res = { ok: false }; }
+  if (!S.session || S.session.token !== token) return;
+  if (res.ok || res.cancelled) {
+    // `cancelled` = the user tapped the card while the first clip was loading, so the same clip is playing anyway.
+    setTimeout(() => revealPrompt(token), 1500);
+  } else {
+    if (!res.timeout) setHidden('no-audio', false);
+    revealPrompt(token);
+  }
+}
+function revealPrompt(token) {
+  const ses = S.session;
+  if (!ses || ses.token !== token || ses.phase !== 'loading') return;
+  const card = ses.card;
+  $('speaker').classList.remove('big');
+  setHidden('prompt', false);
+  setHidden('answer-form', false);
+  setHidden('btn-mic', !micAvailable());
+  const input = $('answer');
+  if (card.type === 'build') {
+    ses.phase = 'build';
+    input.placeholder = 'Dein Satz …';
+    setHidden('btn-check', true);
+    renderRatingRow(card, null);
+    setHidden('btn-next', true);
+    setHidden('rating', false);
+  } else {
+    ses.phase = 'prompt';
+    input.placeholder = card.type === 'cloze' ? 'fehlendes Wort' : 'spanische Form';
+    setHidden('btn-check', false);
+    try { input.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+  }
+  ses.latencyStart = performance.now();
+}
+function replayAudio() {
+  const ses = S.session;
+  if (!ses || !ses.ctx || !ses.ctx.audioNames.length) return;
+  const token = ses.token;
+  if (ses.card.type === 'build') {
+    audio.playSequence(ses.ctx.audioNames, 400).then((r) => { if (S.session && S.session.token === token && !r.ok && !r.cancelled) setHidden('no-audio', false); });
+  } else {
+    audio.play(ses.ctx.audioNames[0]).then((r) => { if (S.session && S.session.token === token && !r.ok && !r.cancelled) setHidden('no-audio', false); });
+  }
+}
+/** Accepted answer forms: the dictionary form, plus the inflected surface form gapped in a cloze sentence. */
+function answerTargets(ses) {
+  const targets = [wordOf(ses.card).spanish];
+  if (ses.card.type === 'cloze' && ses.ctx.cloze && ses.ctx.cloze.inflected && ses.ctx.cloze.surface) targets.push(ses.ctx.cloze.surface);
+  return targets;
+}
+function submitAnswer() {
+  const ses = S.session;
+  if (!ses || ses.phase !== 'prompt') return;
+  ses.phase = 'evaluating';
+  $('btn-check').disabled = true;
+  stopListening();
+  const latency = Math.max(0, Math.round(performance.now() - ses.latencyStart));
+  const input = $('answer').value;
+  const word = wordOf(ses.card);
+  const targets = answerTargets(ses);
+  const empty = !normalizeAnswer(input);
+  let target = word.spanish;
+  let m = { result: 'wrong', distance: normalizeAnswer(target).length, empty: true };
+  if (!empty) {
+    const RANK = { exact: 2, near: 1, wrong: 0 };
+    m = null;
+    for (const t of targets) {
+      const mm = match(input, t);
+      if (!m || RANK[mm.result] > RANK[m.result] || (RANK[mm.result] === RANK[m.result] && mm.distance < m.distance)) { m = mm; target = t; }
+    }
+  }
+  ses.result = { input, latency, match: m, target, correct: m.result !== 'wrong' };
+  ses.autoRating = m.result === 'exact' ? 3 : m.result === 'near' ? 2 : 1;
+  renderFeedback();
+  ses.phase = 'feedback';
+  if (m.result !== 'exact') replayAudio();
+}
+function renderRatingRow(card, preselect) {
+  const prev = fsrs.preview(card, nowMs());
+  document.querySelectorAll('.rate').forEach((b) => {
+    const g = Number(b.dataset.rating);
+    b.querySelector('small').textContent = prev[g] ? prev[g].label : '';
+    b.classList.toggle('selected', preselect === g);
+  });
+  if (S.session) S.session.selectedRating = preselect || null;
+}
+function renderFeedback() {
+  const ses = S.session;
+  const card = ses.card, word = wordOf(card), r = ses.result;
+  const resEl = $('fb-result'), tEl = $('fb-target'), subEl = $('fb-sub'), inEl = $('fb-input');
+  resEl.className = 'fb-result';
+  const target = r.target || word.spanish;
+  if (r.match.result === 'exact') { resEl.textContent = 'richtig'; resEl.classList.add('ok'); }
+  else if (r.match.result === 'near') { resEl.textContent = 'fast — richtig: ' + target; resEl.classList.add('warn'); }
+  else { resEl.textContent = r.match.empty ? 'weiß ich nicht' : 'falsch'; resEl.classList.add('bad'); }
+  tEl.className = 'fb-target';
+  if (card.type === 'cloze' && ses.ctx.sentence) {
+    tEl.classList.add('sentence-mode');
+    tEl.innerHTML = ses.ctx.cloze.found ? ses.ctx.cloze.highlightHtml : escapeHtml(ses.ctx.sentence.spanish) + ' — <span class="hit">' + escapeHtml(word.spanish) + '</span>';
+    subEl.textContent = (ses.ctx.cloze.inflected ? 'Grundform: ' : '') + word.spanish + ' — ' + word.german;
+    setHidden('fb-sub', false);
+  } else {
+    tEl.textContent = word.spanish;
+    subEl.textContent = word.german + (word.note ? ' · ' + word.note : '');
+    setHidden('fb-sub', false);
+  }
+  if (r.match.result === 'exact') {
+    setHidden('fb-input', true);
+  } else {
+    inEl.innerHTML = 'Deine Antwort: ' + (r.match.empty ? '<span class="muted">–</span>' : diffHtml(r.input, target));
+    setHidden('fb-input', false);
+  }
+  setHidden('answer-form', true);
+  try { $('answer').blur(); } catch (e) { /* ignore */ }
+  setHidden('feedback', false);
+  renderRatingRow(card, ses.autoRating);
+  setHidden('btn-next', false);
+  setHidden('rating', false);
+}
+function confirmRating() {
+  const ses = S.session;
+  if (!ses || ses.phase !== 'feedback' || !ses.selectedRating) return;
+  commitReview(ses.selectedRating).catch(reportError);
+}
+function rate(g) {
+  const ses = S.session;
+  if (!ses) return;
+  if (ses.phase === 'feedback' || ses.phase === 'build') commitReview(g).catch(reportError);
+}
+async function commitReview(rating) {
+  const ses = S.session;
+  if (!ses || (ses.phase !== 'feedback' && ses.phase !== 'build')) return;
+  const phase = ses.phase;
+  ses.phase = 'committing';
+  stopListening();
+  try {
+    const now = nowMs();
+    const card = ses.card;
+    const wasNew = card.state === 0;
+    let latency, correct, input, matchResult = null;
+    if (phase === 'build') {
+      latency = Math.max(0, Math.round(performance.now() - ses.latencyStart));
+      correct = null;
+      input = $('answer').value.trim();
+    } else {
+      latency = ses.result.latency; correct = ses.result.correct; input = ses.result.input; matchResult = ses.result.match.result;
+    }
+    const next = fsrs.schedule(card, rating, now);
+    if (wasNew || !next.introduced) next.introduced = card.introduced || now;
+    const review = { ts: now, card_id: card.id, type: card.type, latency_ms: latency, correct, rating, input: input || '' };
+    const daily = currentDaily(now);
+    if (wasNew) daily[card.type === 'word' ? 'new_words' : card.type === 'cloze' ? 'new_cloze' : 'new_build'] += 1;
+    const streak = nextStreak(S.streak, dayKey(now));
+    await runTx(['cards', 'reviews', 'meta'], 'readwrite', (tx) => {
+      tx.objectStore('cards').put(next);
+      tx.objectStore('reviews').add(review);
+      tx.objectStore('meta').put({ key: 'daily', value: daily });
+      tx.objectStore('meta').put({ key: 'streak', value: streak });
+    });
+    S.cards.set(next.id, next);
+    S.daily = daily;
+    S.streak = streak;
+    ses.done++;
+    ses.reviews.push({ rating, correct, latency_ms: latency, type: card.type, result: matchResult });
+    if (next.state === fsrs.State.Learning || next.state === fsrs.State.Relearning) ses.pending.push({ id: next.id, due: next.due });
+  } catch (err) {
+    ses.phase = phase; // allow retry
+    throw err;
+  }
+  nextCard();
+}
+function endSession() {
+  const ses = S.session;
+  if (!ses) return;
+  audio.stop();
+  stopListening();
+  const rv = ses.reviews;
+  const right = rv.filter((r) => r.result === 'exact').length;
+  const near = rv.filter((r) => r.result === 'near').length;
+  const wrong = rv.filter((r) => r.result === 'wrong').length;
+  const self = rv.filter((r) => r.type === 'build').length;
+  const lat = rv.filter((r) => r.latency_ms > 0);
+  const mean = lat.length ? lat.reduce((a, r) => a + r.latency_ms, 0) / lat.length : 0;
+  $('end-right').textContent = right;
+  $('end-near').textContent = near;
+  $('end-wrong').textContent = wrong;
+  const now = nowMs();
+  const parts = [plural(rv.length, 'Karte', 'Karten') + ' in ' + fmtDuration(now - ses.startedAt)];
+  if (self) parts.push(self + ' selbst bewertet');
+  parts.push('mittlere Latenz ' + fmtSeconds(mean));
+  const dueNow = computeQueue(now).due.length;
+  if (dueNow) parts.push(dueNow === 1 ? '1 Karte ist jetzt fällig' : dueNow + ' Karten sind jetzt fällig');
+  else { const nd = nextDueMs(now); if (nd) parts.push('nächste Karte fällig in ' + fmtDuration(nd - now)); }
+  $('end-meta').textContent = parts.join(' · ');
+  setHidden('btn-again', dueNow === 0);
+  $('btn-again').textContent = 'Nochmal fällige (' + dueNow + ')';
+  S.session = null;
+  S.currentCard = null;
+  showScreen('end');
+}
+
+/* ================================================================ speech input */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+const speech = { rec: null, listening: false, lang: 'es-AR' };
+const SPEECH_ERRORS = {
+  'no-speech': 'Nichts gehört',
+  'not-allowed': 'Spracheingabe nicht erlaubt',
+  'service-not-allowed': 'Spracheingabe nicht erlaubt',
+  'audio-capture': 'Kein Mikrofon',
+  'network': 'Spracheingabe: keine Verbindung'
+};
+function setListening(on) {
+  speech.listening = on;
+  const b = $('btn-mic');
+  if (b) b.classList.toggle('listening', on);
+}
+function stopListening() {
+  if (speech.rec) { const r = speech.rec; speech.rec = null; try { r.onresult = null; r.onend = null; r.onerror = null; r.abort(); } catch (e) { /* ignore */ } }
+  setListening(false);
+}
+function startListening() {
+  if (!SR) return;
+  const ses = S.session;
+  if (!ses || (ses.phase !== 'prompt' && ses.phase !== 'build')) return;
+  if (speech.listening) { stopListening(); return; }
+  audio.stop();
+  launchRecognition(speech.lang);
+}
+function launchRecognition(lang) {
+  let rec;
+  try { rec = new SR(); } catch (e) { toast('Spracheingabe nicht verfügbar'); return; }
+  rec.lang = lang;
+  rec.interimResults = true;
+  rec.maxAlternatives = 3;
+  rec.continuous = false;
+  const token = S.session ? S.session.token : -1;
+  let gotFinal = false;
+  rec.onresult = (e) => {
+    if (!S.session || S.session.token !== token) return;
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) {
+        gotFinal = true;
+        const alts = [];
+        for (let j = 0; j < r.length; j++) if (r[j] && r[j].transcript) alts.push(String(r[j].transcript).trim());
+        acceptSpeech(alts);
+      } else if (r[0]) interim += r[0].transcript;
+    }
+    if (!gotFinal && interim) $('answer').value = interim;
+  };
+  rec.onerror = (e) => {
+    const code = e && e.error;
+    if (code === 'language-not-supported' && lang === 'es-AR') {
+      // Retry once with the generic Latin-American locale; detach this recogniser first so its onend
+      // cannot switch the pulse off for the replacement session.
+      speech.lang = 'es-419';
+      rec.onresult = rec.onend = rec.onerror = null;
+      if (speech.rec === rec) speech.rec = null;
+      launchRecognition('es-419');
+      return;
+    }
+    if (code === 'aborted') return;
+    toast(SPEECH_ERRORS[code] || ('Spracheingabe: ' + (code || 'Fehler')));
+  };
+  rec.onend = () => { if (speech.rec === rec) { speech.rec = null; setListening(false); } };
+  speech.rec = rec;
+  setListening(true);
+  try { rec.start(); } catch (e) { speech.rec = null; setListening(false); toast('Spracheingabe: ' + errMessage(e)); }
+}
+/** Pick the alternative that matches best (exact beats near beats the first), fill the input and submit. */
+function acceptSpeech(alts) {
+  const ses = S.session;
+  if (!ses || !alts.length) return;
+  let best = alts[0];
+  if (ses.phase === 'prompt') {
+    const targets = answerTargets(ses);
+    let bestRank = 0;
+    for (const a of alts) {
+      const rank = Math.max(...targets.map((t) => { const r = match(a, t).result; return r === 'exact' ? 2 : r === 'near' ? 1 : 0; }));
+      if (rank > bestRank) { bestRank = rank; best = a; }
+      if (rank === 2) break;
+    }
+    $('answer').value = best;
+    submitAnswer();
+  } else if (ses.phase === 'build') {
+    // Free text: append the spoken part to whatever was typed already.
+    const input = $('answer');
+    const typed = input.value.trim();
+    input.value = typed ? typed + ' ' + best : best;
+  }
+}
+
+/* ================================================================ statistics */
+async function renderStats() {
+  const reviews = await dbGetAll('reviews');
+  const now = nowMs();
+  const today = dayKey(now);
+  const todayCount = reviews.filter((r) => dayKey(r.ts) === today).length;
+  $('stats-totals').innerHTML =
+    '<div class="stat"><b>' + reviews.length + '</b><span>Reviews gesamt</span></div>' +
+    '<div class="stat"><b>' + todayCount + '</b><span>heute</span></div>' +
+    '<div class="stat"><b>' + learnedCount() + '</b><span>Wörter gelernt</span></div>';
+
+  // This week (Monday–today): reviews, share of correct answers (word/cloze), newly introduced words.
+  const ws = startOfWeek(now);
+  const week = reviews.filter((r) => r.ts >= ws);
+  const answered = week.filter((r) => r.correct === true || r.correct === false);
+  const okShare = answered.length ? Math.round(100 * answered.filter((r) => r.correct).length / answered.length) + ' %' : '–';
+  let weekNew = 0;
+  for (const c of S.cards.values()) if (c.type === 'word' && c.introduced && c.introduced >= ws) weekNew++;
+  $('stats-week').innerHTML =
+    '<div class="stat"><b>' + week.length + '</b><span>Reviews</span></div>' +
+    '<div class="stat"><b>' + okShare + '</b><span>richtig</span></div>' +
+    '<div class="stat"><b>' + weekNew + '</b><span>neue Wörter</span></div>';
+
+  // Per block: secured (Review & stability ≥ 21) / learned (reps ≥ 1) / total.
+  const blocks = {};
+  for (const w of S.data.words) {
+    const b = blocks[w.block] || (blocks[w.block] = { total: 0, learned: 0, secured: 0 });
+    b.total++;
+    const wc = S.cards.get(cardId(w.id, 'word'));
+    if (wc && (wc.reps || 0) >= 1) b.learned++;
+    if (wc && wc.state === fsrs.State.Review && wc.stability >= 21) b.secured++;
+  }
+  $('stats-blocks').innerHTML = Object.keys(blocks).map(Number).sort((a, b) => a - b).map((k) => {
+    const b = blocks[k];
+    const pl = b.total ? (100 * b.learned / b.total) : 0;
+    const ps = b.total ? (100 * b.secured / b.total) : 0;
+    return '<div class="block-row"><div class="block-head"><span>' + k + ' · ' + escapeHtml(BLOCK_NAMES[k] || 'Block ' + k) + '</span><span class="nums">' + b.secured + ' gesichert · ' + b.learned + ' gelernt · ' + b.total + '</span></div>' +
+      '<div class="bar-track"><div class="bar-fill learned" style="width:' + pl.toFixed(1) + '%"></div><div class="bar-fill secured" style="width:' + ps.toFixed(1) + '%"></div></div></div>';
+  }).join('') || '<p class="muted small">Keine Daten.</p>';
+
+  // Mean latency per week, last 8 weeks (bucket 0 = last 7 days).
+  const dayStart = startOfDay(now);
+  const buckets = [];
+  for (let k = 0; k < 8; k++) buckets.push({ sum: 0, n: 0, from: dayStart - (7 * k + 6) * DAY, to: dayStart - 7 * k * DAY + DAY });
+  reviews.forEach((r) => {
+    if (!(r.latency_ms > 0)) return;
+    for (const b of buckets) if (r.ts >= b.from && r.ts < b.to) { b.sum += r.latency_ms; b.n++; break; }
+  });
+  const means = buckets.map((b) => (b.n ? b.sum / b.n : 0));
+  const maxMean = Math.max(1, ...means);
+  $('stats-latency').innerHTML = buckets.map((b, k) => {
+    const label = k === 0 ? 'diese Wo.' : '−' + k + ' Wo.';
+    const val = b.n ? fmtSeconds(means[k]) : '–';
+    return '<div class="lat-row"><span class="lbl">' + label + '</span><div class="lat-bar"><i style="width:' + (b.n ? (100 * means[k] / maxMean).toFixed(1) : 0) + '%"></i></div><span class="val">' + val + '</span></div>';
+  }).join('');
+
+  // Error list: most Again ratings in the last 7 days.
+  const since = now - 7 * DAY;
+  const counts = new Map();
+  reviews.forEach((r) => {
+    if (r.rating !== 1 || r.ts < since) return;
+    const wid = Number(String(r.card_id).split(':')[0]);
+    if (!S.wordsById.has(wid)) return;
+    counts.set(wid, (counts.get(wid) || 0) + 1);
+  });
+  const top = Array.from(counts.entries()).sort((a, b) => (b[1] - a[1]) || (a[0] - b[0])).slice(0, 15);
+  $('stats-errors').innerHTML = top.length ? top.map(([wid, n]) => {
+    const w = S.wordsById.get(wid);
+    return '<li><span><span class="es">' + escapeHtml(w.spanish) + '</span> <span class="de">' + escapeHtml(w.german) + ' · ' + escapeHtml(BLOCK_NAMES[w.block] || 'Block ' + w.block) + '</span></span><span class="n">' + n + '×</span></li>';
+  }).join('') : '<li class="muted small">Keine Fehler in den letzten 7 Tagen.</li>';
+}
+
+/* ================================================================ settings */
+function renderSettings() {
+  $('set-new').value = S.settings.newPerDay;
+  $('set-autoplay').checked = !!S.settings.autoplay;
+  $('set-voice').checked = !!S.settings.voice;
+  setHidden('row-voice', !SR);
+  const counts = {}, learned = {};
+  S.data.words.forEach((w) => { counts[w.block] = (counts[w.block] || 0) + 1; if (isLearnedWord(w.id)) learned[w.block] = (learned[w.block] || 0) + 1; });
+  const blocks = Object.keys(Object.assign({}, BLOCK_NAMES, counts)).map(Number).sort((a, b) => a - b);
+  const enabled = enabledBlocks();
+  $('block-toggles').innerHTML = blocks.map((b) =>
+    '<label class="row"><span class="lbl">' + b + ' · ' + escapeHtml(BLOCK_NAMES[b] || 'Block ' + b) +
+    '<span class="cnt">' + plural(counts[b] || 0, 'Wort', 'Wörter') + ' · ' + (learned[b] || 0) + ' gelernt</span></span>' +
+    '<input type="checkbox" class="switch block-toggle" data-block="' + b + '"' + (enabled.has(b) ? ' checked' : '') + '></label>'
+  ).join('');
+  document.querySelectorAll('.block-toggle').forEach((cb) => {
+    cb.addEventListener('change', guard(async () => {
+      const set = enabledBlocks();
+      const b = Number(cb.dataset.block);
+      if (cb.checked) set.add(b); else set.delete(b);
+      S.settings.blocks = Array.from(set).sort((x, y) => x - y);
+      await saveSettings();
+      renderStart();
+    }));
+  });
+  setHidden('reset-confirm', true);
+  renderVersionLine();
+}
+function renderVersionLine() {
+  const el = $('version-line');
+  if (!el) return;
+  const am = S.audioManifest;
+  const sw = !('serviceWorker' in navigator) ? 'nicht verfügbar' : S.swFailed ? 'Fehler' : (S.swVersion || '…');
+  el.innerHTML =
+    'Daten <b>' + escapeHtml(S.data ? S.data.version : '–') + '</b>' + (S.data ? ' · ' + plural(S.data.words.length, 'Wort', 'Wörter') + ', ' + plural(S.data.sentences.length, 'Satz', 'Sätze') : '') + '<br>' +
+    'Audio <b>' + escapeHtml(am && am.version ? am.version : '–') + '</b>' + (am ? ' · ' + plural(Number(am.count) || am.files.length, 'Clip', 'Clips') : ' · noch nicht erzeugt') + '<br>' +
+    'Service Worker <b>' + escapeHtml(sw) + '</b> · ' + (S.updateAvailable ? '<span class="bad">Update verfügbar</span>' : S.swFailed || !('serviceWorker' in navigator) ? 'kein Offline-Cache' : 'aktuell');
+}
+async function buildExport() {
+  const cards = await dbGetAll('cards');
+  const reviews = await dbGetAll('reviews');
+  return {
+    app: 'tango', schema: 1, exported_at: new Date(nowMs()).toISOString(), data_version: S.data ? S.data.version : null,
+    settings: S.settings, cards, reviews, meta: { daily: S.daily, streak: S.streak }
+  };
+}
+async function doExport() {
+  const obj = await buildExport();
+  const json = JSON.stringify(obj);
+  const name = 'tango-export-' + dayKey(nowMs()) + '.json';
+  let file = null;
+  try { file = new File([json], name, { type: 'application/json' }); } catch (e) { file = null; }
+  if (file && navigator.share && navigator.canShare) {
+    let can = false;
+    try { can = navigator.canShare({ files: [file] }); } catch (e) { can = false; }
+    if (can) {
+      try { await navigator.share({ files: [file], title: 'Tango Export' }); toast('Export geteilt: ' + obj.cards.length + ' Karten, ' + obj.reviews.length + ' Reviews'); return; }
+      catch (e) { if (e && e.name === 'AbortError') return; /* fall back to download */ }
+    }
+  }
+  const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+  const a = document.createElement('a');
+  a.href = url; a.download = name; a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 10000);
+  toast('Export: ' + obj.cards.length + ' Karten, ' + obj.reviews.length + ' Reviews');
+}
+function validCard(c) {
+  return c && typeof c === 'object' && typeof c.id === 'string' && /^\d+:[wcb]$/.test(c.id);
+}
+function validateImport(obj) {
+  if (!obj || typeof obj !== 'object') throw new Error('Kein Objekt');
+  if (obj.app !== 'tango') throw new Error('Keine Tango-Exportdatei (app ≠ "tango")');
+  if (obj.cards != null && !Array.isArray(obj.cards)) throw new Error('Feld "cards" ist kein Array');
+  if (obj.reviews != null && !Array.isArray(obj.reviews)) throw new Error('Feld "reviews" ist kein Array');
+  return true;
+}
+/** Whitelist an imported card through the newCard template: id/word_id/type come from the id, every
+ *  scheduling field is coerced, unknown fields are dropped. */
+function sanitizeCard(c) {
+  const wordId = Number(c.id.split(':')[0]);
+  const type = c.id.endsWith(':w') ? 'word' : c.id.endsWith(':c') ? 'cloze' : 'build';
+  const base = newCard(wordId, type);
+  const num = (v, fb) => (Number.isFinite(Number(v)) ? Number(v) : fb);
+  const msOrNull = (v) => (v == null || !Number.isFinite(Number(v)) ? null : Number(v));
+  base.state = Math.min(3, Math.max(0, c.state | 0));
+  base.due = msOrNull(c.due);
+  base.stability = num(c.stability, 0);
+  base.difficulty = num(c.difficulty, 0);
+  base.elapsed_days = num(c.elapsed_days, 0);
+  base.scheduled_days = num(c.scheduled_days, 0);
+  base.reps = Math.max(0, c.reps | 0);
+  base.lapses = Math.max(0, c.lapses | 0);
+  base.last_review = msOrNull(c.last_review);
+  base.introduced = msOrNull(c.introduced);
+  base.suspended = !!c.suspended;
+  return base;
+}
+/** Replace the whole state with the export object (no confirmation here). */
+async function applyImport(obj) {
+  validateImport(obj);
+  const cards = (obj.cards || []).filter(validCard).map(sanitizeCard);
+  const reviews = (obj.reviews || []).filter((r) => r && typeof r === 'object' && Number.isFinite(Number(r.ts)));
+  const settings = obj.settings ? sanitizeSettings(obj.settings) : null;
+  const meta = obj.meta && typeof obj.meta === 'object' ? obj.meta : {};
+  await runTx(['cards', 'reviews', 'meta'], 'readwrite', (tx) => {
+    const cs = tx.objectStore('cards'), rs = tx.objectStore('reviews'), ms = tx.objectStore('meta');
+    cs.clear(); rs.clear(); ms.clear();
+    cards.forEach((c) => cs.put(c));
+    reviews.forEach((r) => { const copy = Object.assign({}, r); if (copy.id == null) delete copy.id; rs.put(copy); });
+    if (settings) ms.put({ key: 'settings', value: settings });
+    if (meta.daily) ms.put({ key: 'daily', value: meta.daily });
+    if (meta.streak) ms.put({ key: 'streak', value: meta.streak });
+    if (S.audioStatus) ms.put({ key: 'audio_status', value: S.audioStatus }); // device-local, not part of the export
+  });
+  await loadMeta();
+  await ensureCards();
+  S.session = null; S.currentCard = null;
+  renderStart();
+  showScreen('start');
+  toast('Import: ' + cards.length + ' Karten, ' + reviews.length + ' Reviews');
+  return { cards: cards.length, reviews: reviews.length };
+}
+async function importFromFile(file) {
+  if (!file) return;
+  let text;
+  if (typeof file.text === 'function') text = await file.text();
+  else text = await new Promise((resolve, reject) => { const fr = new FileReader(); fr.onload = () => resolve(String(fr.result)); fr.onerror = () => reject(fr.error || new Error('Datei nicht lesbar')); fr.readAsText(file); });
+  let obj;
+  try { obj = JSON.parse(text); } catch (e) { throw new Error('Datei ist kein gültiges JSON'); }
+  validateImport(obj);
+  const ok = await showDialog('Aktuellen Stand ersetzen? (' + (obj.cards || []).length + ' Karten, ' + (obj.reviews || []).length + ' Reviews, exportiert am ' + fmtDate(obj.exported_at) + ')', 'Ersetzen');
+  if (!ok) { toast('Import abgebrochen'); return; }
+  await applyImport(obj);
+}
+async function doReset() {
+  audio.stop();
+  await runTx(['cards', 'reviews', 'meta'], 'readwrite', (tx) => { tx.objectStore('cards').clear(); tx.objectStore('reviews').clear(); tx.objectStore('meta').clear(); });
+  S.settings = Object.assign({}, DEFAULT_SETTINGS);
+  S.daily = null; S.streak = null; S.session = null; S.currentCard = null;
+  await ensureCards();
+  renderStart();
+  showScreen('start');
+  toast('Alles gelöscht – ' + S.cards.size + ' Karten neu angelegt');
+}
+
+/* ================================================================ listen-only mode */
+const listen = { token: 0, paused: false, items: [], idx: 0, resume: null };
+function buildListenItems() {
+  const now = nowMs();
+  const blocks = enabledBlocks();
+  const items = [];
+  const q = computeQueue(now);
+  for (const c of q.due) {
+    const w = wordOf(c);
+    if (c.type === 'word') items.push({ spanish: w.spanish, german: w.german, audio: 'w_' + w.id });
+    else if (c.type === 'cloze') {
+      const sents = S.sentencesByWord.get(w.id) || [];
+      if (sents.length) { const s = sents[(c.reps || 0) % sents.length]; items.push({ spanish: s.spanish, german: s.german, audio: 's_' + s.id }); }
+    }
+  }
+  if (items.length) return items;
+  const learned = S.data.words.filter((w) => blocks.has(w.block) && isLearnedWord(w.id));
+  const pool = learned.length ? learned : S.data.words.filter((w) => blocks.has(w.block));
+  if (!learned.length && pool.length) toast('Noch nichts gelernt – alle Wörter der aktiven Blöcke');
+  return pool.sort((a, b) => (a.block - b.block) || (a.id - b.id)).map((w) => ({ spanish: w.spanish, german: w.german, audio: 'w_' + w.id }));
+}
+function startListen() {
+  audio.unlock();
+  const items = buildListenItems();
+  if (!items.length) { toast('Nichts zum Anhören (keine aktiven Blöcke?)'); return; }
+  listen.items = items; listen.idx = 0; listen.paused = false; listen.token++;
+  $('btn-listen-pause').textContent = 'Pause';
+  showScreen('listen');
+  runListen(listen.token).catch(reportError);
+}
+function waitResume() { return new Promise((r) => { listen.resume = r; }); }
+async function runListen(token) {
+  while (listen.idx < listen.items.length) {
+    if (token !== listen.token) return;
+    if (listen.paused) { await waitResume(); if (token !== listen.token) return; }
+    const item = listen.items[listen.idx];
+    $('listen-progress').textContent = (listen.idx + 1) + ' / ' + listen.items.length;
+    $('listen-es').textContent = item.spanish;
+    $('listen-de').textContent = item.german;
+    setHidden('listen-noaudio', true);
+    const r = await audio.play(item.audio);
+    if (token !== listen.token) return;
+    if (r.ok) await r.ended;
+    else if (!r.cancelled) { setHidden('listen-noaudio', false); await sleep(1200); }
+    if (token !== listen.token) return;
+    if (listen.paused) continue; // interrupted: replay this item after resume
+    listen.idx++;
+    await sleep(800);
+  }
+  if (token !== listen.token) return;
+  $('listen-progress').textContent = listen.items.length + ' / ' + listen.items.length;
+  $('listen-es').textContent = 'Fertig';
+  $('listen-de').textContent = listen.items.length + ' Clips gehört';
+  setHidden('listen-noaudio', true);
+}
+function toggleListenPause() {
+  if (listen.paused) {
+    listen.paused = false;
+    $('btn-listen-pause').textContent = 'Pause';
+    if (listen.resume) { const r = listen.resume; listen.resume = null; r(); }
+  } else {
+    listen.paused = true;
+    $('btn-listen-pause').textContent = 'Weiter';
+    audio.stop();
+  }
+}
+function stopListen() {
+  listen.token++;
+  listen.paused = false;
+  if (listen.resume) { const r = listen.resume; listen.resume = null; r(); }
+  audio.stop();
+  renderStart();
+  showScreen('start');
+}
+
+/* ================================================================ service worker */
+let swReg = null;
+let updateRequested = false;
+let reloading = false;
+let audioStatusWriteFailed = false;
+function showUpdateBanner() {
+  S.updateAvailable = true;
+  setHidden('update-banner', false);
+  document.documentElement.classList.add('banner-open'); // the banner carries the safe-area padding now
+  renderVersionLine();
+}
+function onSwMessage(e) {
+  const d = e && e.data;
+  if (!d || typeof d !== 'object') return;
+  if (d.type === 'AUDIO_PROGRESS' || d.type === 'AUDIO_DONE' || d.type === 'AUDIO_STATUS') {
+    if (d.type === 'AUDIO_STATUS' && !d.total && !d.synced) return; // nothing known yet – a SYNC_AUDIO is on its way
+    const total = Number(d.total) || 0, failed = Number(d.failed) || 0;
+    S.audioStatus = {
+      done: Number(d.done != null ? d.done : total - failed) || 0, total, failed,
+      running: d.type === 'AUDIO_PROGRESS' || !!d.running,
+      synced: d.type === 'AUDIO_DONE' || !!d.synced,
+      ts: Date.now()
+    };
+    if (d.error) toast('Audio-Sync: ' + d.error, 'err');
+    // Persisted for the next start; a failing write is surfaced once instead of on every progress message.
+    metaSet('audio_status', S.audioStatus).catch((err) => { if (!audioStatusWriteFailed) { audioStatusWriteFailed = true; reportError(err); } });
+    if (S.screen === 'start') $('st-audio').textContent = audioStatusText();
+    // The worker just refreshed audio/manifest.json — pick up the current clip list (and the known set).
+    if (d.type === 'AUDIO_DONE') loadAudioManifest().then(renderVersionLine).catch(noop);
+  } else if (d.type === 'VERSION') {
+    S.swVersion = d.version;
+    renderVersionLine();
+  }
+}
+function postToSw(msg) {
+  const target = (swReg && (swReg.active || swReg.waiting || swReg.installing)) || navigator.serviceWorker.controller;
+  if (target) { try { target.postMessage(msg); } catch (e) { /* ignore */ } }
+}
+async function registerSW() {
+  if (!('serviceWorker' in navigator)) return;
+  try {
+    navigator.serviceWorker.addEventListener('message', onSwMessage);
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (updateRequested && !reloading) { reloading = true; location.reload(); return; }
+      postToSw({ type: 'AUDIO_STATUS' }); // a freshly claimed page asks the new worker for its counts
+    });
+    const reg = await navigator.serviceWorker.register('./sw.js');
+    swReg = reg;
+    if (reg.waiting && navigator.serviceWorker.controller) showUpdateBanner();
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) showUpdateBanner();
+      });
+    });
+    await navigator.serviceWorker.ready;
+    postToSw({ type: 'GET_VERSION' });
+    postToSw({ type: 'AUDIO_STATUS' });
+    postToSw({ type: 'SYNC_AUDIO' });
+  } catch (e) {
+    S.swFailed = true;
+    if (S.screen === 'start') renderStart();
+    renderVersionLine();
+    toast('Service Worker: ' + errMessage(e));
+  }
+}
+function applyUpdate() {
+  updateRequested = true;
+  const w = swReg && swReg.waiting;
+  if (w) { w.postMessage({ type: 'SKIP_WAITING' }); setTimeout(() => { if (!reloading) { reloading = true; location.reload(); } }, 4000); }
+  else location.reload();
+}
+async function checkUpdate() {
+  if (!swReg) { toast('Kein Service Worker registriert'); return; }
+  toast('Suche nach Update …');
+  await swReg.update();
+  if (swReg.waiting && navigator.serviceWorker.controller) { showUpdateBanner(); toast('Update verfügbar'); return; }
+  const nw = swReg.installing;
+  if (nw) {
+    toast('Update wird installiert …');
+    nw.addEventListener('statechange', () => {
+      if (nw.state === 'installed' && navigator.serviceWorker.controller) { showUpdateBanner(); toast('Update verfügbar'); }
+      else if (nw.state === 'activated' && !navigator.serviceWorker.controller) toast('App aktualisiert');
+      else if (nw.state === 'redundant') toast('Update fehlgeschlagen', 'err');
+    });
+    return;
+  }
+  toast('App ist aktuell');
+}
+
+/* ================================================================ keyboard */
+function isTyping() {
+  const el = document.activeElement;
+  return !!el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA');
+}
+function onRatingButton() {
+  const el = document.activeElement;
+  return !!el && el.classList && el.classList.contains('rate');
+}
+/** Desktop shortcuts (§16): Enter = Prüfen/Weiter, Space = replay while the input is not focused, 1–4 = rating,
+ *  Esc = leave. In the feedback panel Space confirms „Weiter" (§8) — replay stays on the card tap. A focused
+ *  rating button keeps its native Enter/Space click. */
+function onKeyDown(e) {
+  if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+  if (!$('dialog').hidden) { if (e.key === 'Escape' && dialogState.close) { e.preventDefault(); dialogState.close(false); } return; }
+  if (S.screen === 'session' && S.session) {
+    const ses = S.session;
+    if (e.key === 'Escape') { e.preventDefault(); leaveSession(); return; }
+    if (ses.phase === 'prompt') {
+      if (e.key === 'Enter' && !isTyping()) { e.preventDefault(); submitAnswer(); return; }
+      if (e.key === ' ' && !isTyping()) { e.preventDefault(); replayAudio(); return; }
+    } else if (ses.phase === 'feedback') {
+      if (onRatingButton()) return;
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); confirmRating(); return; }
+      if (/^[1-4]$/.test(e.key)) { e.preventDefault(); rate(Number(e.key)); return; }
+    } else if (ses.phase === 'build') {
+      if (e.key === 'Enter' && isTyping()) { e.preventDefault(); try { document.activeElement.blur(); } catch (err) { /* ignore */ } return; }
+      if (!isTyping() && !onRatingButton()) {
+        if (e.key === ' ') { e.preventDefault(); replayAudio(); return; }
+        if (/^[1-4]$/.test(e.key)) { e.preventDefault(); rate(Number(e.key)); return; }
+      }
+    }
+  } else if (S.screen === 'end') {
+    if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); goHome(); }
+  } else if (S.screen === 'stats' || S.screen === 'settings') {
+    if (e.key === 'Escape' && !isTyping()) { e.preventDefault(); goHome(); }
+  } else if (S.screen === 'listen') {
+    if (e.key === 'Escape') { e.preventDefault(); stopListen(); }
+    else if (e.key === ' ' && !isTyping()) { e.preventDefault(); toggleListenPause(); }
+  }
+}
+
+/* ================================================================ UI binding */
+function goHome() { renderStart(); showScreen('start'); }
+function bindUI() {
+  $('btn-start').addEventListener('click', guard(startSession));
+  $('btn-listen').addEventListener('click', guard(startListen));
+  $('nav-stats').addEventListener('click', guard(async () => { showScreen('stats'); await renderStats(); }));
+  $('nav-settings').addEventListener('click', guard(() => { renderSettings(); showScreen('settings'); }));
+  $('btn-stats-back').addEventListener('click', guard(goHome));
+  $('btn-settings-back').addEventListener('click', guard(goHome));
+  $('btn-leave').addEventListener('click', guard(leaveSession));
+  $('btn-done').addEventListener('click', guard(goHome));
+  $('btn-again').addEventListener('click', guard(startSession));
+  $('btn-reload').addEventListener('click', () => location.reload());
+
+  $('card').addEventListener('click', guard((e) => {
+    if (e.target && e.target.closest && e.target.closest('button, input, a')) return;
+    replayAudio();
+  }));
+  $('card').addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && document.activeElement === $('card')) { e.preventDefault(); e.stopPropagation(); replayAudio(); } });
+  $('answer-form').addEventListener('submit', guard((e) => { e.preventDefault(); submitAnswer(); }));
+  $('btn-mic').addEventListener('click', guard(startListening));
+  $('btn-next').addEventListener('click', guard(confirmRating));
+  document.querySelectorAll('.rate').forEach((b) => b.addEventListener('click', guard(() => rate(Number(b.dataset.rating)))));
+
+  $('set-new').addEventListener('change', guard(async () => {
+    const v = Math.min(30, Math.max(1, Math.round(Number($('set-new').value)) || 7));
+    $('set-new').value = v; S.settings.newPerDay = v; await saveSettings(); renderStart();
+  }));
+  $('set-autoplay').addEventListener('change', guard(async () => { S.settings.autoplay = $('set-autoplay').checked; await saveSettings(); }));
+  $('set-voice').addEventListener('change', guard(async () => { S.settings.voice = $('set-voice').checked; await saveSettings(); }));
+  $('btn-export').addEventListener('click', guard(doExport));
+  $('btn-import').addEventListener('click', () => { $('file-import').value = ''; $('file-import').click(); });
+  $('file-import').addEventListener('change', guard(async () => { const f = $('file-import').files && $('file-import').files[0]; await importFromFile(f); }));
+  $('btn-reset').addEventListener('click', () => { setHidden('reset-confirm', false); });
+  $('btn-reset-no').addEventListener('click', () => { setHidden('reset-confirm', true); });
+  $('btn-reset-yes').addEventListener('click', guard(async () => { setHidden('reset-confirm', true); await doReset(); }));
+  $('btn-update-check').addEventListener('click', guard(checkUpdate));
+  $('btn-update').addEventListener('click', guard(applyUpdate));
+
+  $('btn-listen-pause').addEventListener('click', guard(toggleListenPause));
+  $('btn-listen-stop').addEventListener('click', guard(stopListen));
+  $('btn-listen-close').addEventListener('click', guard(stopListen));
+
+  document.addEventListener('keydown', onKeyDown);
+  // Counts may change while the tab was in the background (new day, learning steps due).
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && S.screen === 'start') renderStart(); });
+  // iOS: make sure a focused input ends up above the keyboard (the page scrolls, nothing is fixed over it).
+  document.addEventListener('focusin', (e) => {
+    const t = e.target;
+    if (!t || (t.tagName !== 'INPUT' && t.tagName !== 'TEXTAREA')) return;
+    setTimeout(() => { try { t.scrollIntoView({ block: 'nearest' }); } catch (err) { /* ignore */ } }, 300);
+  });
+}
+
+/* ================================================================ boot */
+async function boot() {
+  let step = 'Oberfläche';
+  try {
+    bindUI();
+    step = 'Datenbank öffnen'; await openDB();
+    step = 'Einstellungen laden'; await loadMeta();
+    step = 'data.json laden'; S.data = await loadData();
+    indexData();
+    step = 'Karten anlegen'; await ensureCards();
+    step = 'Audio-Manifest'; await loadAudioManifest();
+    renderStart();
+    showScreen('start');
+  } catch (err) {
+    showError(err, step);
+  }
+  // Registered regardless of the data outcome so the shell gets cached (offline guarantee) even after a transient failure.
+  if (document.readyState === 'complete') registerSW().catch(reportError);
+  else window.addEventListener('load', () => registerSW().catch(reportError));
+}
+
+/* ================================================================ test / debug API */
+window.Tango = {
+  db: { openDB, dbGet, dbPut, dbAdd, dbGetAll, dbDelete, dbClear, dbCount, dbBulkPut, runTx, metaGet, metaSet },
+  fsrs,
+  match,
+  normalize: normalizeAnswer,
+  buildCloze,
+  audio,
+  state: S,
+  nowMs,
+  computeQueue: () => computeQueue(nowMs()),
+  exportData: buildExport,
+  importData: applyImport,
+  debug: {
+    getCards: () => dbGetAll('cards'),
+    getReviews: () => dbGetAll('reviews'),
+    setTimeOffsetDays: (n) => { lsSet('tango_time_offset_ms', String(Math.round((Number(n) || 0) * DAY))); refreshUI(); return nowMs(); },
+    getTimeOffsetDays: () => (Number(lsGet('tango_time_offset_ms')) || 0) / DAY,
+    getQueuePreview: () => { const q = computeQueue(nowMs()); return { newCount: q.newWords.length, dueCount: q.due.length, newCloze: q.newCloze.length, newBuild: q.newBuild.length, total: q.queue.length }; },
+    /** Drive one specific card in a one-card session (tests cloze/build flows directly). */
+    showCard: (id) => {
+      if (!S.cards.get(id)) throw new Error('Karte nicht gefunden: ' + id);
+      if (S.session) leaveSession();
+      if (S.screen === 'listen') stopListen();
+      audio.unlock();
+      S.session = newSession([id], nowMs());
+      showScreen('session');
+      nextCard();
+      return S.currentCard;
+    },
+    forceDue: async (id) => {
+      const c = S.cards.get(id);
+      if (!c) throw new Error('Karte nicht gefunden: ' + id);
+      const now = nowMs();
+      const next = Object.assign({}, c, { due: now - 1000 });
+      if (next.state === 0) { next.state = fsrs.State.Learning; next.stability = fsrs.initStability(3); next.difficulty = fsrs.initDifficulty(3); next.last_review = now - 10 * MIN; next.introduced = next.introduced || now - 10 * MIN; }
+      await dbPut('cards', next);
+      S.cards.set(id, next);
+      refreshUI();
+      return next;
+    },
+    reset: doReset,
+    renderStart
+  }
+};
+
+boot();
+})();
+</script>
+</body>
+</html>
