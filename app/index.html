@@ -1301,9 +1301,19 @@ function cardOrder(a, b) {
   const wa = S.wordsById.get(a.word_id), wb = S.wordsById.get(b.word_id);
   return (wa.block - wb.block) || (wa.id - wb.id) || (a.type < b.type ? -1 : 1);
 }
+/** Words first: a sentence is ready for a word once every other list word in it has been learned (word card reps ≥ 1). */
+function sentenceReady(sentence, targetId) {
+  return sentence.word_ids.every((id) => id === targetId || isLearnedWord(id));
+}
+/** Sentences usable for the cloze card of `wordId` (only those whose other words are already known). */
+function readySentences(wordId) {
+  return (S.sentencesByWord.get(wordId) || []).filter((s) => sentenceReady(s, wordId));
+}
 function clozeUnlocked(c) {
+  // The target word itself must have graduated to Review (it was produced correctly more than once),
+  // and at least one sentence must consist only of words that were learned as single words before.
   const wc = S.cards.get(cardId(c.word_id, 'word'));
-  return !!wc && wc.state !== 0 && (S.sentencesByWord.get(c.word_id) || []).length > 0;
+  return !!wc && wc.state === fsrs.State.Review && readySentences(c.word_id).length > 0;
 }
 function buildUnlocked(c, learned) {
   const wc = S.cards.get(cardId(c.word_id, 'word'));
@@ -1488,7 +1498,8 @@ function buildCardContext(card, word) {
   if (card.type === 'word') {
     ctx.audioNames = ['w_' + word.id];
   } else if (card.type === 'cloze') {
-    const sents = S.sentencesByWord.get(word.id) || [];
+    const ready = readySentences(word.id);
+    const sents = ready.length ? ready : (S.sentencesByWord.get(word.id) || []);
     if (sents.length) {
       ctx.sentence = sents[(card.reps || 0) % sents.length];
       ctx.cloze = buildCloze(ctx.sentence.spanish, word.spanish);
@@ -2105,7 +2116,8 @@ function buildListenItems() {
     const w = wordOf(c);
     if (c.type === 'word') items.push({ spanish: w.spanish, german: w.german, audio: 'w_' + w.id });
     else if (c.type === 'cloze') {
-      const sents = S.sentencesByWord.get(w.id) || [];
+      const ready = readySentences(w.id);
+      const sents = ready.length ? ready : (S.sentencesByWord.get(w.id) || []);
       if (sents.length) { const s = sents[(c.reps || 0) % sents.length]; items.push({ spanish: s.spanish, german: s.german, audio: 's_' + s.id }); }
     }
   }

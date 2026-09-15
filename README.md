@@ -1,6 +1,6 @@
 # Tango – Vokabeltrainer für Rioplatense-Spanisch
 
-Audio zuerst, Text danach. Eine PWA fürs iPhone, komplett offline, FSRS-Wiederholung, drei Kartentypen (Wort, Lückensatz, Satz bauen). 500 Wörter in 7 Blöcken und über 300 Beispielsätze im Spanisch von Buenos Aires (`vos`, `acá`, `plata`, `colectivo`). Die Audio-Clips werden einmalig lokal mit F5-TTS aus einer Referenzstimme erzeugt und ins Repo committet.
+Audio zuerst, Text danach. Eine PWA fürs iPhone, komplett offline, FSRS-Wiederholung, drei Kartentypen (Wort, Lückensatz, Satz bauen). Wörter zuerst: Ein Lückensatz wird erst fällig, wenn sein Zielwort gefestigt ist (FSRS-Status „Review“) und alle anderen Listenwörter des Satzes schon als Einzelwörter gelernt wurden; „Satz bauen“ kommt, sobald mindestens drei Wörter gelernt sind. 500 Wörter in 7 Blöcken und über 300 Beispielsätze im Spanisch von Buenos Aires (`vos`, `acá`, `plata`, `colectivo`). Die Audio-Clips werden einmalig lokal mit F5-TTS aus einer Referenzstimme erzeugt und ins Repo committet.
 
 **App:** https://aeneassoft.github.io/tango-vocab/
 
@@ -21,12 +21,16 @@ Audio zuerst, Text danach. Eine PWA fürs iPhone, komplett offline, FSRS-Wiederh
 ## Audio einmalig erzeugen (PC mit NVIDIA-GPU)
 
 1. `bash tools/setup_tts.sh` – legt `.venv` an, installiert PyTorch mit CUDA, F5-TTS, Whisper und prüft ffmpeg (Windows: installiert es per winget).
-2. Referenzstimme als `data/reference.wav` ablegen: 60–120 s ein einzelner Sprecher, wenig Hintergrund, möglichst viele `ll`/`y`-Wörter (calle, yo, ella, lluvia, playa) für den porteño-Klang. Die Datei bleibt lokal (`.gitignore`).
-3. `python tools/gen_audio.py --test` – erzeugt Testclips in `data/test_clips/` (Einzelwörter in den Modi `bare` und `double`, drei Sätze) und transkribiert die Referenz mit Whisper nach `data/reference.txt`.
-4. `python tools/gen_audio.py` (bzw. `--word-mode double`, wenn die double-Variante sauberer klingt) – alle Clips nach `app/audio/`, AAC 48 kbps mono, −16 LUFS, plus `app/audio/manifest.json`.
-5. `python tools/check_audio.py` – spielt 10 zufällige Clips; „neu" merkt sie in `data/regen.txt` vor, `python tools/gen_audio.py --from-regen` erzeugt sie neu.
+2. Referenzstimme: `data/reference.wav` liegt im Repo (siehe unten). Eine eigene Stimme geht auch: 10–12 s ein einzelner Sprecher, wenig Hintergrund, möglichst viele `ll`/`y`-Wörter (calle, yo, ella, lluvia, playa) für den porteño-Klang; längere Dateien werden automatisch auf das beste Sprachstück gekürzt und mit Whisper transkribiert (`data/reference.txt`).
+3. `python tools/gen_audio.py --test` – erzeugt Testclips in `data/test_clips/` (Einzelwörter in den Modi `bare` und `double`, drei Sätze).
+4. `python tools/gen_audio.py` – alle fehlenden Clips nach `app/audio/`, AAC 48 kbps mono, −16 LUFS, plus `app/audio/manifest.json`. Tempo und Wortmodus sind als Standard hinterlegt (`--speed 0.85 --tempo 0.75 --word-mode double`).
+5. `python tools/verify_audio.py` – hört alle Clips mit Whisper gegen und listet unverständliche; `--write-regen` merkt sie vor, `python tools/gen_audio.py --from-regen` erzeugt sie mit neuem Seed. `python tools/check_audio.py` spielt 10 zufällige Clips zum Selberhören.
 
-Verwendete Referenz-Einstellung: __REFERENCE_SETTING__
+### Referenzstimme und Lizenz
+
+Die Stimme stammt aus dem Datensatz „Crowdsourced high-quality Argentinian Spanish speech data set“ (Google, [OpenSLR 61](https://www.openslr.org/61/), Lizenz [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)), Sprecher-ID 8784, vier Sätze zu 11,4 s zusammengeschnitten (`data/reference.wav`, Transkript `data/reference.txt`). Modell: F5-TTS mit dem spanischen Fine-Tune [jpgallegoar/F5-Spanish](https://huggingface.co/jpgallegoar/F5-Spanish) (Architektur F5TTS_Base, Checkpoint 1200000), NFE 32, CFG 2.0, Speed 0,85. Die Satz-Clips werden anschließend tonhöhenneutral auf 75 % Tempo gedehnt (ffmpeg `atempo`), weil F5-TTS das Sprechtempo der Referenz übernimmt und Anfänger langsamere Sätze brauchen. Einzelwörter werden im Modus `double` erzeugt (Wort zweimal synthetisiert, zweite Äußerung behalten), das vermeidet abgeschnittene Anlaute. Die erzeugten Clips in `app/audio/` sind abgeleitete Werke und stehen ebenfalls unter CC BY-SA 4.0.
+
+Umfang: __AUDIO_STATS__
 
 ## Bekannte Einschränkungen
 

@@ -2,11 +2,10 @@
 .venv/
 __pycache__/
 *.pyc
-# Personal reference voice stays local (voice data); generated clips ARE committed
-data/reference.wav
+# Reference voice: data/reference.wav is a CC BY-SA 4.0 excerpt (OpenSLR 61) and IS committed
 data/reference_snippet.wav
-data/reference.txt
-data/reference_meta.json
+data/ref_candidates/
+data/test_clips_*/
 data/test_clips/
 data/tmp_wav/
 data/regen.txt

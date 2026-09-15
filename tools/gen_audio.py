@@ -538,8 +538,25 @@ def postprocess(raw, sr: int, kind: str, word_mode: str):
     return y.astype(np.float32), None
 
 
-def encode_m4a(ffmpeg: str, y, sr: int, out_path: Path, keep_wav: Path | None = None) -> None:
-    """16-bit temp WAV -> AAC 48 kbit/s mono 24 kHz, written atomically."""
+def atempo_chain(tempo: float) -> str:
+    """ffmpeg atempo accepts 0.5-100 per instance; chain instances for stronger stretches."""
+    parts = []
+    t = tempo
+    while t < 0.5:
+        parts.append("atempo=0.5")
+        t /= 0.5
+    while t > 2.0:
+        parts.append("atempo=2.0")
+        t /= 2.0
+    parts.append(f"atempo={t:.4f}")
+    return ",".join(parts)
+
+
+def encode_m4a(ffmpeg: str, y, sr: int, out_path: Path, keep_wav: Path | None = None, tempo: float = 1.0) -> None:
+    """16-bit temp WAV -> AAC 48 kbit/s mono 24 kHz, written atomically.
+
+    tempo < 1.0 slows the clip down with ffmpeg's pitch-preserving atempo filter (0.75 = 25 % slower).
+    Applied after loudness normalisation; atempo keeps the level."""
     import numpy as np
     import soundfile as sf
 
@@ -553,8 +570,10 @@ def encode_m4a(ffmpeg: str, y, sr: int, out_path: Path, keep_wav: Path | None = 
     tmp_out = out_path.with_name(out_path.stem + ".tmp.m4a")
     try:
         sf.write(str(wav_path), np.clip(y, -1.0, 1.0), sr, subtype="PCM_16")
-        cmd = [ffmpeg, "-y", "-loglevel", "error", "-i", str(wav_path), "-ac", "1", "-ar", str(SR),
-               "-c:a", "aac", "-b:a", "48k", "-movflags", "+faststart", str(tmp_out)]
+        cmd = [ffmpeg, "-y", "-loglevel", "error", "-i", str(wav_path)]
+        if abs(tempo - 1.0) > 1e-3:
+            cmd += ["-af", atempo_chain(tempo)]
+        cmd += ["-ac", "1", "-ar", str(SR), "-c:a", "aac", "-b:a", "48k", "-movflags", "+faststart", str(tmp_out)]
         proc = subprocess.run(cmd, capture_output=True, text=True)
         if proc.returncode != 0:
             raise RuntimeError(f"ffmpeg failed ({proc.returncode}): {proc.stderr.strip()}")
@@ -847,12 +866,13 @@ def generate_clip(engine: F5Engine, args, ffmpeg: str, kind: str, word_mode: str
         if y is None:
             reason = why or "rejected"
             continue
+        tempo = args.tempo if kind == "s" else args.word_tempo
         try:
-            encode_m4a(ffmpeg, y, SR, out_path, keep_wav)
+            encode_m4a(ffmpeg, y, SR, out_path, keep_wav, tempo)
         except (RuntimeError, OSError) as exc:  # ffmpeg error, target locked (ffplay), disk full
             # Not seed-dependent, so another attempt would not help.
             return ClipResult(False, attempts=attempt + 1, seed=seed, reason=f"encode error: {exc}")
-        return ClipResult(True, round(len(y) / SR, 2), attempt + 1, seed)
+        return ClipResult(True, round(len(y) / SR / tempo, 2), attempt + 1, seed)
     return ClipResult(False, attempts=MAX_ATTEMPTS, reason=reason)
 
 
@@ -925,7 +945,8 @@ def write_manifest(reference: dict | None, durations: dict[str, float]) -> dict:
 
 def reference_block(ref: Reference, engine: F5Engine, args) -> dict:
     return {"file": rel(ref.used), "seconds": round(ref.seconds, 2), "mode": args.word_mode, "model": engine.label,
-            "source": rel(ref.source), "word_speed": args.word_speed}
+            "source": rel(ref.source), "speed": args.speed, "word_speed": args.word_speed,
+            "tempo": args.tempo, "word_tempo": args.word_tempo}
 
 
 # --------------------------------------------------------------------------- runs
@@ -1084,7 +1105,7 @@ def build_parser() -> argparse.ArgumentParser:
     sel.add_argument("--limit", type=int, metavar="N", help="stop after N generated items (smoke tests)")
 
     voice = ap.add_argument_group("voice / model")
-    voice.add_argument("--word-mode", choices=("bare", "double"), default="bare",
+    voice.add_argument("--word-mode", choices=("bare", "double"), default="double",
                        help="single words: 'calle.' (bare) or 'calle. calle.' keeping the second one (double)")
     voice.add_argument("--model", default="spanish", metavar="spanish|base|PATH",
                        help="spanish = jpgallegoar/F5-Spanish (F5TTS_Base arch, default); base = F5TTS_v1_Base; "
@@ -1102,13 +1123,19 @@ def build_parser() -> argparse.ArgumentParser:
     inf = ap.add_argument_group("inference")
     inf.add_argument("--nfe", type=int, default=32, help="ODE steps (default 32)")
     inf.add_argument("--cfg", type=float, default=2.0, help="classifier-free guidance strength (default 2.0)")
-    inf.add_argument("--speed", type=float, default=1.0,
+    inf.add_argument("--speed", type=float, default=0.85,
                      help="speech speed factor (default 1.0); F5-TTS ignores it for texts under 10 bytes "
                           "(forced 0.3), see --word-speed for words of 10-29 bytes")
     inf.add_argument("--word-speed", type=float, default=0.7, metavar="F",
                      help="extra factor on --speed for words whose text is 10-29 UTF-8 bytes ('colectivo.', "
                           "double mode), whose duration budget is otherwise too tight (default 0.7; 1.0 = off)")
     inf.add_argument("--sway", type=float, default=-1.0, help="sway sampling coefficient (default -1.0)")
+    inf.add_argument("--tempo", type=float, default=0.75, metavar="F",
+                     help="time-stretch factor for SENTENCE clips after synthesis, pitch preserved (ffmpeg atempo); "
+                          "0.75 = 25%% slower for beginners. F5-TTS copies the reference speaker's pace, so this is "
+                          "the reliable way to slow speech down (default 1.0 = off)")
+    inf.add_argument("--word-tempo", type=float, default=1.0, metavar="F",
+                     help="same for single-word clips (default 1.0 = off; F5-TTS already speaks short texts slowly)")
     inf.add_argument("--seed", type=int, default=0, metavar="N",
                      help="seed offset; per item seed = N + item id + 1000 * retry (default 0 -> seed = id)")
 

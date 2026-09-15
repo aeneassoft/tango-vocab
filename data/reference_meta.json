@@ -1,0 +1,10 @@
+{
+ "source": "data/reference.wav",
+ "used_file": "data/reference.wav",
+ "sha1": "3fe441c0a61a6f280f6e3c6c5e9aa6b97b032f6d",
+ "start_s": 0.0,
+ "end_s": 11.383,
+ "duration_s": 11.383,
+ "whisper_model": "dataset transcript (OpenSLR 61, speaker 8784)",
+ "created": "2026-09-15"
+}
