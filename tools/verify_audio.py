@@ -41,8 +41,32 @@ def load_expected() -> dict[str, str]:
     return exp
 
 
+UNITS = ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho", "nueve", "diez", "once", "doce",
+         "trece", "catorce", "quince", "dieciséis", "diecisiete", "dieciocho", "diecinueve", "veinte"]
+TENS = {30: "treinta", 40: "cuarenta", 50: "cincuenta", 60: "sesenta", 70: "setenta", 80: "ochenta", 90: "noventa"}
+
+
+def number_words(n: int) -> str:
+    """0-100 as spoken in Spanish (Whisper writes digits, the CSVs spell numbers out)."""
+    if n <= 20:
+        return UNITS[n]
+    if n < 30:
+        return "veinti" + UNITS[n - 20]
+    if n == 100:
+        return "cien"
+    if n < 100:
+        t, u = divmod(n, 10)
+        return TENS[t * 10] + (f" y {UNITS[u]}" if u else "")
+    return str(n)
+
+
+def spell_numbers(s: str) -> str:
+    import re
+    return re.sub(r"\d+", lambda m: number_words(int(m.group())) if int(m.group()) <= 100 else m.group(), s)
+
+
 def similarity(a: str, b: str) -> float:
-    return difflib.SequenceMatcher(None, norm(a), norm(b)).ratio()
+    return difflib.SequenceMatcher(None, norm(spell_numbers(a)), norm(spell_numbers(b))).ratio()
 
 
 def main(argv: list[str] | None = None) -> int:

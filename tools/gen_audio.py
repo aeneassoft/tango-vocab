@@ -474,15 +474,24 @@ def extract_snippet(y, sr: int, seconds: float):
 
 
 def keep_second_utterance(y, sr: int):
-    """Double mode: the text was '<word>. <word>.'; keep only the second utterance by
-    cutting after the longest internal gap (>= 120 ms below threshold) whose centre
-    lies in the middle 30-70 % of the clip. Whole clip if no gap is found."""
+    """Double mode: the text was '<word>. <word>.'; keep only the second utterance.
+
+    1. Prefer the longest internal gap (>= 120 ms below peak - 30 dB) whose centre lies in the
+       middle 30-70 % of the clip.
+    2. Otherwise cut at the softest point of a smoothed envelope in that window (if it is at
+       least 18 dB below the peak) - F5 often leaves only a short dip between the two words.
+    3. If the kept part is implausibly short (< 200 ms or < 40 % of the first part), keep the
+       FIRST utterance instead - a single word beats a doubled one.
+    Whole clip only when no usable dip exists at all."""
+    import numpy as np
+
     rms, hop = rms_frames(y, sr, 0.010)
     n = len(rms)
     if n < 30:
         return y
-    below = rms < rms.max() * db_to_lin(-30.0)
-    lo, hi = 0.30 * n, 0.70 * n
+    peak = float(rms.max())
+    lo, hi = int(0.30 * n), int(0.70 * n)
+    below = rms < peak * db_to_lin(-30.0)
     best: tuple[int, int] | None = None
     i = 0
     while i < n:
@@ -495,9 +504,21 @@ def keep_second_utterance(y, sr: int):
         if j - i >= 12 and lo <= (i + j) / 2 <= hi and (best is None or j - i > best[1] - best[0]):
             best = (i, j)
         i = j
-    if best is None:
-        return y
-    return y[best[1] * hop:]
+    if best is not None:
+        cut_start, cut_end = best
+    else:
+        kernel = np.ones(5) / 5.0
+        smooth = np.convolve(rms, kernel, mode="same")
+        k = lo + int(np.argmin(smooth[lo:hi]))
+        if smooth[k] > peak * db_to_lin(-18.0):
+            return y
+        cut_start = cut_end = k
+    second = y[cut_end * hop:]
+    first = y[: cut_start * hop]
+    voiced = lambda seg: float(np.sum(rms_frames(seg, sr, 0.010)[0] > peak * db_to_lin(-30.0))) * 0.010
+    if len(second) < 0.2 * sr or voiced(second) < 0.4 * max(0.05, voiced(first)):
+        return first if len(first) >= 0.2 * sr else y
+    return second
 
 
 def postprocess(raw, sr: int, kind: str, word_mode: str):
