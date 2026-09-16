@@ -46,23 +46,41 @@ UNITS = ["cero", "uno", "dos", "tres", "cuatro", "cinco", "seis", "siete", "ocho
 TENS = {30: "treinta", 40: "cuarenta", 50: "cincuenta", 60: "sesenta", 70: "setenta", 80: "ochenta", 90: "noventa"}
 
 
+HUNDREDS = {100: "cien", 200: "doscientos", 300: "trescientos", 400: "cuatrocientos", 500: "quinientos", 600: "seiscientos",
+            700: "setecientos", 800: "ochocientos", 900: "novecientos"}
+
+
 def number_words(n: int) -> str:
-    """0-100 as spoken in Spanish (Whisper writes digits, the CSVs spell numbers out)."""
+    """0-999999 as spoken in Spanish (Whisper writes digits, the CSVs spell numbers out)."""
+    if n < 0:
+        return str(n)
     if n <= 20:
         return UNITS[n]
     if n < 30:
         return "veinti" + UNITS[n - 20]
-    if n == 100:
-        return "cien"
     if n < 100:
         t, u = divmod(n, 10)
         return TENS[t * 10] + (f" y {UNITS[u]}" if u else "")
+    if n < 1000:
+        h, r = divmod(n, 100)
+        head = "ciento" if (h == 1 and r) else HUNDREDS[h * 100]
+        return head + (f" {number_words(r)}" if r else "")
+    if n < 1000000:
+        k, r = divmod(n, 1000)
+        head = "mil" if k == 1 else f"{number_words(k)} mil"
+        return head + (f" {number_words(r)}" if r else "")
+    if n == 1000000:
+        return "un millón"
     return str(n)
 
 
 def spell_numbers(s: str) -> str:
-    import re
-    return re.sub(r"\d+", lambda m: number_words(int(m.group())) if int(m.group()) <= 100 else m.group(), s)
+    import re as _re
+    # '300.000' / '1.500' (thousands separators) -> plain digits, then digits -> words
+    sep = _re.compile('([0-9])[.,]([0-9]{3})(?![0-9])')
+    while sep.search(s):
+        s = sep.sub(lambda m: m.group(1) + m.group(2), s)
+    return _re.sub('[0-9]+', lambda m: number_words(int(m.group())) if int(m.group()) <= 1000000 else m.group(), s)
 
 
 def similarity(a: str, b: str) -> float:
