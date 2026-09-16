@@ -22,7 +22,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "tools"))
-from gen_audio import ensure_venv, find_ffmpeg, parse_item_ids, utf8_console  # noqa: E402
+from gen_audio import ensure_venv, find_ffmpeg, parse_item_ids, spoken_form, utf8_console  # noqa: E402
 from validate_data import norm  # noqa: E402
 
 AUDIO_DIR = ROOT / "app" / "audio"
@@ -84,7 +84,10 @@ def spell_numbers(s: str) -> str:
 
 
 def similarity(a: str, b: str) -> float:
-    return difflib.SequenceMatcher(None, norm(spell_numbers(a)), norm(spell_numbers(b))).ratio()
+    # b is the expected text: compare against what the TTS was asked to say (acronyms spelled out)
+    heard = norm(spell_numbers(a))
+    return max(difflib.SequenceMatcher(None, heard, norm(spell_numbers(b))).ratio(),
+               difflib.SequenceMatcher(None, heard, norm(spell_numbers(spoken_form(b)))).ratio())
 
 
 def main(argv: list[str] | None = None) -> int:

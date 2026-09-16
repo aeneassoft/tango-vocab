@@ -299,9 +299,24 @@ def ensure_terminal_punct(text: str) -> str:
     return text if text and text[-1] in TERMINAL_PUNCT else text + "."
 
 
+# Acronyms that porteños spell out letter by letter (F5-TTS cannot read capital-letter clusters);
+# SUBE, CUIL, CUIT, MIG, MAG, TIG are pronounced as words and only need lower-casing.
+SPELLED_ACRONYMS = {"DNI": "de ene i", "PH": "pe hache", "ART": "a ere te", "CD": "ce de", "DJ": "di yei"}
+
+
+def spoken_form(text: str) -> str:
+    """Rewrite acronyms for the TTS: spelled ones to letter names, word-like ones to lower case."""
+    def fix(m):
+        tok = m.group(0)
+        if tok in SPELLED_ACRONYMS:
+            return SPELLED_ACRONYMS[tok]
+        return tok.lower() if len(tok) >= 3 else tok
+    return re.sub(r"(?<![A-Za-zÁÉÍÓÚÑáéíóúñ])[A-ZÑ]{2,5}(?![A-Za-zÁÉÍÓÚÑáéíóúñ])", fix, text)
+
+
 def gen_text_for(kind: str, text: str, word_mode: str) -> str:
     """Sentence: as-is with terminal punctuation. Word: 'calle.' (bare) or 'calle. calle.' (double)."""
-    unit = ensure_terminal_punct(text)
+    unit = ensure_terminal_punct(spoken_form(text))
     if kind == "s" or word_mode == "bare":
         return unit
     return f"{unit} {unit}"
