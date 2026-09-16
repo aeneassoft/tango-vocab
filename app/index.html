@@ -405,24 +405,60 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
 .confirm-box { background: var(--surface); border: 1px solid var(--accent); border-radius: 12px; padding: 14px; margin-top: 10px; }
 .confirm-box p { margin-bottom: 12px; }
 
-/* ---------------------------------------------------------------- listen */
-.listen-main { flex: 1; display: flex; flex-direction: column; gap: 16px; justify-content: center; }
-.listen-card {
+/* ---------------------------------------------------------------- learn (Kartei) */
+.learn-main { flex: 1; display: flex; flex-direction: column; gap: 14px; }
+/* The flip card: a fixed-height perspective box, both faces absolutely positioned, the inner box rotates.
+   This 3D rotation is the one allowed animation besides the opacity fade (reduced motion → instant swap). */
+.flip {
   position: relative;
+  height: 280px;
+  perspective: 1000px;
+  cursor: pointer;
+  -webkit-user-select: none;
+  user-select: none;
+}
+@media (min-height: 720px) { .flip { height: 320px; } }
+.flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+  transition: transform .35s;
+}
+.flip.flipped .flip-inner { transform: rotateY(180deg); }
+.face {
+  position: absolute;
+  inset: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 18px;
-  padding: 36px 20px;
-  min-height: 220px;
+  padding: 26px 20px 52px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 10px;
   text-align: center;
+  overflow: hidden;
 }
-.listen-es { font-size: 32px; font-weight: 700; line-height: 1.25; }
-.listen-de { font-size: 18px; color: var(--muted); }
+.face.back { transform: rotateY(180deg); }
+.learn-es { font-size: 32px; font-weight: 700; line-height: 1.25; word-break: break-word; }
+.learn-de { font-size: 28px; font-weight: 600; line-height: 1.25; word-break: break-word; }
+.face .chip { display: inline-block; color: var(--muted); font-size: 14px; border: 1px solid var(--line); border-radius: 8px; padding: 2px 10px; }
+.learn-speaker { position: absolute; right: 8px; bottom: 6px; }
+.learn-speaker svg { width: 26px; height: 26px; }
+.face-hint { position: absolute; left: 0; right: 0; bottom: 14px; color: var(--muted); font-size: 13px; pointer-events: none; }
+.pdots { display: flex; justify-content: center; flex-wrap: wrap; gap: 8px; min-height: 12px; }
+.pdot { width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--muted); background: none; }
+.pdot.seen { background: var(--muted); }
+.pdot.cur { border-color: var(--accent-hi); border-width: 2px; }
+.pdot.cur.seen { background: var(--accent-hi); }
+.learn-hint { min-height: 1.4em; }
+.learn-footer { margin-top: auto; }
+.learn-footer .btn.prev { flex: 0 0 64px; font-size: 26px; }
 
 /* ---------------------------------------------------------------- error */
 .error-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; text-align: center; }
@@ -452,10 +488,12 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
     <div class="start-wrap">
       <h1 class="title">Tango</h1>
       <p class="subtitle">Rioplatense · Produktion statt Wiedererkennung</p>
-      <p id="today-line" class="today">Heute: – neu, – fällig</p>
+      <p id="today-line" class="today">Fällig: – Karten</p>
+      <p id="today-new" class="today-sub">Neu heute: – Wörter · Stapel –/–</p>
       <p id="today-sub" class="today-sub"></p>
-      <button type="button" id="btn-start" class="btn primary big">Start</button>
-      <button type="button" id="btn-listen" class="btn secondary">Nur hören</button>
+      <button type="button" id="btn-chunk" class="btn primary big" hidden>Neuen Stapel lernen</button>
+      <button type="button" id="btn-review" class="btn secondary big" hidden>Wiederholen</button>
+      <button type="button" id="btn-nothing" class="btn primary big" disabled hidden>Heute alles erledigt</button>
       <div class="stats-row">
         <span id="st-streak">Streak 0 Tage</span>
         <span>·</span>
@@ -470,7 +508,48 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
     </div>
   </section>
 
-  <!-- ============================================================ Session -->
+  <!-- ============================================================ Kartei (Stapel lernen) -->
+  <section id="scr-learn" class="screen" hidden>
+    <header class="bar">
+      <button type="button" id="btn-learn-close" class="icon-btn" aria-label="Zurück zum Start">✕</button>
+      <div class="bar-mid"><span id="learn-progress">Stapel · 1 / 10</span></div>
+      <span id="learn-block" class="type-label"></span>
+    </header>
+    <main class="learn-main">
+      <div id="flip" class="flip" role="button" tabindex="0" aria-label="Karte umdrehen">
+        <div class="flip-inner">
+          <div class="face front">
+            <span id="learn-noaudio" class="tag" hidden>kein Audio</span>
+            <div id="learn-es" class="learn-es"></div>
+            <span id="learn-note" class="chip" hidden></span>
+            <span class="face-hint">Tippen zum Umdrehen</span>
+            <button type="button" class="icon-btn learn-speaker" aria-label="Audio abspielen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/>
+              </svg>
+            </button>
+          </div>
+          <div class="face back">
+            <div id="learn-de" class="learn-de"></div>
+            <span id="learn-pos" class="chip" hidden></span>
+            <button type="button" class="icon-btn learn-speaker" aria-label="Audio abspielen">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div id="learn-dots" class="pdots" aria-hidden="true"></div>
+      <p id="learn-hint" class="note center learn-hint"></p>
+      <div class="btn-row learn-footer">
+        <button type="button" id="btn-learn-prev" class="btn prev" aria-label="Vorherige Karte">‹</button>
+        <button type="button" id="btn-learn-next" class="btn primary">Weiter ›</button>
+      </div>
+    </main>
+  </section>
+
+  <!-- ============================================================ Session (Wiederholen / Abfrage) -->
   <section id="scr-session" class="screen" hidden>
     <header class="bar">
       <button type="button" id="btn-leave" class="icon-btn" aria-label="Session verlassen">✕</button>
@@ -536,8 +615,9 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
   <!-- ============================================================ Session end -->
   <section id="scr-end" class="screen" hidden>
     <div class="end-wrap">
-      <h2>Session beendet</h2>
-      <div class="end-grid">
+      <h2 id="end-title">Session beendet</h2>
+      <p id="end-first" class="today" hidden></p>
+      <div id="end-grid" class="end-grid">
         <div class="stat"><b id="end-right" class="ok">0</b><span>richtig</span></div>
         <div class="stat"><b id="end-near" class="warn">0</b><span>fast</span></div>
         <div class="stat"><b id="end-wrong" class="bad">0</b><span>falsch</span></div>
@@ -574,8 +654,10 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
       <div class="bar-mid">Einstellungen</div>
       <span class="type-label"></span>
     </header>
-    <label class="row"><span class="lbl">Neue Wörter pro Tag</span><input id="set-new" type="number" min="1" max="30" step="1" inputmode="numeric"></label>
+    <label class="row"><span class="lbl">Wörter pro Stapel</span><input id="set-chunk" type="number" min="5" max="20" step="1" inputmode="numeric"></label>
+    <label class="row"><span class="lbl">Stapel pro Tag</span><input id="set-chunks" type="number" min="1" max="3" step="1" inputmode="numeric"></label>
     <label class="row"><span class="lbl">Auto-Play</span><input id="set-autoplay" type="checkbox" class="switch"></label>
+    <label class="row"><span class="lbl">Audio vor der Antwort abspielen</span><input id="set-audio-before" type="checkbox" class="switch"></label>
     <label class="row" id="row-voice"><span class="lbl">Spracheingabe</span><input id="set-voice" type="checkbox" class="switch"></label>
     <h3>Blöcke</h3>
     <div id="block-toggles"></div>
@@ -593,27 +675,6 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
     </div>
     <div id="version-line" class="version"></div>
     <button type="button" id="btn-update-check" class="btn link">Update prüfen</button>
-  </section>
-
-  <!-- ============================================================ Nur hören -->
-  <section id="scr-listen" class="screen" hidden>
-    <header class="bar">
-      <button type="button" id="btn-listen-close" class="icon-btn" aria-label="Stop">✕</button>
-      <div class="bar-mid"><span id="listen-progress">–</span></div>
-      <span class="type-label">Nur hören</span>
-    </header>
-    <main class="listen-main">
-      <div class="listen-card">
-        <span id="listen-noaudio" class="tag" hidden>kein Audio</span>
-        <div id="listen-es" class="listen-es"></div>
-        <div id="listen-de" class="listen-de"></div>
-      </div>
-      <p class="note center">Bildschirm anlassen — iOS pausiert im Hintergrund</p>
-      <div class="btn-row">
-        <button type="button" id="btn-listen-pause" class="btn">Pause</button>
-        <button type="button" id="btn-listen-stop" class="btn secondary">Stop</button>
-      </div>
-    </main>
   </section>
 
   <!-- ============================================================ Fehler -->
@@ -648,7 +709,8 @@ const MIN = 60000;
 const BLOCK_NAMES = { 1: 'Skelett', 2: 'Kernverben', 3: 'Fragen & Antworten', 4: 'Stadt, Tag, Zahlen', 5: 'Menschen & Körper', 6: 'Milonga', 7: 'Alltag & Gefühle' };
 const TYPE_LABELS = { word: 'Produktion', cloze: 'Lückensatz', build: 'Satz bauen' };
 const TYPE_SUFFIX = { word: 'w', cloze: 'c', build: 'b' };
-const DEFAULT_SETTINGS = { newPerDay: 7, autoplay: true, blocks: [1, 2, 3, 4, 5, 6, 7], voice: true };
+const DEFAULT_SETTINGS = { chunkSize: 10, chunksPerDay: 1, autoplay: true, audioBefore: false, blocks: [1, 2, 3, 4, 5, 6, 7], voice: true };
+const CHUNK_TEST_MAX_ASKS = 3; // a word is asked at most this often within one chunk test
 const RATING_NAMES = { 1: 'Nochmal', 2: 'Schwer', 3: 'Gut', 4: 'Leicht' };
 
 const $ = (id) => document.getElementById(id);
@@ -930,14 +992,95 @@ function levenshtein(a, b) {
   }
   return prev[b.length];
 }
-/** → {result:'exact'|'near'|'wrong', distance} */
+/* ---- phonetic matching (German-ear spellings of Rioplatense Spanish) */
+function stripAccents(s) { return s.normalize('NFD').replace(/[̀-ͯ]/g, ''); }
+/** Spanish (Rioplatense) spelling -> phonetic key: ll/y = sh (S), j/ge/gi = German ch (H), ch = tsch (C), c/z seseo, b=v, h silent. */
+function keyEs(word) {
+  let s = String(word || '').toLowerCase().replace(/ñ/g, '');
+  s = stripAccents(s).replace(//g, 'ñ').replace(/[^a-zñ]/g, '');
+  let out = '';
+  for (let i = 0; i < s.length; i++) {
+    const c = s[i], n = s[i + 1] || '', vowelNext = /[aeiou]/.test(n);
+    if (c === 'c' && n === 'h') { out += 'C'; i++; continue; }
+    if (c === 'l' && n === 'l') { out += 'S'; i++; continue; }
+    if (c === 'y') { out += (vowelNext || (i === 0 && s.length > 1)) ? 'S' : 'i'; continue; }  // 'y' alone = "i"
+    if (c === 'q' && n === 'u') { out += 'k'; i++; continue; }
+    if (c === 'c') { out += /[ei]/.test(n) ? 's' : 'k'; continue; }
+    if (c === 'z') { out += 's'; continue; }
+    if (c === 'x') { out += 'ks'; continue; }
+    if (c === 'j') { out += 'H'; continue; }
+    if (c === 'g') { if (/[ei]/.test(n)) { out += 'H'; continue; } if (n === 'u' && /[ei]/.test(s[i + 2] || '')) { out += 'g'; i++; continue; } out += 'g'; continue; }
+    if (c === 'h') continue;
+    if (c === 'v' || c === 'w' || c === 'b') { out += 'b'; continue; }
+    if (c === 'ñ') { out += 'nj'; continue; }
+    if (c === 'r' && n === 'r') { out += 'r'; i++; continue; }
+    out += c;
+  }
+  return out.replace(/(.)\1+/g, '$1');
+}
+/** German-ear typing -> all plausible phonetic keys (ambiguous digraphs branch). */
+function keysDe(input) {
+  let s = String(input || '').toLowerCase().replace(/ß/g, 'ss').replace(/ä/g, 'e').replace(/ö/g, 'o').replace(/ü/g, 'u').replace(/ñ/g, 'nj');
+  s = stripAccents(s).replace(/[^a-z]/g, '');
+  const fixed = [['dsch', 'S'], ['tsch', 'C'], ['sch', 'S'], ['tch', 'C'], ['sh', 'S'], ['lj', 'S'], ['ck', 'k'], ['qu', 'k'], ['nj', 'nj'], ['ph', 'f']];
+  let variants = [''];
+  for (let i = 0; i < s.length;) {
+    let hit = null;
+    for (const [pat, rep] of fixed) { if (s.startsWith(pat, i)) { hit = [pat, rep]; break; } }
+    let opts, step = 1;
+    if (hit) { opts = [hit[1]]; step = hit[0].length; }
+    else {
+      const c = s[i], n = s[i + 1] || '';
+      if (c === 'c' && n === 'h') { opts = ['C', 'H']; step = 2; }
+      else if (c === 'l' && n === 'l') { opts = ['S', 'l']; step = 2; }
+      else if (c === 'i' && n === 'e') { opts = ['ie', 'i']; step = 2; }
+      else if (c === 'r' && n === 'r') { opts = ['r']; step = 2; }
+      else if (c === 'j') opts = ['S', 'H', 'i'];
+      else if (c === 'y') opts = ['S', 'i'];
+      else if (c === 'c') opts = [/[ei]/.test(n) ? 's' : 'k'];
+      else if (c === 'z') opts = ['s'];
+      else if (c === 'x') opts = ['ks'];
+      else if (c === 'h') opts = ['', 'H'];
+      else if (c === 'v' || c === 'w' || c === 'b') opts = ['b'];
+      else if (c === 'g') opts = /[ei]/.test(n) ? ['H', 'g'] : ['g'];
+      else opts = [c];
+    }
+    variants = variants.flatMap((v) => opts.map((o) => v + o));
+    if (variants.length > 96) variants = variants.slice(0, 96);
+    i += step;
+  }
+  return [...new Set(variants.map((v) => v.replace(/(.)\1+/g, '$1')))];
+}
+function phoneticMatch(input, target) { const t = keyEs(target); return !!t && keysDe(input).includes(t); }
+/** Assertions from the spec; returns the failing cases (empty array = ok). */
+function phoneticSelfTest() {
+  const yes = [['kaje', 'calle'], ['kalje', 'calle'], ['tschau', 'chau'], ['bos', 'vos'], ['ke', 'que'], ['tenes', 'tenés'], ['hente', 'gente'], ['chente', 'gente'], ['jente', 'gente'], ['scho', 'yo'], ['jo', 'yo'], ['plata', 'plata'], ['akah', 'acá'], ['tjene', 'tiene'], ['sie', 'sí'], ['bailas', '¿bailás?'], ['milonga', 'milonga'], ['sisha', 'silla']];
+  const no = [['cosa', 'casa'], ['plato', 'plata'], ['calle', 'valle']];
+  const fails = [];
+  yes.forEach(([a, b]) => { if (!phoneticMatch(a, b)) fails.push('erwartet true: ' + a + ' / ' + b); });
+  no.forEach(([a, b]) => { if (phoneticMatch(a, b)) fails.push('erwartet false: ' + a + ' / ' + b); });
+  return fails;
+}
+const MATCH_RANK = { exact: 3, phonetic: 2, near: 1, wrong: 0 };
+/** → {result:'exact'|'phonetic'|'near'|'wrong', target, spelling, distance}
+ *  exact = normalised strings equal (accents kept); phonetic = German-ear spelling of the same sounds
+ *  (spelling hint in the feedback); near = one edit away (plain or phonetic key, ≥ 6 chars); else wrong. */
 function match(input, target) {
   const a = normalizeAnswer(input);
   const b = normalizeAnswer(target);
-  if (a === b) return { result: 'exact', distance: 0 };
+  const out = (result, distance) => ({ result, target: String(target == null ? '' : target), spelling: result === 'phonetic' ? String(target) : null, distance });
+  if (a === b) return out('exact', 0);
   const distance = levenshtein(a, b);
-  if (b.length >= 6 && distance <= 1) return { result: 'near', distance };
-  return { result: 'wrong', distance };
+  if (a && phoneticMatch(a, b)) return out('phonetic', distance);
+  if (b.length >= 6 && distance <= 1) return out('near', distance);
+  if (a) {
+    const key = keyEs(b);
+    if (key.length >= 6) {
+      const keys = keysDe(a);
+      for (const k of keys) if (levenshtein(k, key) <= 1) return out('near', distance);
+    }
+  }
+  return out('wrong', distance);
 }
 /** Character-level diff of the (normalised) input against the target; wrong/extra chars marked, missing chars shown as "_". */
 function diffHtml(input, target) {
@@ -1199,7 +1342,8 @@ const S = {
   updateAvailable: false,
   screen: 'start',
   session: null,
-  currentCard: null
+  currentCard: null,
+  chunk: null                 // the persisted chunk record (meta key `chunk`) or null
 };
 
 /* ================================================================ data & cards */
@@ -1258,18 +1402,49 @@ async function ensureCards() {
   }
   if (missing.length) await dbBulkPut('cards', missing);
 }
+/** Whitelists + migration: stored settings from v1 carry `newPerDay` and no chunk fields → chunkSize 10, chunksPerDay 1. */
 function sanitizeSettings(obj) {
   const s = Object.assign({}, DEFAULT_SETTINGS, obj && typeof obj === 'object' ? obj : {});
-  s.newPerDay = Math.min(30, Math.max(1, Math.round(Number(s.newPerDay)) || 7));
+  s.chunkSize = Math.min(20, Math.max(5, Math.round(Number(s.chunkSize)) || 10));
+  s.chunksPerDay = Math.min(3, Math.max(1, Math.round(Number(s.chunksPerDay)) || 1));
   s.autoplay = s.autoplay !== false;
+  s.audioBefore = s.audioBefore === true;
   s.voice = s.voice !== false;
   s.blocks = Array.isArray(s.blocks) ? s.blocks.map(Number).filter((b) => b >= 1 && b <= 7) : DEFAULT_SETTINGS.blocks.slice();
+  delete s.newPerDay;
   return s;
+}
+/** Whitelist a stored/imported chunk record; null when unusable. */
+function sanitizeChunk(c) {
+  if (!c || typeof c !== 'object' || !Array.isArray(c.word_ids)) return null;
+  const ids = c.word_ids.map(Number).filter((id) => Number.isFinite(id));
+  if (!ids.length) return null;
+  const seen = {};
+  if (c.seen && typeof c.seen === 'object') ids.forEach((id) => { if (c.seen[id]) seen[id] = true; });
+  const out = {
+    id: String(c.id || ('c' + nowMs())), word_ids: ids, seen,
+    index: Math.min(ids.length - 1, Math.max(0, c.index | 0)),
+    started: Number(c.started) || nowMs(),
+    phase: c.phase === 'test' ? 'test' : 'learn',
+    test: null
+  };
+  if (out.phase === 'test') {
+    const t = c.test && typeof c.test === 'object' ? c.test : {};
+    const cardIds = new Set(ids.map((id) => cardId(id, 'word')));
+    out.test = {
+      queue: (Array.isArray(t.queue) ? t.queue : []).map(String).filter((id) => cardIds.has(id)),
+      round: Math.max(1, t.round | 0),
+      firstTry: t.firstTry && typeof t.firstTry === 'object' ? Object.assign({}, t.firstTry) : {},
+      asked: t.asked && typeof t.asked === 'object' ? Object.assign({}, t.asked) : {}
+    };
+  }
+  return out;
 }
 async function loadMeta() {
   S.settings = sanitizeSettings(await metaGet('settings'));
   S.daily = (await metaGet('daily')) || null;
   S.streak = (await metaGet('streak')) || null;
+  S.chunk = sanitizeChunk(await metaGet('chunk'));
   const st = await metaGet('audio_status');
   if (st && (st.total || st.synced)) S.audioStatus = st;
 }
@@ -1280,8 +1455,8 @@ function isLearnedWord(wordId) { const wc = S.cards.get(cardId(wordId, 'word'));
 function learnedCount() { let n = 0; for (const w of S.data.words) if (isLearnedWord(w.id)) n++; return n; }
 function currentDaily(now) {
   const key = dayKey(now);
-  if (S.daily && S.daily.date === key) return { date: key, new_words: S.daily.new_words || 0, new_cloze: S.daily.new_cloze || 0, new_build: S.daily.new_build || 0 };
-  return { date: key, new_words: 0, new_cloze: 0, new_build: 0 };
+  if (S.daily && S.daily.date === key) return { date: key, new_words: S.daily.new_words || 0, new_cloze: S.daily.new_cloze || 0, new_build: S.daily.new_build || 0, chunks_started: S.daily.chunks_started || 0 };
+  return { date: key, new_words: 0, new_cloze: 0, new_build: 0, chunks_started: 0 };
 }
 function nextStreak(streak, today) {
   if (!streak || !streak.last_date) return { count: 1, last_date: today };
@@ -1339,7 +1514,9 @@ function interleave(due, news) {
   out.unshift(due[0]);
   return out;
 }
-/** The exact queue a session would start with at `now`. */
+/** The exact queue a review session would start with at `now`: due cards only, plus the unlocked new
+ *  cloze/build cards (capped per day by chunkSize). New word cards never enter here — words are introduced
+ *  through chunks (Stapel). */
 function computeQueue(now) {
   const blocks = enabledBlocks();
   const daily = currentDaily(now);
@@ -1351,13 +1528,52 @@ function computeQueue(now) {
   }
   const due = active.filter((c) => c.state !== 0 && c.due != null && c.due <= now).sort((a, b) => (a.due - b.due) || cardOrder(a, b));
   const learned = learnedCount();
-  const quota = (used) => Math.max(0, S.settings.newPerDay - (used || 0));
-  const newWords = active.filter((c) => c.type === 'word' && c.state === 0).sort(cardOrder).slice(0, quota(daily.new_words));
+  const quota = (used) => Math.max(0, S.settings.chunkSize - (used || 0));
   const newCloze = active.filter((c) => c.type === 'cloze' && c.state === 0 && clozeUnlocked(c)).sort(cardOrder).slice(0, quota(daily.new_cloze));
   const newBuild = active.filter((c) => c.type === 'build' && c.state === 0 && buildUnlocked(c, learned)).sort(cardOrder).slice(0, quota(daily.new_build));
-  const news = newWords.concat(newCloze, newBuild);
-  return { due, newWords, newCloze, newBuild, queue: interleave(due, news).map((c) => c.id) };
+  const news = newCloze.concat(newBuild);
+  return { due, newCloze, newBuild, queue: interleave(due, news).map((c) => c.id) };
 }
+/* ---- chunks (Stapel): unlearned words come in blocks of chunkSize, learned on flip cards, then tested */
+const chunkHas = (chunk, wordId) => !!chunk && chunk.word_ids.indexOf(wordId) >= 0;
+/** Word cards still New in enabled blocks, block order then id order, excluding the current chunk's words. */
+function unlearnedWords() {
+  const blocks = enabledBlocks();
+  const out = [];
+  for (const c of S.cards.values()) {
+    if (c.type !== 'word' || c.state !== 0 || c.suspended) continue;
+    const w = S.wordsById.get(c.word_id);
+    if (!w || !blocks.has(w.block) || chunkHas(S.chunk, w.id)) continue;
+    out.push(c);
+  }
+  return out.sort(cardOrder).map((c) => c.word_id);
+}
+function chunksStartedToday(now) { return currentDaily(now).chunks_started; }
+function canStartChunk(now) {
+  return !S.chunk && chunksStartedToday(now) < S.settings.chunksPerDay && unlearnedWords().length > 0;
+}
+function chunkSeenCount(chunk) { return chunk ? chunk.word_ids.filter((id) => chunk.seen[id]).length : 0; }
+function chunkAllSeen(chunk) { return !!chunk && chunkSeenCount(chunk) === chunk.word_ids.length; }
+/** Words of the current chunk whose word card has not been reviewed yet (for the "Neu heute" line). */
+function chunkPendingWords(chunk) { return chunk ? chunk.word_ids.filter((id) => { const c = S.cards.get(cardId(id, 'word')); return !c || c.state === 0; }).length : 0; }
+async function saveChunk() { if (S.chunk) await metaSet('chunk', S.chunk); else await dbDelete('meta', 'chunk'); }
+/** Create and persist a new chunk (counts against the daily limit). Returns the record or null. */
+async function startChunk() {
+  const now = nowMs();
+  if (!canStartChunk(now)) return null;
+  const ids = unlearnedWords().slice(0, S.settings.chunkSize);
+  const chunk = { id: 'c' + now, word_ids: ids, seen: {}, index: 0, started: now, phase: 'learn', test: null };
+  const daily = currentDaily(now);
+  daily.chunks_started += 1;
+  await runTx(['meta'], 'readwrite', (tx) => {
+    tx.objectStore('meta').put({ key: 'chunk', value: chunk });
+    tx.objectStore('meta').put({ key: 'daily', value: daily });
+  });
+  S.chunk = chunk;
+  S.daily = daily;
+  return chunk;
+}
+async function deleteChunk() { S.chunk = null; await dbDelete('meta', 'chunk'); }
 /** Earliest future due time among active cards (null when nothing is scheduled) — for the "fällig in …" hints. */
 function nextDueMs(now) {
   const blocks = enabledBlocks();
@@ -1371,7 +1587,7 @@ function nextDueMs(now) {
 }
 
 /* ================================================================ screens */
-const SCREENS = ['loading', 'start', 'session', 'end', 'stats', 'settings', 'listen', 'error'];
+const SCREENS = ['loading', 'start', 'learn', 'session', 'end', 'stats', 'settings', 'error'];
 function showScreen(name) {
   for (const s of SCREENS) {
     const el = $('scr-' + s);
@@ -1419,25 +1635,48 @@ function audioStatusText() {
   if (st.failed) return 'Audio ' + st.done + '/' + st.total + ' (' + st.failed + ' fehlen)';
   return 'offline bereit ✓';
 }
+/** Start screen: "Fällig: Y Karten" (everything a review session would ask, new cloze/build included),
+ *  "Neu heute: N Wörter · Stapel s/S", and the buttons per state: chunk in progress → primary chunk button;
+ *  else due cards → primary „Wiederholen" (chunk button secondary); nothing due → chunk button primary or,
+ *  when the daily chunk limit is used up too, a disabled „Heute alles erledigt". */
 function renderStart() {
   if (!S.data) return;
   const now = nowMs();
   const q = computeQueue(now);
-  const nothing = q.queue.length === 0;
-  const counts = 'Heute: ' + q.newWords.length + ' neu, ' + q.due.length + ' fällig';
+  const dueCount = q.queue.length;
+  const daily = currentDaily(now);
+  const chunk = S.chunk;
+  const size = S.settings.chunkSize;
+  const canStart = canStartChunk(now);
+  const remainingChunks = Math.max(0, S.settings.chunksPerDay - daily.chunks_started);
+  const available = chunk ? 0 : Math.min(unlearnedWords().length, remainingChunks * size);
+  const newToday = daily.new_words + chunkPendingWords(chunk) + available;
+  $('today-line').textContent = 'Fällig: ' + plural(dueCount, 'Karte', 'Karten');
+  $('today-new').textContent = 'Neu heute: ' + plural(newToday, 'Wort', 'Wörter') + ' · Stapel ' + daily.chunks_started + '/' + S.settings.chunksPerDay;
   const extra = [];
-  if (q.newCloze.length) extra.push(plural(q.newCloze.length, 'Lückensatz', 'Lückensätze'));
-  if (q.newBuild.length) extra.push(plural(q.newBuild.length, 'Satzbau-Karte', 'Satzbau-Karten'));
-  if (nothing) {
-    $('today-line').textContent = 'Heute alles erledigt';
+  if (q.newCloze.length) extra.push(plural(q.newCloze.length, 'neuer Lückensatz', 'neue Lückensätze'));
+  if (q.newBuild.length) extra.push(plural(q.newBuild.length, 'neue Satzbau-Karte', 'neue Satzbau-Karten'));
+  let sub = extra.length ? 'davon ' + extra.join(', ') : '';
+  if (!dueCount && !chunk && !canStart) {
     const nd = nextDueMs(now);
-    $('today-sub').textContent = nd ? 'Nächste Karte fällig in ' + fmtDuration(nd - now)
-      : (S.settings.blocks.length ? 'Morgen gibt es neue Wörter.' : 'Keine Blöcke aktiv – siehe Einstellungen.');
-  } else {
-    $('today-line').textContent = counts;
-    $('today-sub').textContent = extra.length ? '+ ' + extra.join(', ') : '';
+    sub = nd ? 'Nächste Karte fällig in ' + fmtDuration(nd - now)
+      : (!S.settings.blocks.length ? 'Keine Blöcke aktiv – siehe Einstellungen.' : unlearnedWords().length ? 'Morgen gibt es einen neuen Stapel.' : 'Alle Wörter sind gelernt.');
   }
-  $('btn-start').disabled = nothing;
+  $('today-sub').textContent = sub;
+
+  const bChunk = $('btn-chunk'), bReview = $('btn-review'), bNothing = $('btn-nothing');
+  let chunkLabel = null;
+  if (chunk && chunk.phase === 'test') chunkLabel = 'Test fortsetzen';
+  else if (chunk) chunkLabel = chunkAllSeen(chunk) ? 'Stapel testen' : 'Stapel weiter lernen (' + chunkSeenCount(chunk) + '/' + chunk.word_ids.length + ')';
+  else if (canStart) chunkLabel = 'Neuen Stapel lernen (' + plural(Math.min(size, unlearnedWords().length), 'Wort', 'Wörter') + ')';
+  bChunk.hidden = !chunkLabel;
+  bChunk.textContent = chunkLabel || '';
+  const chunkPrimary = !!chunk || !dueCount;
+  bChunk.className = 'btn big ' + (chunkPrimary ? 'primary' : 'secondary');
+  bReview.hidden = !dueCount;
+  bReview.textContent = 'Wiederholen (' + dueCount + ' fällig)';
+  bReview.className = 'btn big ' + (!chunkLabel || !chunkPrimary ? 'primary' : 'secondary');
+  bNothing.hidden = !!chunkLabel || !!dueCount;
   const streak = streakDisplay();
   $('st-streak').textContent = 'Streak ' + streak + (streak === 1 ? ' Tag' : ' Tage');
   const learned = learnedCount();
@@ -1454,21 +1693,45 @@ function refreshUI() {
 function setHidden(id, hidden) { const el = $(id); if (el) el.hidden = !!hidden; }
 function micAvailable() { return !!SR && S.settings.voice !== false; }
 
-function newSession(queue, now) {
-  return { queue: queue.slice(), pending: [], done: 0, reviews: [], startedAt: now, token: 0, phase: 'idle', card: null, ctx: null, latencyStart: 0, autoRating: null, selectedRating: null, result: null };
+/** mode 'review' = the normal due-card session; 'chunk' = the chunk test (Abfrage) over S.chunk.test.queue. */
+function newSession(queue, now, mode) {
+  return { mode: mode || 'review', queue: queue.slice(), pending: [], done: 0, reviews: [], startedAt: now, token: 0, phase: 'idle', card: null, ctx: null, latencyStart: 0, autoRating: null, selectedRating: null, result: null };
 }
 function startSession() {
   audio.unlock();
   const now = nowMs();
   const q = computeQueue(now);
-  if (!q.queue.length) { toast('Heute ist nichts zu tun.'); renderStart(); return; }
-  S.session = newSession(q.queue, now);
+  if (!q.queue.length) { toast('Nichts fällig.'); renderStart(); return; }
+  S.session = newSession(q.queue, now, 'review');
   showScreen('session');
   nextCard();
 }
+/** Chunk test: shuffled word cards of the chunk (phase 'learn' → 'test'), or resume the remaining queue. */
+async function startChunkTest() {
+  const chunk = S.chunk;
+  if (!chunk) { toast('Kein Stapel vorhanden.'); renderStart(); return; }
+  audio.unlock();
+  if (chunk.phase !== 'test' || !chunk.test) {
+    if (!chunkAllSeen(chunk)) { toast('Erst alle Karten einmal umdrehen.'); return; }
+    chunk.phase = 'test';
+    chunk.test = { queue: shuffle(chunk.word_ids.map((id) => cardId(id, 'word'))), round: 1, firstTry: {}, asked: {} };
+    await saveChunk();
+  }
+  const now = nowMs();
+  S.session = newSession(chunk.test.queue, now, 'chunk');
+  showScreen('session');
+  nextCard();
+}
+/** Leaving is always safe: reviews are committed one by one; a chunk test keeps its remaining queue. */
 function leaveSession() {
   audio.stop();
   stopListening();
+  const ses = S.session;
+  if (ses && ses.mode === 'chunk' && S.chunk && S.chunk.test) {
+    const unanswered = ses.card && ses.phase !== 'committing' && ses.phase !== 'idle' ? [ses.card.id] : [];
+    S.chunk.test.queue = unanswered.concat(ses.queue);
+    saveChunk().catch(reportError);
+  }
   S.session = null;
   S.currentCard = null;
   renderStart();
@@ -1478,13 +1741,15 @@ function nextCard() {
   const ses = S.session;
   if (!ses) return;
   const now = nowMs();
-  // Learning cards that came due during the session go to the end of the queue.
-  ses.pending.sort((a, b) => a.due - b.due);
-  const ready = ses.pending.filter((p) => p.due <= now);
-  if (ready.length) { ready.forEach((p) => ses.queue.push(p.id)); ses.pending = ses.pending.filter((p) => p.due > now); }
-  if (!ses.queue.length) {
-    const soon = ses.pending.filter((p) => p.due <= now + 60000);
-    if (soon.length) { ses.queue.push(soon[0].id); ses.pending = ses.pending.filter((p) => p !== soon[0]); }
+  if (ses.mode === 'review') {
+    // Learning cards that came due during the session go to the end of the queue.
+    ses.pending.sort((a, b) => a.due - b.due);
+    const ready = ses.pending.filter((p) => p.due <= now);
+    if (ready.length) { ready.forEach((p) => ses.queue.push(p.id)); ses.pending = ses.pending.filter((p) => p.due > now); }
+    if (!ses.queue.length) {
+      const soon = ses.pending.filter((p) => p.due <= now + 60000);
+      if (soon.length) { ses.queue.push(soon[0].id); ses.pending = ses.pending.filter((p) => p !== soon[0]); }
+    }
   }
   while (ses.queue.length) {
     const id = ses.queue.shift();
@@ -1562,7 +1827,7 @@ function showCard(card) {
 
   $('progress').textContent = (ses.done + 1) + ' / ' + (ses.done + 1 + ses.queue.length);
   $('block-name').textContent = BLOCK_NAMES[word.block] || ('Block ' + word.block);
-  $('type-label').textContent = TYPE_LABELS[card.type] || '';
+  $('type-label').textContent = ses.mode === 'chunk' ? 'Abfrage' : (TYPE_LABELS[card.type] || '');
 
   const ctx = buildCardContext(card, word);
   ses.ctx = ctx;
@@ -1585,7 +1850,9 @@ function showCard(card) {
     if (S.settings.autoplay) audio.playSequence(ctx.audioNames, 400).then((r) => { if (S.session && S.session.token === token && !r.ok && !r.cancelled) setHidden('no-audio', false); });
     return;
   }
-  if (!S.settings.autoplay) { revealPrompt(token); return; }
+  // Word/cloze: the prompt is shown right away and the clip plays after the answer; the „Audio vor der
+  // Antwort" setting brings back the audio-first flow (clip, then prompt after 1.5 s).
+  if (!S.settings.autoplay || !S.settings.audioBefore) { revealPrompt(token); return; }
   playFirst(token);
 }
 /** Audio-first: play the clip, reveal the prompt 1.5 s after playback started (immediately when there is no audio). */
@@ -1655,20 +1922,20 @@ function submitAnswer() {
   const targets = answerTargets(ses);
   const empty = !normalizeAnswer(input);
   let target = word.spanish;
-  let m = { result: 'wrong', distance: normalizeAnswer(target).length, empty: true };
+  let m = { result: 'wrong', distance: normalizeAnswer(target).length, target, spelling: null, empty: true };
   if (!empty) {
-    const RANK = { exact: 2, near: 1, wrong: 0 };
     m = null;
     for (const t of targets) {
       const mm = match(input, t);
-      if (!m || RANK[mm.result] > RANK[m.result] || (RANK[mm.result] === RANK[m.result] && mm.distance < m.distance)) { m = mm; target = t; }
+      if (!m || MATCH_RANK[mm.result] > MATCH_RANK[m.result] || (MATCH_RANK[mm.result] === MATCH_RANK[m.result] && mm.distance < m.distance)) { m = mm; target = t; }
     }
   }
   ses.result = { input, latency, match: m, target, correct: m.result !== 'wrong' };
-  ses.autoRating = m.result === 'exact' ? 3 : m.result === 'near' ? 2 : 1;
+  ses.autoRating = (m.result === 'exact' || m.result === 'phonetic') ? 3 : m.result === 'near' ? 2 : 1;
   renderFeedback();
   ses.phase = 'feedback';
-  if (m.result !== 'exact') replayAudio();
+  // The clip plays after the answer (audio-first mode already played it: repeat only when something was off).
+  if (S.settings.autoplay && !(S.settings.audioBefore && m.result === 'exact')) replayAudio();
 }
 function renderRatingRow(card, preselect) {
   const prev = fsrs.preview(card, nowMs());
@@ -1686,6 +1953,7 @@ function renderFeedback() {
   resEl.className = 'fb-result';
   const target = r.target || word.spanish;
   if (r.match.result === 'exact') { resEl.textContent = 'richtig'; resEl.classList.add('ok'); }
+  else if (r.match.result === 'phonetic') { resEl.textContent = 'richtig — Schreibweise: ' + target; resEl.classList.add('ok'); }
   else if (r.match.result === 'near') { resEl.textContent = 'fast — richtig: ' + target; resEl.classList.add('warn'); }
   else { resEl.textContent = r.match.empty ? 'weiß ich nicht' : 'falsch'; resEl.classList.add('bad'); }
   tEl.className = 'fb-target';
@@ -1701,6 +1969,10 @@ function renderFeedback() {
   }
   if (r.match.result === 'exact') {
     setHidden('fb-input', true);
+  } else if (r.match.result === 'phonetic') {
+    // Same sounds, German spelling: show the input as typed (a diff against the Spanish spelling would only confuse).
+    inEl.innerHTML = 'Deine Antwort: ' + escapeHtml(normalizeAnswer(r.input));
+    setHidden('fb-input', false);
   } else {
     inEl.innerHTML = 'Deine Antwort: ' + (r.match.empty ? '<span class="muted">–</span>' : diffHtml(r.input, target));
     setHidden('fb-input', false);
@@ -1757,7 +2029,21 @@ async function commitReview(rating) {
     S.streak = streak;
     ses.done++;
     ses.reviews.push({ rating, correct, latency_ms: latency, type: card.type, result: matchResult });
-    if (next.state === fsrs.State.Learning || next.state === fsrs.State.Relearning) ses.pending.push({ id: next.id, due: next.due });
+    if (ses.mode === 'chunk') {
+      // Chunk test bookkeeping: first-try flag, re-ask Again-rated words (at most CHUNK_TEST_MAX_ASKS times),
+      // persist the remaining queue so leaving mid-test resumes exactly here. The review itself is already
+      // committed, so a failing chunk write is only reported (never retried as a second review).
+      const chunk = S.chunk;
+      if (chunk && chunk.test) {
+        const t = chunk.test;
+        const wid = card.word_id;
+        if (t.firstTry[wid] === undefined) t.firstTry[wid] = correct === true;
+        t.asked[wid] = (t.asked[wid] || 0) + 1;
+        if (rating === fsrs.Rating.Again && t.asked[wid] < CHUNK_TEST_MAX_ASKS) { ses.queue.push(card.id); t.round = Math.max(t.round, t.asked[wid] + 1); }
+        t.queue = ses.queue.slice();
+        saveChunk().catch(reportError);
+      }
+    } else if (next.state === fsrs.State.Learning || next.state === fsrs.State.Relearning) ses.pending.push({ id: next.id, due: next.due });
   } catch (err) {
     ses.phase = phase; // allow retry
     throw err;
@@ -1770,25 +2056,43 @@ function endSession() {
   audio.stop();
   stopListening();
   const rv = ses.reviews;
-  const right = rv.filter((r) => r.result === 'exact').length;
+  const right = rv.filter((r) => r.result === 'exact' || r.result === 'phonetic').length;
   const near = rv.filter((r) => r.result === 'near').length;
   const wrong = rv.filter((r) => r.result === 'wrong').length;
   const self = rv.filter((r) => r.type === 'build').length;
   const lat = rv.filter((r) => r.latency_ms > 0);
   const mean = lat.length ? lat.reduce((a, r) => a + r.latency_ms, 0) / lat.length : 0;
-  $('end-right').textContent = right;
-  $('end-near').textContent = near;
-  $('end-wrong').textContent = wrong;
   const now = nowMs();
-  const parts = [plural(rv.length, 'Karte', 'Karten') + ' in ' + fmtDuration(now - ses.startedAt)];
-  if (self) parts.push(self + ' selbst bewertet');
-  parts.push('mittlere Latenz ' + fmtSeconds(mean));
-  const dueNow = computeQueue(now).due.length;
-  if (dueNow) parts.push(dueNow === 1 ? '1 Karte ist jetzt fällig' : dueNow + ' Karten sind jetzt fällig');
-  else { const nd = nextDueMs(now); if (nd) parts.push('nächste Karte fällig in ' + fmtDuration(nd - now)); }
-  $('end-meta').textContent = parts.join(' · ');
-  setHidden('btn-again', dueNow === 0);
-  $('btn-again').textContent = 'Nochmal fällige (' + dueNow + ')';
+  if (ses.mode === 'chunk') {
+    // Chunk finished: summary of the first attempts, then the chunk record is gone for good.
+    const chunk = S.chunk;
+    const ids = chunk ? chunk.word_ids : [];
+    const ft = chunk && chunk.test ? chunk.test.firstTry : {};
+    const firstRight = ids.filter((id) => ft[id] === true).length;
+    $('end-title').textContent = 'Stapel abgeschlossen';
+    $('end-first').textContent = firstRight + ' von ' + ids.length + ' beim ersten Versuch richtig';
+    setHidden('end-first', false);
+    setHidden('end-grid', true);
+    $('end-meta').textContent = [plural(rv.length, 'Antwort', 'Antworten') + ' in ' + fmtDuration(now - ses.startedAt), 'mittlere Latenz ' + fmtSeconds(mean)].join(' · ');
+    setHidden('btn-again', true);
+    deleteChunk().catch(reportError);
+  } else {
+    $('end-title').textContent = 'Session beendet';
+    setHidden('end-first', true);
+    setHidden('end-grid', false);
+    $('end-right').textContent = right;
+    $('end-near').textContent = near;
+    $('end-wrong').textContent = wrong;
+    const parts = [plural(rv.length, 'Karte', 'Karten') + ' in ' + fmtDuration(now - ses.startedAt)];
+    if (self) parts.push(self + ' selbst bewertet');
+    parts.push('mittlere Latenz ' + fmtSeconds(mean));
+    const dueNow = computeQueue(now).due.length;
+    if (dueNow) parts.push(dueNow === 1 ? '1 Karte ist jetzt fällig' : dueNow + ' Karten sind jetzt fällig');
+    else { const nd = nextDueMs(now); if (nd) parts.push('nächste Karte fällig in ' + fmtDuration(nd - now)); }
+    $('end-meta').textContent = parts.join(' · ');
+    setHidden('btn-again', dueNow === 0);
+    $('btn-again').textContent = 'Nochmal fällige (' + dueNow + ')';
+  }
   S.session = null;
   S.currentCard = null;
   showScreen('end');
@@ -1872,9 +2176,9 @@ function acceptSpeech(alts) {
     const targets = answerTargets(ses);
     let bestRank = 0;
     for (const a of alts) {
-      const rank = Math.max(...targets.map((t) => { const r = match(a, t).result; return r === 'exact' ? 2 : r === 'near' ? 1 : 0; }));
+      const rank = Math.max(...targets.map((t) => MATCH_RANK[match(a, t).result] || 0));
       if (rank > bestRank) { bestRank = rank; best = a; }
-      if (rank === 2) break;
+      if (rank === MATCH_RANK.exact) break;
     }
     $('answer').value = best;
     submitAnswer();
@@ -1960,8 +2264,10 @@ async function renderStats() {
 
 /* ================================================================ settings */
 function renderSettings() {
-  $('set-new').value = S.settings.newPerDay;
+  $('set-chunk').value = S.settings.chunkSize;
+  $('set-chunks').value = S.settings.chunksPerDay;
   $('set-autoplay').checked = !!S.settings.autoplay;
+  $('set-audio-before').checked = !!S.settings.audioBefore;
   $('set-voice').checked = !!S.settings.voice;
   setHidden('row-voice', !SR);
   const counts = {}, learned = {};
@@ -2001,7 +2307,7 @@ async function buildExport() {
   const reviews = await dbGetAll('reviews');
   return {
     app: 'tango', schema: 1, exported_at: new Date(nowMs()).toISOString(), data_version: S.data ? S.data.version : null,
-    settings: S.settings, cards, reviews, meta: { daily: S.daily, streak: S.streak }
+    settings: S.settings, cards, reviews, meta: { daily: S.daily, streak: S.streak, chunk: S.chunk }
   };
 }
 async function doExport() {
@@ -2062,8 +2368,9 @@ async function applyImport(obj) {
   validateImport(obj);
   const cards = (obj.cards || []).filter(validCard).map(sanitizeCard);
   const reviews = (obj.reviews || []).filter((r) => r && typeof r === 'object' && Number.isFinite(Number(r.ts)));
-  const settings = obj.settings ? sanitizeSettings(obj.settings) : null;
+  const settings = obj.settings ? sanitizeSettings(obj.settings) : null; // v1 exports (newPerDay) are migrated here
   const meta = obj.meta && typeof obj.meta === 'object' ? obj.meta : {};
+  const chunk = sanitizeChunk(meta.chunk);
   await runTx(['cards', 'reviews', 'meta'], 'readwrite', (tx) => {
     const cs = tx.objectStore('cards'), rs = tx.objectStore('reviews'), ms = tx.objectStore('meta');
     cs.clear(); rs.clear(); ms.clear();
@@ -2072,6 +2379,7 @@ async function applyImport(obj) {
     if (settings) ms.put({ key: 'settings', value: settings });
     if (meta.daily) ms.put({ key: 'daily', value: meta.daily });
     if (meta.streak) ms.put({ key: 'streak', value: meta.streak });
+    if (chunk) ms.put({ key: 'chunk', value: chunk });
     if (S.audioStatus) ms.put({ key: 'audio_status', value: S.audioStatus }); // device-local, not part of the export
   });
   await loadMeta();
@@ -2098,88 +2406,131 @@ async function doReset() {
   audio.stop();
   await runTx(['cards', 'reviews', 'meta'], 'readwrite', (tx) => { tx.objectStore('cards').clear(); tx.objectStore('reviews').clear(); tx.objectStore('meta').clear(); });
   S.settings = Object.assign({}, DEFAULT_SETTINGS);
-  S.daily = null; S.streak = null; S.session = null; S.currentCard = null;
+  S.daily = null; S.streak = null; S.session = null; S.currentCard = null; S.chunk = null;
   await ensureCards();
   renderStart();
   showScreen('start');
   toast('Alles gelöscht – ' + S.cards.size + ' Karten neu angelegt');
 }
 
-/* ================================================================ listen-only mode */
-const listen = { token: 0, paused: false, items: [], idx: 0, resume: null };
-function buildListenItems() {
-  const now = nowMs();
-  const blocks = enabledBlocks();
-  const items = [];
-  const q = computeQueue(now);
-  for (const c of q.due) {
-    const w = wordOf(c);
-    if (c.type === 'word') items.push({ spanish: w.spanish, german: w.german, audio: 'w_' + w.id });
-    else if (c.type === 'cloze') {
-      const ready = readySentences(w.id);
-      const sents = ready.length ? ready : (S.sentencesByWord.get(w.id) || []);
-      if (sents.length) { const s = sents[(c.reps || 0) % sents.length]; items.push({ spanish: s.spanish, german: s.german, audio: 's_' + s.id }); }
-    }
-  }
-  if (items.length) return items;
-  const learned = S.data.words.filter((w) => blocks.has(w.block) && isLearnedWord(w.id));
-  const pool = learned.length ? learned : S.data.words.filter((w) => blocks.has(w.block));
-  if (!learned.length && pool.length) toast('Noch nichts gelernt – alle Wörter der aktiven Blöcke');
-  return pool.sort((a, b) => (a.block - b.block) || (a.id - b.id)).map((w) => ({ spanish: w.spanish, german: w.german, audio: 'w_' + w.id }));
+/* ================================================================ learn screen (Kartei: flip cards of the current chunk) */
+const POS_LABELS = { noun: 'Substantiv', verb: 'Verb', adj: 'Adjektiv', adv: 'Adverb', func: 'Funktionswort', phrase: 'Wendung' };
+const learn = { flipped: false, token: 0 };
+/** Start-screen chunk button: continue/test the current chunk or start a new one. */
+async function onChunkButton() {
+  if (S.chunk) { openLearn(); return; }
+  await startNewChunk();
 }
-function startListen() {
+async function startNewChunk() {
   audio.unlock();
-  const items = buildListenItems();
-  if (!items.length) { toast('Nichts zum Anhören (keine aktiven Blöcke?)'); return; }
-  listen.items = items; listen.idx = 0; listen.paused = false; listen.token++;
-  $('btn-listen-pause').textContent = 'Pause';
-  showScreen('listen');
-  runListen(listen.token).catch(reportError);
+  const chunk = await startChunk();
+  if (!chunk) { toast('Heute kein neuer Stapel mehr.'); renderStart(); return; }
+  showScreen('learn');
+  renderLearnCard(true);
 }
-function waitResume() { return new Promise((r) => { listen.resume = r; }); }
-async function runListen(token) {
-  while (listen.idx < listen.items.length) {
-    if (token !== listen.token) return;
-    if (listen.paused) { await waitResume(); if (token !== listen.token) return; }
-    const item = listen.items[listen.idx];
-    $('listen-progress').textContent = (listen.idx + 1) + ' / ' + listen.items.length;
-    $('listen-es').textContent = item.spanish;
-    $('listen-de').textContent = item.german;
-    setHidden('listen-noaudio', true);
-    const r = await audio.play(item.audio);
-    if (token !== listen.token) return;
-    if (r.ok) await r.ended;
-    else if (!r.cancelled) { setHidden('listen-noaudio', false); await sleep(1200); }
-    if (token !== listen.token) return;
-    if (listen.paused) continue; // interrupted: replay this item after resume
-    listen.idx++;
-    await sleep(800);
+/** Open the current chunk where it was left (phase 'test' resumes the test directly). */
+function openLearn() {
+  const chunk = S.chunk;
+  if (!chunk) { goHome(); return; }
+  if (chunk.phase === 'test') { startChunkTest().catch(reportError); return; }
+  audio.unlock();
+  showScreen('learn');
+  renderLearnCard(true);
+}
+function learnWord() { const c = S.chunk; return c ? S.wordsById.get(c.word_ids[c.index]) : null; }
+/** First note segment when it is a pure grammar tag (m, f, yo, vos, él/ella, imperativo vos, pretérito yo …), else ''. */
+function grammarTag(note) {
+  const first = String(note || '').split(';')[0].trim();
+  return /^(m|f|m\/f|yo|vos|él\/ella|imperativo vos|pretérito yo(\s*\(.*\))?|unpersönlich|Fragewort)$/i.test(first) ? first : '';
+}
+function renderLearnCard(play) {
+  const chunk = S.chunk;
+  if (!chunk) { goHome(); return; }
+  const n = chunk.word_ids.length;
+  chunk.index = Math.min(n - 1, Math.max(0, chunk.index | 0));
+  const word = learnWord();
+  if (!word) {
+    // data.json changed underneath a stored chunk: drop unknown ids, or the whole chunk when nothing is left.
+    chunk.word_ids = chunk.word_ids.filter((id) => S.wordsById.has(id));
+    if (!chunk.word_ids.length) { deleteChunk().catch(reportError); goHome(); return; }
+    chunk.index = 0;
+    saveChunk().catch(reportError);
+    renderLearnCard(play);
+    return;
   }
-  if (token !== listen.token) return;
-  $('listen-progress').textContent = listen.items.length + ' / ' + listen.items.length;
-  $('listen-es').textContent = 'Fertig';
-  $('listen-de').textContent = listen.items.length + ' Clips gehört';
-  setHidden('listen-noaudio', true);
-}
-function toggleListenPause() {
-  if (listen.paused) {
-    listen.paused = false;
-    $('btn-listen-pause').textContent = 'Pause';
-    if (listen.resume) { const r = listen.resume; listen.resume = null; r(); }
-  } else {
-    listen.paused = true;
-    $('btn-listen-pause').textContent = 'Weiter';
-    audio.stop();
-  }
-}
-function stopListen() {
-  listen.token++;
-  listen.paused = false;
-  if (listen.resume) { const r = listen.resume; listen.resume = null; r(); }
+  learn.flipped = false;
+  learn.token++;
+  $('flip').classList.remove('flipped');
+  $('learn-progress').textContent = 'Stapel · ' + (chunk.index + 1) + ' / ' + n;
+  $('learn-block').textContent = BLOCK_NAMES[word.block] || ('Block ' + word.block);
+  $('learn-es').textContent = word.spanish;
+  // Front side: only grammatical tags (gender, person, imperative); explanatory notes contain German and belong to the back.
+  const frontNote = grammarTag(word.note);
+  $('learn-note').textContent = frontNote;
+  setHidden('learn-note', !frontNote);
+  $('learn-de').textContent = word.german;
+  const posNote = [POS_LABELS[word.pos] || word.pos, word.note].filter(Boolean).join(' · ');
+  $('learn-pos').textContent = posNote;
+  setHidden('learn-pos', !posNote);
+  setHidden('learn-noaudio', !audio.isKnownMissing('w_' + word.id));
+  renderLearnDots();
+  renderLearnFooter();
   audio.stop();
-  renderStart();
-  showScreen('start');
+  if (play && S.settings.autoplay) learnPlay();
 }
+function renderLearnDots() {
+  const chunk = S.chunk;
+  $('learn-dots').innerHTML = chunk.word_ids.map((id, i) => '<span class="pdot' + (chunk.seen[id] ? ' seen' : '') + (i === chunk.index ? ' cur' : '') + '"></span>').join('');
+}
+/** Footer: „Weiter ›" moves on; on the last card it becomes „Jetzt testen" once every card was flipped,
+ *  otherwise it jumps to the first card that is still unseen (the hint says so). */
+function renderLearnFooter() {
+  const chunk = S.chunk;
+  const n = chunk.word_ids.length;
+  const last = chunk.index === n - 1;
+  const unseen = n - chunkSeenCount(chunk);
+  const btn = $('btn-learn-next');
+  $('btn-learn-prev').disabled = chunk.index === 0;
+  btn.disabled = false;
+  if (last && !unseen) { btn.textContent = 'Jetzt testen'; $('learn-hint').textContent = 'Alle Karten gesehen'; }
+  else if (last) { btn.textContent = 'Weiter ›'; $('learn-hint').textContent = 'Alle Karten einmal umdrehen – noch ' + plural(unseen, 'Karte', 'Karten') + ' (Weiter springt dorthin)'; }
+  else { btn.textContent = 'Weiter ›'; $('learn-hint').textContent = unseen ? 'Noch ' + plural(unseen, 'Karte', 'Karten') + ' umdrehen' : 'Alle Karten gesehen – Test auf der letzten Karte'; }
+}
+/** Tap = flip. The first flip to the back marks the card as seen; flipping back to the front replays the clip. */
+function flipLearn() {
+  const chunk = S.chunk;
+  if (!chunk || S.screen !== 'learn') return;
+  learn.flipped = !learn.flipped;
+  $('flip').classList.toggle('flipped', learn.flipped);
+  if (learn.flipped) {
+    const id = chunk.word_ids[chunk.index];
+    if (!chunk.seen[id]) { chunk.seen[id] = true; renderLearnDots(); renderLearnFooter(); saveChunk().catch(reportError); }
+  } else if (S.settings.autoplay) learnPlay();
+}
+function learnGo(index) {
+  const chunk = S.chunk;
+  if (!chunk) return;
+  chunk.index = index;
+  saveChunk().catch(reportError);
+  renderLearnCard(true);
+}
+function learnNext() {
+  const chunk = S.chunk;
+  if (!chunk || S.screen !== 'learn') return;
+  if (chunk.index < chunk.word_ids.length - 1) { learnGo(chunk.index + 1); return; }
+  if (chunkAllSeen(chunk)) { learn.token++; startChunkTest().catch(reportError); return; }
+  const first = chunk.word_ids.findIndex((id) => !chunk.seen[id]);
+  learnGo(first < 0 ? 0 : first);
+}
+function learnPrev() { const c = S.chunk; if (c && S.screen === 'learn' && c.index > 0) learnGo(c.index - 1); }
+function learnPlay() {
+  const word = learnWord();
+  if (!word) return;
+  const token = learn.token;
+  audio.play('w_' + word.id).then((r) => { if (S.screen === 'learn' && learn.token === token && !r.ok && !r.cancelled) setHidden('learn-noaudio', false); });
+}
+/** ✕: back to the start screen; the chunk (seen flags, position) is already persisted. */
+function leaveLearn() { audio.stop(); learn.token++; goHome(); }
 
 /* ================================================================ service worker */
 let swReg = null;
@@ -2281,12 +2632,29 @@ function onRatingButton() {
   const el = document.activeElement;
   return !!el && el.classList && el.classList.contains('rate');
 }
+function onButton() { const el = document.activeElement; return !!el && el.tagName === 'BUTTON'; }
 /** Desktop shortcuts (§16): Enter = Prüfen/Weiter, Space = replay while the input is not focused, 1–4 = rating,
  *  Esc = leave. In the feedback panel Space confirms „Weiter" (§8) — replay stays on the card tap. A focused
- *  rating button keeps its native Enter/Space click. */
+ *  rating button keeps its native Enter/Space click. Learn screen: Space/Enter = flip, ←/→ = previous/next,
+ *  Enter on the last card (all seen) = start the test, Esc = back to start. */
 function onKeyDown(e) {
   if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
   if (!$('dialog').hidden) { if (e.key === 'Escape' && dialogState.close) { e.preventDefault(); dialogState.close(false); } return; }
+  if (S.screen === 'learn' && S.chunk) {
+    if (isTyping()) return;
+    if (e.key === 'Escape') { e.preventDefault(); leaveLearn(); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); learnNext(); return; }
+    if (e.key === 'ArrowLeft') { e.preventDefault(); learnPrev(); return; }
+    if (onButton()) return; // a focused footer/speaker button keeps its native Enter/Space click
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      const c = S.chunk;
+      if (c.index === c.word_ids.length - 1 && chunkAllSeen(c)) learnNext(); else flipLearn();
+      return;
+    }
+    if (e.key === ' ') { e.preventDefault(); flipLearn(); return; }
+    return;
+  }
   if (S.screen === 'session' && S.session) {
     const ses = S.session;
     if (e.key === 'Escape') { e.preventDefault(); leaveSession(); return; }
@@ -2308,17 +2676,14 @@ function onKeyDown(e) {
     if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); goHome(); }
   } else if (S.screen === 'stats' || S.screen === 'settings') {
     if (e.key === 'Escape' && !isTyping()) { e.preventDefault(); goHome(); }
-  } else if (S.screen === 'listen') {
-    if (e.key === 'Escape') { e.preventDefault(); stopListen(); }
-    else if (e.key === ' ' && !isTyping()) { e.preventDefault(); toggleListenPause(); }
   }
 }
 
 /* ================================================================ UI binding */
 function goHome() { renderStart(); showScreen('start'); }
 function bindUI() {
-  $('btn-start').addEventListener('click', guard(startSession));
-  $('btn-listen').addEventListener('click', guard(startListen));
+  $('btn-chunk').addEventListener('click', guard(onChunkButton));
+  $('btn-review').addEventListener('click', guard(startSession));
   $('nav-stats').addEventListener('click', guard(async () => { showScreen('stats'); await renderStats(); }));
   $('nav-settings').addEventListener('click', guard(() => { renderSettings(); showScreen('settings'); }));
   $('btn-stats-back').addEventListener('click', guard(goHome));
@@ -2333,16 +2698,31 @@ function bindUI() {
     replayAudio();
   }));
   $('card').addEventListener('keydown', (e) => { if ((e.key === 'Enter' || e.key === ' ') && document.activeElement === $('card')) { e.preventDefault(); e.stopPropagation(); replayAudio(); } });
+
+  // Learn screen: tap the card to flip (the speaker buttons replay instead), footer buttons, close.
+  $('flip').addEventListener('click', guard((e) => {
+    if (e.target && e.target.closest && e.target.closest('button')) return;
+    flipLearn();
+  }));
+  document.querySelectorAll('.learn-speaker').forEach((b) => b.addEventListener('click', guard((e) => { e.stopPropagation(); learnPlay(); })));
+  $('btn-learn-prev').addEventListener('click', guard(learnPrev));
+  $('btn-learn-next').addEventListener('click', guard(learnNext));
+  $('btn-learn-close').addEventListener('click', guard(leaveLearn));
   $('answer-form').addEventListener('submit', guard((e) => { e.preventDefault(); submitAnswer(); }));
   $('btn-mic').addEventListener('click', guard(startListening));
   $('btn-next').addEventListener('click', guard(confirmRating));
   document.querySelectorAll('.rate').forEach((b) => b.addEventListener('click', guard(() => rate(Number(b.dataset.rating)))));
 
-  $('set-new').addEventListener('change', guard(async () => {
-    const v = Math.min(30, Math.max(1, Math.round(Number($('set-new').value)) || 7));
-    $('set-new').value = v; S.settings.newPerDay = v; await saveSettings(); renderStart();
+  $('set-chunk').addEventListener('change', guard(async () => {
+    const v = Math.min(20, Math.max(5, Math.round(Number($('set-chunk').value)) || 10));
+    $('set-chunk').value = v; S.settings.chunkSize = v; await saveSettings(); renderStart();
+  }));
+  $('set-chunks').addEventListener('change', guard(async () => {
+    const v = Math.min(3, Math.max(1, Math.round(Number($('set-chunks').value)) || 1));
+    $('set-chunks').value = v; S.settings.chunksPerDay = v; await saveSettings(); renderStart();
   }));
   $('set-autoplay').addEventListener('change', guard(async () => { S.settings.autoplay = $('set-autoplay').checked; await saveSettings(); }));
+  $('set-audio-before').addEventListener('change', guard(async () => { S.settings.audioBefore = $('set-audio-before').checked; await saveSettings(); }));
   $('set-voice').addEventListener('change', guard(async () => { S.settings.voice = $('set-voice').checked; await saveSettings(); }));
   $('btn-export').addEventListener('click', guard(doExport));
   $('btn-import').addEventListener('click', () => { $('file-import').value = ''; $('file-import').click(); });
@@ -2352,10 +2732,6 @@ function bindUI() {
   $('btn-reset-yes').addEventListener('click', guard(async () => { setHidden('reset-confirm', true); await doReset(); }));
   $('btn-update-check').addEventListener('click', guard(checkUpdate));
   $('btn-update').addEventListener('click', guard(applyUpdate));
-
-  $('btn-listen-pause').addEventListener('click', guard(toggleListenPause));
-  $('btn-listen-stop').addEventListener('click', guard(stopListen));
-  $('btn-listen-close').addEventListener('click', guard(stopListen));
 
   document.addEventListener('keydown', onKeyDown);
   // Counts may change while the tab was in the background (new day, learning steps due).
@@ -2394,6 +2770,7 @@ window.Tango = {
   db: { openDB, dbGet, dbPut, dbAdd, dbGetAll, dbDelete, dbClear, dbCount, dbBulkPut, runTx, metaGet, metaSet },
   fsrs,
   match,
+  phonetic: { keyEs, keysDe, phoneticMatch },
   normalize: normalizeAnswer,
   buildCloze,
   audio,
@@ -2407,12 +2784,19 @@ window.Tango = {
     getReviews: () => dbGetAll('reviews'),
     setTimeOffsetDays: (n) => { lsSet('tango_time_offset_ms', String(Math.round((Number(n) || 0) * DAY))); refreshUI(); return nowMs(); },
     getTimeOffsetDays: () => (Number(lsGet('tango_time_offset_ms')) || 0) / DAY,
-    getQueuePreview: () => { const q = computeQueue(nowMs()); return { newCount: q.newWords.length, dueCount: q.due.length, newCloze: q.newCloze.length, newBuild: q.newBuild.length, total: q.queue.length }; },
+    getQueuePreview: () => { const q = computeQueue(nowMs()); return { dueCount: q.due.length, newCloze: q.newCloze.length, newBuild: q.newBuild.length, total: q.queue.length, unlearned: unlearnedWords().length }; },
+    /** Chunk (Stapel) API: the persisted record, start one when the daily limit allows, open/test it. */
+    getChunk: () => S.chunk,
+    startChunk: async () => { const c = await startChunk(); refreshUI(); return c; },
+    openLearn: () => { if (S.session) leaveSession(); openLearn(); return S.screen; },
+    startChunkTest: async () => { if (S.session) leaveSession(); await startChunkTest(); return S.screen; },
+    /** Phonetic assertions from the spec → failures (empty array = ok). */
+    selfTest: phoneticSelfTest,
     /** Drive one specific card in a one-card session (tests cloze/build flows directly). */
     showCard: (id) => {
       if (!S.cards.get(id)) throw new Error('Karte nicht gefunden: ' + id);
       if (S.session) leaveSession();
-      if (S.screen === 'listen') stopListen();
+      if (S.screen === 'learn') leaveLearn();
       audio.unlock();
       S.session = newSession([id], nowMs());
       showScreen('session');

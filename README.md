@@ -1,6 +1,6 @@
 # Tango – Vokabeltrainer für Rioplatense-Spanisch
 
-Audio zuerst, Text danach. Eine PWA fürs iPhone, komplett offline, FSRS-Wiederholung, drei Kartentypen (Wort, Lückensatz, Satz bauen). Wörter zuerst: Ein Lückensatz wird erst fällig, wenn sein Zielwort gefestigt ist (FSRS-Status „Review“) und alle anderen Listenwörter des Satzes schon als Einzelwörter gelernt wurden; „Satz bauen“ kommt, sobald mindestens drei Wörter gelernt sind. 500 Wörter in 7 Blöcken und über 300 Beispielsätze im Spanisch von Buenos Aires (`vos`, `acá`, `plata`, `colectivo`). Die Audio-Clips werden einmalig lokal mit F5-TTS aus einer Referenzstimme erzeugt und ins Repo committet.
+Erst lernen, dann testen. Eine PWA fürs iPhone, komplett offline. Neue Wörter kommen als Karteikarten-Stapel von 10: Karte antippen dreht sie (Spanisch mit Audio ↔ Deutsch); sind alle 10 gesehen, folgt der Test (Deutsch → Spanisch tippen oder sprechen, danach Auflösung mit Audio). Danach übernimmt die FSRS-Wiederholung mit drei Kartentypen (Wort, Lückensatz, Satz bauen). Wörter zuerst: Ein Lückensatz wird erst fällig, wenn sein Zielwort gefestigt ist und alle anderen Listenwörter des Satzes schon gelernt wurden. Antworten dürfen lautschriftlich mit deutschen Buchstaben getippt werden („kaje“ für calle, „tschau“ für chau, „tenes“ ohne Akzent), die richtige Schreibweise wird dann angezeigt. 500 Wörter in 7 Blöcken und über 450 Beispielsätze im Spanisch von Buenos Aires (`vos`, `acá`, `plata`, `colectivo`). Die Audio-Clips werden einmalig lokal mit F5-TTS aus einer Referenzstimme erzeugt und ins Repo committet.
 
 **App:** https://aeneassoft.github.io/tango-vocab/
 
@@ -10,7 +10,7 @@ Audio zuerst, Text danach. Eine PWA fürs iPhone, komplett offline, FSRS-Wiederh
 2. Teilen-Symbol → „Zum Home-Bildschirm" → „Hinzufügen".
 3. Vom Home-Bildschirm öffnen (startet ohne Browserleiste) und einmal **Start** tippen.
 4. Auf dem Startbildschirm kurz warten, bis „offline bereit" steht (die Audio-Clips werden im Hintergrund gecacht).
-5. Ab jetzt läuft alles im Flugmodus – Wiederholungen, Audio, Statistik, Export.
+5. Ab jetzt läuft alles im Flugmodus – Stapel, Tests, Wiederholungen, Audio, Statistik, Export.
 
 ## Wörter hinzufügen
 
@@ -34,7 +34,6 @@ Umfang: 954 Clips (500 Wörter, 454 Sätze), 10.9 MB in `app/audio/`; Wörter im
 
 ## Bekannte Einschränkungen
 
-- Der Nur-hören-Modus pausiert, sobald das Display gesperrt wird (iOS lässt Web-Apps im Hintergrund kein Audio weiterspielen). Display anlassen.
 - Die Spracheingabe (Web Speech API, `es-AR`) läuft über Apple-Server und braucht eine Internetverbindung; alles andere funktioniert offline.
 - Das Gardel-Zitat („Volver") ist nicht enthalten: keine der ersten vier Zeilen besteht vollständig aus Wörtern der Liste. Eigene Songzeilen können als Satz mit `note=lyric` in `sentences.csv` ergänzt werden (die Längenregel gilt dann nicht).
 - Ein neues Deployment ersetzt den App-Cache; Audio-Clips werden nur nachgeladen, wenn sich Dateiname oder Größe geändert hat.
