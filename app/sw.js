@@ -95,7 +95,9 @@ async function serveShellPage(req) {
   try {
     const res = await fetch(req);
     if (res && res.ok) {
-      caches.open(SHELL).then((c) => c.put('./index.html', res.clone())).catch(() => {});
+      // Clone before the body is handed to respondWith — a later clone() would find it already consumed.
+      const copy = res.clone();
+      caches.open(SHELL).then((c) => c.put('./index.html', copy)).catch(() => {});
     }
     return res;
   } catch (e) {

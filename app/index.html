@@ -195,6 +195,8 @@ input[type=number] { width: 92px; text-align: center; }
   cursor: pointer;
 }
 html.banner-open #app { padding-top: 0; }
+/* The overview's sticky header sits below the update banner instead of underneath it (--banner-h set by JS). */
+html.banner-open .bar.sticky { top: var(--banner-h, 0px); margin-top: -12px; padding-top: 12px; }
 .toasts {
   position: fixed;
   left: 16px;
@@ -296,6 +298,16 @@ html.banner-open #app { padding-top: 0; }
 .speaker svg { width: 36px; height: 36px; }
 .speaker.big svg { width: 84px; height: 84px; }
 .speaker.big { color: var(--text); }
+/* While a clip plays, the speaker that started it (data-play = clip name) turns accent. */
+.speaker.playing, .icon-btn.playing { color: var(--accent-hi); }
+.listen-hint { color: var(--muted); font-size: 17px; }
+.listen-actions { display: flex; flex-direction: column; gap: 10px; }
+.repeat-box { display: flex; flex-direction: column; gap: 8px; align-items: center; padding-top: 4px; }
+.repeat-box .btn { max-width: 320px; }
+.repeat-box .btn.listening { color: var(--accent-hi); border-color: var(--accent-hi); animation: pulse 1s ease-in-out infinite alternate; }
+.repeat-result { font-size: 17px; min-height: 1.4em; }
+.repeat-result.good { color: var(--ok); }
+.repeat-transcript { color: var(--muted); font-size: 16px; }
 .tag {
   position: absolute;
   top: 10px;
@@ -429,6 +441,8 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
   transition: transform .35s;
 }
 .flip.flipped .flip-inner { transform: rotateY(180deg); }
+/* Returning to the front for the next card swaps instantly, so the back face never shows the next answer. */
+.flip-inner.noanim { transition: none !important; }
 .face {
   position: absolute;
   inset: 0;
@@ -538,6 +552,21 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
 .ov-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; color: var(--muted); font-size: 13px; padding: 12px 0 4px; align-items: center; }
 .ov-legend .sdot { display: inline-block; margin-right: 5px; vertical-align: -1px; }
 .ov-empty { color: var(--muted); padding: 24px 0; text-align: center; }
+.ov-close { margin-top: 6px; text-align: right; }
+.ov-close .btn.link { min-height: 44px; padding: 8px 4px; font-size: 14px; }
+/* Block sentences („Sätze"): free listening practice, the German toggles on tap. */
+.ov-sents-bar { padding: 4px 0 8px; }
+.ov-sents-bar .btn { min-height: 48px; padding: 8px 6px; font-size: 16px; }
+.ov-sents-bar .btn.on { border-color: var(--accent-hi); }
+.ov-sents { border-top: 1px solid var(--line); margin-bottom: 8px; }
+.ov-sent { display: flex; align-items: center; gap: 6px; min-height: 52px; padding: 4px 0; border-bottom: 1px solid var(--line); cursor: pointer; }
+.ov-sent .txt { flex: 1; min-width: 0; }
+.ov-sent .es { font-size: 17px; line-height: 1.3; }
+.ov-sent .de { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.ov-sent .lock { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.ov-sent.locked .es { opacity: .5; }
+.ov-sent .icon-btn { min-width: 48px; min-height: 48px; margin-left: -8px; }
+.ov-sent .icon-btn svg { width: 24px; height: 24px; }
 
 /* ---------------------------------------------------------------- error */
 .error-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; text-align: center; }
@@ -656,7 +685,15 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
             <div id="p-build-words" class="build-words"></div>
             <div class="note">Bilde einen Satz mit diesen Wörtern – sprich oder tipp ihn.</div>
           </div>
+          <div id="p-listen" hidden>
+            <div class="listen-hint">Hör zu und versteh den Satz</div>
+            <div class="note">Tippen zum Wiederholen</div>
+          </div>
         </div>
+      </div>
+
+      <div id="listen-actions" class="listen-actions" hidden>
+        <button type="button" id="btn-reveal" class="btn primary">Aufdecken</button>
       </div>
 
       <form id="answer-form" class="answer" hidden autocomplete="off">
@@ -676,6 +713,11 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
         <div id="fb-target" class="fb-target"></div>
         <div id="fb-sub" class="fb-sub" hidden></div>
         <div id="fb-input" class="fb-input" hidden></div>
+        <div id="repeat-box" class="repeat-box" hidden>
+          <button type="button" id="btn-repeat" class="btn">Nachsprechen</button>
+          <div id="repeat-result" class="repeat-result" aria-live="polite"></div>
+          <div id="repeat-transcript" class="repeat-transcript"></div>
+        </div>
       </div>
 
       <div id="rating" class="rating" hidden>
@@ -730,6 +772,7 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
     </header>
     <div class="totals" id="stats-totals"></div>
     <p id="stats-counter" class="today-sub" style="margin-top:10px"></p>
+    <p id="stats-listen" class="today-sub"></p>
     <h3>Diese Woche</h3>
     <div class="totals" id="stats-week"></div>
     <h3>Wörter pro Block</h3>
@@ -751,9 +794,14 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
     <label class="row"><span class="lbl">Wörter pro Stapel</span><input id="set-chunk" type="number" min="5" max="20" step="1" inputmode="numeric"></label>
     <label class="row"><span class="lbl">Karten pro Tag (für die Abstände)</span><input id="set-rpd" type="number" min="5" max="100" step="1" inputmode="numeric"></label>
     <div class="row"><span class="lbl">Reihenfolge</span><div class="seg" id="set-order" role="group" aria-label="Reihenfolge"><button type="button" data-order="prio">Priorität</button><button type="button" data-order="block">Blöcke</button></div></div>
-    <label class="row"><span class="lbl">Auto-Play</span><input id="set-autoplay" type="checkbox" class="switch"></label>
+    <label class="row"><span class="lbl">Auto-Play<span class="cnt">Audio nach der Antwort</span></span><input id="set-autoplay" type="checkbox" class="switch"></label>
     <label class="row"><span class="lbl">Audio vor der Antwort abspielen</span><input id="set-audio-before" type="checkbox" class="switch"></label>
+    <label class="row"><span class="lbl">Karteikarten automatisch vorlesen</span><input id="set-learn-autoplay" type="checkbox" class="switch"></label>
     <label class="row" id="row-voice"><span class="lbl">Spracheingabe</span><input id="set-voice" type="checkbox" class="switch"></label>
+    <h3>Kartentypen beim Wiederholen</h3>
+    <label class="row"><span class="lbl">Lückensätze</span><input id="set-use-cloze" type="checkbox" class="switch"></label>
+    <label class="row"><span class="lbl">Satz bauen</span><input id="set-use-build" type="checkbox" class="switch"></label>
+    <label class="row"><span class="lbl">Satz verstehen</span><input id="set-use-listen" type="checkbox" class="switch"></label>
     <h3>Blöcke</h3>
     <div id="block-toggles"></div>
     <h3>Daten</h3>
@@ -802,10 +850,14 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
 const DAY = 86400000;
 const MIN = 60000;
 const BLOCK_NAMES = { 1: 'Skelett', 2: 'Kernverben', 3: 'Fragen & Antworten', 4: 'Stadt, Tag, Zahlen', 5: 'Menschen & Körper', 6: 'Milonga', 7: 'Alltag & Gefühle', 8: 'Arbeit & Werkstatt', 9: 'Einkaufen', 10: 'Milonga-Gespräche', 11: 'Zahlen, Uhrzeit, Wohnen', 12: 'Lunfardo & Alltagssprache', 13: 'Behörden, Geld & Papiere', 14: 'Essen & Trinken', 15: 'Körper & Gesundheit', 16: 'Weitere Verben', 17: 'Wetter, Verkehr & Zeit', 18: 'Fußball & Smalltalk' };
-const TYPE_LABELS = { word: 'Produktion', cloze: 'Lückensatz', build: 'Satz bauen' };
+const TYPE_LABELS = { word: 'Produktion', cloze: 'Lückensatz', build: 'Satz bauen', listen: 'Satz verstehen' };
 const TYPE_SUFFIX = { word: 'w', cloze: 'c', build: 'b' };
 // `blocks` = enabled blocks; null = every block present in the data (resolved once the data is known).
-const DEFAULT_SETTINGS = { chunkSize: 10, reviewsPerDay: 20, order: 'prio', autoplay: true, audioBefore: false, blocks: null, voice: true };
+// `autoplay` = feedback audio in tests/reviews; `learnAutoplay` = flashcards read the front automatically (off:
+// only the speaker button plays). useCloze/useBuild/useListen switch the extra card types in the review queue.
+const DEFAULT_SETTINGS = { chunkSize: 10, reviewsPerDay: 20, order: 'prio', autoplay: true, audioBefore: false, learnAutoplay: false, useCloze: true, useBuild: true, useListen: true, blocks: null, voice: true };
+const RATE_PHASES = { feedback: true, build: true, reveal: true }; // session phases in which a rating is accepted
+const REPEAT_GOOD = 80; // „Nachsprechen" ≥ 80 % renders green
 const CHUNK_TEST_MAX_ASKS = 3; // a word is asked at most this often within one chunk test
 const RATING_NAMES = { 1: 'Nochmal', 2: 'Schwer', 3: 'Gut', 4: 'Leicht' };
 // Learning steps in answers (count-based scheduling): New/Learning/Relearning Again → 2, Hard → 4, Good (New) → 8.
@@ -1076,9 +1128,11 @@ const fsrs = (function () {
 })();
 
 /* ================================================================ answer matching */
-const PUNCT_RE = /[¿?¡!.,;:"'()«»…\-–—“”‘’\[\]]/g;
+const PUNCT_RE = /[¿?¡!.,;:"()«»…\-–—“”\[\]]/g;
+const APOS_RE = /['‘’]/g;
+/** NFC, lower-case, punctuation → space, apostrophes dropped ("D'Arienzo" → "darienzo" stays one token). */
 function normalizeAnswer(s) {
-  return String(s == null ? '' : s).normalize('NFC').toLowerCase().replace(PUNCT_RE, ' ').replace(/\s+/g, ' ').trim();
+  return String(s == null ? '' : s).normalize('NFC').toLowerCase().replace(APOS_RE, '').replace(PUNCT_RE, ' ').replace(/\s+/g, ' ').trim();
 }
 function levenshtein(a, b) {
   if (a === b) return 0;
@@ -1156,6 +1210,30 @@ function keysDe(input) {
   return [...new Set(variants.map((v) => v.replace(/(.)\1+/g, '$1')))];
 }
 function phoneticMatch(input, target) { const t = keyEs(target); return !!t && keysDe(input).includes(t); }
+/** Ratcliff/Obershelp similarity (difflib's ratio): 2 · matched / (|a| + |b|), matched = longest common
+ *  substring, recursively left and right of it. Used on phonetic keys for „Nachsprechen". */
+function similarity(a, b) {
+  a = String(a || ''); b = String(b || '');
+  if (!a.length && !b.length) return 1;
+  if (!a.length || !b.length) return 0;
+  function matched(a0, a1, b0, b1) {
+    if (a0 >= a1 || b0 >= b1) return 0;
+    let best = 0, bi = a0, bj = b0;
+    let prev = new Array(b1 - b0 + 1).fill(0), cur = new Array(b1 - b0 + 1).fill(0);
+    for (let i = a0; i < a1; i++) {
+      cur[0] = 0;
+      for (let j = b0; j < b1; j++) {
+        const v = a[i] === b[j] ? prev[j - b0] + 1 : 0;
+        cur[j - b0 + 1] = v;
+        if (v > best) { best = v; bi = i - v + 1; bj = j - v + 1; }
+      }
+      const t = prev; prev = cur; cur = t;
+    }
+    if (!best) return 0;
+    return best + matched(a0, bi, b0, bj) + matched(bi + best, a1, bj + best, b1);
+  }
+  return 2 * matched(0, a.length, 0, b.length) / (a.length + b.length);
+}
 /** Assertions from the spec; returns the failing cases (empty array = ok). */
 function phoneticSelfTest() {
   const yes = [['kaje', 'calle'], ['kalje', 'calle'], ['tschau', 'chau'], ['bos', 'vos'], ['ke', 'que'], ['tenes', 'tenés'], ['hente', 'gente'], ['chente', 'gente'], ['jente', 'gente'], ['scho', 'yo'], ['jo', 'yo'], ['plata', 'plata'], ['akah', 'acá'], ['tjene', 'tiene'], ['sie', 'sí'], ['bailas', '¿bailás?'], ['milonga', 'milonga'], ['sisha', 'silla']];
@@ -1163,6 +1241,14 @@ function phoneticSelfTest() {
   const fails = [];
   yes.forEach(([a, b]) => { if (!phoneticMatch(a, b)) fails.push('erwartet true: ' + a + ' / ' + b); });
   no.forEach(([a, b]) => { if (phoneticMatch(a, b)) fails.push('erwartet false: ' + a + ' / ' + b); });
+  // Apostrophes are dropped, not split: "D'Arienzo" is one token for the answer check and the cloze gap.
+  if (normalizeAnswer("D'Arienzo") !== 'darienzo') fails.push('normalize: D\'Arienzo → ' + normalizeAnswer("D'Arienzo"));
+  if (match('darienzo', "D'Arienzo").result !== 'exact') fails.push('match: darienzo / D\'Arienzo ≠ exact');
+  if (match("d'arienzo", "D'Arienzo").result !== 'exact') fails.push('match: d\'arienzo / D\'Arienzo ≠ exact');
+  const cz = buildCloze("Me encanta esta orquesta, es D'Arienzo.", "D'Arienzo");
+  if (!cz.found || cz.gapped !== 'Me encanta esta orquesta, es ____.') fails.push('cloze: D\'Arienzo nicht gelückt: ' + cz.gapped);
+  if (phoneticMatch('darienso', "D'Arienzo") !== true) fails.push('erwartet true: darienso / D\'Arienzo');
+  if (similarity('abc', 'abc') !== 1 || similarity('abc', '') !== 0 || Math.abs(similarity('abcd', 'abxd') - 0.75) > 1e-9) fails.push('similarity ratio');
   return fails;
 }
 const MATCH_RANK = { exact: 3, phonetic: 2, near: 1, wrong: 0 };
@@ -1221,29 +1307,68 @@ function splitToken(t) {
  *  Exact token match first; for a single target token (≥ 4 chars) an inflected surface form within
  *  edit distance 1 (linda ↔ lindo) is accepted as the gap. `surface` is the text that was gapped and
  *  `inflected` tells whether it differs from the dictionary form (the answer check accepts both). */
-function buildCloze(sentence, targetForm) {
-  const raw = String(sentence || '');
-  const targetTokens = normalizeAnswer(targetForm).split(' ').filter(Boolean);
-  const pieces = raw.split(/(\s+)/).map((t) => (/^\s+$/.test(t) ? { sep: t } : splitToken(t)));
+/** Tokenise a sentence into word pieces ({pre, core, post}) and whitespace pieces ({sep}). */
+function tokenizeSentence(raw) {
+  const pieces = String(raw || '').split(/(\s+)/).map((t) => (/^\s+$/.test(t) ? { sep: t } : splitToken(t)));
   const wordIdx = [];
   pieces.forEach((p, i) => { if (p.sep === undefined) wordIdx.push(i); });
-  let hitStart = -1, hitEnd = -1;
+  return { pieces, wordIdx };
+}
+/** Locate `targetForm` in the pieces: exact token run first; for a single token (≥ 4 chars) an inflected
+ *  surface form within edit distance 1. `skip` = piece indices already taken. → {start, end} or null. */
+function findTokenRun(pieces, wordIdx, targetForm, skip) {
+  const targetTokens = normalizeAnswer(targetForm).split(' ').filter(Boolean);
+  const free = (idx) => !skip || !skip.has(idx);
   if (targetTokens.length) {
     for (let k = 0; k + targetTokens.length <= wordIdx.length; k++) {
       let ok = true;
       for (let j = 0; j < targetTokens.length; j++) {
-        if (normalizeAnswer(pieces[wordIdx[k + j]].core) !== targetTokens[j]) { ok = false; break; }
+        const idx = wordIdx[k + j];
+        if (!free(idx) || normalizeAnswer(pieces[idx].core) !== targetTokens[j]) { ok = false; break; }
       }
-      if (ok) { hitStart = wordIdx[k]; hitEnd = wordIdx[k + targetTokens.length - 1]; break; }
+      if (ok) return { start: wordIdx[k], end: wordIdx[k + targetTokens.length - 1] };
     }
   }
-  if (hitStart < 0 && targetTokens.length === 1 && Array.from(targetTokens[0]).length >= 4) {
+  if (targetTokens.length === 1 && Array.from(targetTokens[0]).length >= 4) {
     const t = targetTokens[0];
     for (const idx of wordIdx) {
+      if (!free(idx)) continue;
       const core = normalizeAnswer(pieces[idx].core);
-      if (core && Math.abs(Array.from(core).length - Array.from(t).length) <= 1 && levenshtein(core, t) <= 1) { hitStart = hitEnd = idx; break; }
+      if (core && Math.abs(Array.from(core).length - Array.from(t).length) <= 1 && levenshtein(core, t) <= 1) return { start: idx, end: idx };
     }
   }
+  return null;
+}
+/** Sentence HTML with every given word form (surface tokens, same rules as the cloze gap) in accent colour. */
+function highlightSentence(sentence, forms) {
+  const { pieces, wordIdx } = tokenizeSentence(sentence);
+  const taken = new Set();
+  const runs = [];
+  (forms || []).forEach((f) => {
+    const run = findTokenRun(pieces, wordIdx, f, taken);
+    if (run) { runs.push(run); for (let i = run.start; i <= run.end; i++) taken.add(i); }
+  });
+  const startAt = new Map(runs.map((r) => [r.start, r.end]));
+  let html = '';
+  for (let i = 0; i < pieces.length; i++) {
+    const p = pieces[i];
+    if (p.sep !== undefined) { html += escapeHtml(p.sep); continue; }
+    if (startAt.has(i)) {
+      const end = startAt.get(i), last = pieces[end];
+      const inner = pieces.slice(i, end + 1).map((q, k) => (q.sep !== undefined ? q.sep : (k === 0 ? '' : q.pre) + q.core + (q === last ? '' : q.post))).join('');
+      html += escapeHtml(p.pre) + '<span class="hit">' + escapeHtml(inner) + '</span>' + escapeHtml(last.post);
+      i = end;
+      continue;
+    }
+    html += escapeHtml(p.pre + p.core + p.post);
+  }
+  return html;
+}
+function buildCloze(sentence, targetForm) {
+  const raw = String(sentence || '');
+  const { pieces, wordIdx } = tokenizeSentence(raw);
+  const run = findTokenRun(pieces, wordIdx, targetForm, null);
+  const hitStart = run ? run.start : -1, hitEnd = run ? run.end : -1;
   if (hitStart < 0) {
     return { found: false, gapped: raw, gappedHtml: escapeHtml(raw), highlightHtml: escapeHtml(raw), surface: '', inflected: false };
   }
@@ -1269,17 +1394,25 @@ function buildCloze(sentence, targetForm) {
 /* ================================================================ audio engine */
 const audio = (function () {
   const AC = window.AudioContext || window.webkitAudioContext;
-  const MAX_CACHE = 200;
+  const HAS_EL = typeof window.Audio === 'function';
+  const MAX_CACHE_BYTES = 24 * 1024 * 1024; // decoded Web Audio buffers (fallback path only)
   const cache = new Map();      // key → AudioBuffer (insertion order = LRU order)
+  let cacheBytes = 0;
   const missing = new Set();    // keys known to be unavailable (this page load)
   const inflight = new Map();   // key → Promise<AudioBuffer|null>
   let known = null;             // Set of keys listed in audio/manifest.json (null = unknown → always try)
-  let ctx = null;
-  let unlocked = false;
-  let el = null;                // <audio> fallback
-  let current = null;           // {stop(), resolveEnded}
+  let ctx = null;               // AudioContext, created lazily for the fallback only
+  let el = null;                // the one reused <audio playsinline preload="auto">
+  let unlocked = false;         // the element has played (a silent clip) inside a user gesture
+  let current = null;           // {name, stop(), resolveEnded, el|src}
   let playToken = 0;
   let seqToken = 0;
+  let blockedToast = false;     // „Audio blockiert" shown once per blocked episode
+  let lastEngine = null;        // 'element' | 'webaudio' — what played last (debugging)
+  const listeners = [];         // playing-state subscribers: fn({name, playing})
+  // The element is the primary engine: on iOS its output follows the media volume, not the ringer switch
+  // (Web Audio is muted by the silent switch). Web Audio remains a per-clip fallback when the element fails.
+  const mode = HAS_EL ? 'element' : (AC ? 'webaudio' : 'element');
 
   // Clip names are accepted with or without the extension ("w_12" and "w_12.m4a" are the same clip).
   const keyOf = (name) => String(name || '').replace(/\.m4a$/i, '');
@@ -1289,6 +1422,10 @@ const audio = (function () {
     known = Array.isArray(names) ? new Set(names.map(keyOf)) : null;
     if (known) known.forEach((k) => missing.delete(k)); // the manifest may have gained clips since the last miss
   }
+  function notify(name, playing) {
+    listeners.forEach((fn) => { try { fn({ name, playing }); } catch (e) { /* never throw */ } });
+  }
+  function subscribe(fn) { if (typeof fn === 'function') listeners.push(fn); }
 
   function silentWavUrl() {
     // 44-byte header + 2 samples of silence, 8 kHz mono 16-bit.
@@ -1301,32 +1438,32 @@ const audio = (function () {
     let bin = ''; for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
     return 'data:audio/wav;base64,' + btoa(bin);
   }
+  const SILENT = silentWavUrl();
 
-  /** Must be called synchronously inside a user gesture (Start tap) — iOS unlock. */
+  function ensureEl() {
+    if (!el && HAS_EL) {
+      el = document.createElement('audio');
+      el.setAttribute('playsinline', '');
+      el.setAttribute('webkit-playsinline', '');
+      el.preload = 'auto';
+    }
+    return el;
+  }
+  /** Cheap and idempotent; called (capture phase) on every pointerdown/touchend/keydown so audio works again
+   *  after backgrounding or a phone call: (a) the element plays a silent clip once inside the gesture,
+   *  (b) a suspended Web Audio context is resumed. Never throws. */
   function unlock() {
     try {
-      if (AC) {
-        if (!ctx) ctx = new AC();
-        if (ctx.state !== 'running') ctx.resume().catch(noop);
-        if (!unlocked) {
-          const buf = ctx.createBuffer(1, 1, 22050);
-          const src = ctx.createBufferSource();
-          src.buffer = buf; src.connect(ctx.destination); src.start(0);
-          unlocked = true;
-        }
-      } else {
-        ensureEl();
-        if (!unlocked) {
-          unlocked = true;
-          el.src = silentWavUrl();
-          const p = el.play(); if (p && p.catch) p.catch(noop);
-        }
+      const a = ensureEl();
+      if (a && !unlocked && !current) {
+        unlocked = true;
+        a.src = SILENT;
+        const p = a.play();
+        // AbortError = a real clip replaced the silent one within the same gesture, which unlocks just as well.
+        if (p && p.catch) p.catch((e) => { if (!e || e.name !== 'AbortError') unlocked = false; });
       }
+      if (ctx && ctx.state !== 'running') ctx.resume().catch(noop);
     } catch (e) { /* never throw */ }
-  }
-  function ensureEl() {
-    if (!el) { el = document.createElement('audio'); el.setAttribute('playsinline', ''); el.preload = 'auto'; }
-    return el;
   }
   function decode(ab) {
     return new Promise((resolve) => {
@@ -1336,6 +1473,9 @@ const audio = (function () {
       } catch (e) { resolve(null); }
     });
   }
+  const bufferBytes = (buf) => buf.length * buf.numberOfChannels * 4;
+  /** Fallback path: fetch + decode (cached, capped by bytes). A 404 marks the clip missing for this page load;
+   *  a 503 from the worker while offline just means "not synced yet", so a later tap retries. */
   function fetchBuffer(key) {
     if (cache.has(key)) { const b = cache.get(key); cache.delete(key); cache.set(key, b); return Promise.resolve(b); }
     if (missing.has(key)) return Promise.resolve(null);
@@ -1344,14 +1484,15 @@ const audio = (function () {
     const p = (async () => {
       try {
         const res = await fetch(urlOf(key));
-        // Only a 404 (or undecodable data) is a permanent miss; a 503 from the worker while offline
-        // just means "not synced yet", so a later tap retries.
         if (!res.ok) { if (res.status === 404) missing.add(key); return null; }
+        if (!AC) return null;
+        if (!ctx) ctx = new AC();
         const ab = await res.arrayBuffer();
         const buf = await decode(ab);
         if (!buf) { missing.add(key); return null; }
         cache.set(key, buf);
-        while (cache.size > MAX_CACHE) cache.delete(cache.keys().next().value);
+        cacheBytes += bufferBytes(buf);
+        while (cacheBytes > MAX_CACHE_BYTES && cache.size > 1) { const k = cache.keys().next().value; cacheBytes -= bufferBytes(cache.get(k)); cache.delete(k); }
         return buf;
       } catch (e) {
         return null; // network failure: not permanently marked missing
@@ -1361,53 +1502,97 @@ const audio = (function () {
     return p;
   }
   function stopCurrent() {
-    if (current) { const c = current; current = null; try { c.stop(); } catch (e) { /* ignore */ } try { c.resolveEnded(); } catch (e) { /* ignore */ } }
-  }
-  /** Play one clip; resolves when playback started: {ok, duration, ended} or {ok:false}. Never throws. */
-  async function playOne(name) {
-    stopCurrent();
-    const token = ++playToken;
-    const key = keyOf(name);
-    if (!key) return { ok: false };
-    try {
-      if (AC) {
-        if (!ctx) ctx = new AC();
-        if (ctx.state !== 'running') await withTimeout(ctx.resume().catch(noop), 300, null);
-        const buf = await fetchBuffer(key);
-        if (token !== playToken) return { ok: false, cancelled: true };
-        if (!buf) return { ok: false };
-        const src = ctx.createBufferSource();
-        src.buffer = buf;
-        src.connect(ctx.destination);
-        let resolveEnded = noop;
-        const ended = new Promise((r) => { resolveEnded = r; });
-        src.onended = () => { if (current && current.src === src) current = null; resolveEnded(); };
-        src.start(0);
-        current = { src, resolveEnded, stop: () => { src.onended = null; src.stop(0); } };
-        return { ok: true, duration: buf.duration, ended };
-      }
-      return await playEl(key, token);
-    } catch (e) {
-      return { ok: false };
+    if (current) {
+      const c = current; current = null;
+      try { c.stop(); } catch (e) { /* ignore */ }
+      try { c.resolveEnded(); } catch (e) { /* ignore */ }
+      notify(c.name, false);
     }
   }
-  function playEl(name, token) {
+  /** Web Audio playback of one decoded clip (fallback). */
+  async function playBuffer(key, token) {
+    if (!AC) return { ok: false };
+    const buf = await fetchBuffer(key);
+    if (token !== playToken) return { ok: false, cancelled: true };
+    if (!buf) return { ok: false };
+    try {
+      if (!ctx) ctx = new AC();
+      if (ctx.state !== 'running') await withTimeout(ctx.resume().catch(noop), 300, null);
+      if (token !== playToken) return { ok: false, cancelled: true };
+      const src = ctx.createBufferSource();
+      src.buffer = buf;
+      src.connect(ctx.destination);
+      let resolveEnded = noop;
+      const ended = new Promise((r) => { resolveEnded = r; });
+      const me = { name: key, src, resolveEnded, stop: () => { src.onended = null; src.stop(0); } };
+      src.onended = () => { if (current === me) { current = null; notify(key, false); } resolveEnded(); };
+      src.start(0);
+      current = me;
+      lastEngine = 'webaudio';
+      notify(key, true);
+      return { ok: true, duration: buf.duration, ended };
+    } catch (e) { return { ok: false }; }
+  }
+  /** Element playback: src → play() synchronously (still inside the gesture). Resolves {ok:true, duration, ended}
+   *  on `playing`, {ok:false} on error/reject. A rejected play() (iOS blocked) shows the toast once; a media
+   *  error falls back to Web Audio for this clip (which also settles whether the clip exists at all). */
+  function playEl(key, token) {
     return new Promise((resolve) => {
-      if (missing.has(name) || (known && !known.has(name))) { missing.add(name); resolve({ ok: false }); return; }
-      ensureEl();
+      const a = ensureEl();
       let settled = false;
       let resolveEnded = noop;
       const ended = new Promise((r) => { resolveEnded = r; });
+      const me = { name: key, el: a, resolveEnded, stop: () => { a.onended = null; a.onpause = null; try { a.pause(); } catch (e) { /* ignore */ } } };
       const finish = (v) => { if (!settled) { settled = true; resolve(v); } };
-      el.onended = () => { if (current && current.el === el) current = null; resolveEnded(); };
-      el.onerror = () => { missing.add(name); finish({ ok: false }); resolveEnded(); };
-      el.onplaying = () => { if (token === playToken) finish({ ok: true, duration: el.duration || 1, ended }); };
-      el.src = urlOf(name);
-      current = { el, resolveEnded, stop: () => { el.onended = null; el.pause(); } };
-      const p = el.play();
-      if (p && p.catch) p.catch(() => finish({ ok: false }));
-      setTimeout(() => finish({ ok: false }), 4000);
+      const started = () => {
+        if (settled || token !== playToken) return;
+        blockedToast = false;
+        lastEngine = 'element';
+        notify(key, true);
+        finish({ ok: true, duration: (Number.isFinite(a.duration) && a.duration) || 1, ended });
+      };
+      const fail = (err) => {
+        if (settled) return;
+        if (token !== playToken) { finish({ ok: false, cancelled: true }); return; }
+        const name = err && err.name;
+        if (name === 'AbortError') { finish({ ok: false, cancelled: true }); return; }
+        if (current === me) current = null;
+        if (name === 'NotAllowedError') {
+          unlocked = false; // the next gesture re-runs the silent unlock
+          if (!blockedToast) { blockedToast = true; toast('Audio blockiert – bitte noch einmal tippen'); }
+          finish({ ok: false, blocked: true });
+          return;
+        }
+        // Media/network error: the fallback fetch decides (404 → missing) and plays through Web Audio if it can.
+        playBuffer(key, token).then((r) => finish(r), () => finish({ ok: false }));
+      };
+      a.onended = () => { if (current === me) { current = null; notify(key, false); } resolveEnded(); };
+      a.onpause = () => { if (current === me) notify(key, false); }; // interrupted (call, other app): icon back to normal
+      a.onerror = () => fail(a.error || { name: 'MediaError' });
+      a.onplaying = started;
+      current = me;
+      try {
+        a.src = urlOf(key);
+        const p = a.play();
+        if (p && p.then) p.then(started, fail);
+      } catch (e) { fail(e); }
+      setTimeout(() => { if (!settled) { if (current === me) { current = null; try { a.pause(); } catch (e) { /* ignore */ } } finish({ ok: false, timeout: true }); } }, 6000);
     });
+  }
+  /** Play one clip; resolves when playback started: {ok, duration, ended} or {ok:false}. Never throws.
+   *  No await before the element's play(): the call stays inside the user's gesture. */
+  function playOne(name) {
+    stopCurrent();
+    const token = ++playToken;
+    const key = keyOf(name);
+    if (!key) return Promise.resolve({ ok: false });
+    if (missing.has(key) || (known && !known.has(key))) { missing.add(key); return Promise.resolve({ ok: false }); }
+    try {
+      if (mode === 'element') return playEl(key, token);
+      return playBuffer(key, token);
+    } catch (e) {
+      return Promise.resolve({ ok: false });
+    }
   }
   function play(name) { seqToken++; return playOne(name); }
   function stop() { seqToken++; playToken++; stopCurrent(); }
@@ -1427,14 +1612,19 @@ const audio = (function () {
   }
   /** True when the clip is known to be unavailable (404/decode failure seen, or absent from the manifest). */
   function isKnownMissing(name) { const k = keyOf(name); return missing.has(k) || (!!known && !known.has(k)); }
+  function isPlaying(name) { return !!current && (name == null || current.name === keyOf(name)); }
   document.addEventListener('visibilitychange', () => { if (!document.hidden && ctx && ctx.state !== 'running') { try { ctx.resume().catch(noop); } catch (e) { /* ignore */ } } });
-  return { unlock, play, stop, playSequence, isKnownMissing, setKnown, get context() { return ctx; }, get unlocked() { return unlocked; } };
+  // Unlock on every user gesture (capture phase, before any handler): cheap, idempotent, fixes buttons that
+  // did nothing after the app was backgrounded or after a phone call.
+  ['pointerdown', 'touchend', 'keydown'].forEach((t) => document.addEventListener(t, unlock, { capture: true, passive: true }));
+  return { unlock, play, stop, playSequence, isKnownMissing, isPlaying, setKnown, subscribe, mode, get lastEngine() { return lastEngine; }, get context() { return ctx; }, get unlocked() { return unlocked; }, get element() { return el; } };
 })();
 
 /* ================================================================ app state */
 const S = {
   data: null,
   wordsById: new Map(),
+  sentencesById: new Map(),
   sentencesByWord: new Map(),
   cards: new Map(),
   settings: Object.assign({}, DEFAULT_SETTINGS),
@@ -1476,9 +1666,9 @@ async function loadData() {
   return { version: String(data.version || '–'), words, sentences };
 }
 function indexData() {
-  S.wordsById.clear(); S.sentencesByWord.clear();
+  S.wordsById.clear(); S.sentencesById.clear(); S.sentencesByWord.clear();
   S.data.words.forEach((w) => S.wordsById.set(w.id, w));
-  S.data.sentences.forEach((s) => { s.word_ids.forEach((id) => { if (!S.sentencesByWord.has(id)) S.sentencesByWord.set(id, []); S.sentencesByWord.get(id).push(s); }); });
+  S.data.sentences.forEach((s) => { S.sentencesById.set(s.id, s); s.word_ids.forEach((id) => { if (!S.sentencesByWord.has(id)) S.sentencesByWord.set(id, []); S.sentencesByWord.get(id).push(s); }); });
   S.sentencesByWord.forEach((list) => list.sort((a, b) => a.id - b.id));
 }
 /** Optional: audio/manifest.json (may not exist before audio has been generated). Feeds the audio engine's
@@ -1497,8 +1687,22 @@ async function loadAudioManifest() {
   return manifest;
 }
 function cardId(wordId, type) { return wordId + ':' + TYPE_SUFFIX[type]; }
+/** „Satz verstehen" card of a sentence: id "s<sentenceId>:l", type listen (word_id null, sentence_id set). */
+function listenId(sentenceId) { return 's' + sentenceId + ':l'; }
 function newCard(wordId, type) {
-  return { id: cardId(wordId, type), word_id: wordId, type, state: 0, due: null, due_n: null, stability: 0, difficulty: 0, elapsed_days: 0, scheduled_days: 0, reps: 0, lapses: 0, last_review: null, last_n: null, introduced: null, suspended: false };
+  return { id: cardId(wordId, type), word_id: wordId, type, state: 0, due: null, due_n: null, stability: 0, difficulty: 0, elapsed_days: 0, scheduled_days: 0, reps: 0, lapses: 0, last_review: null, last_n: null, last_rating: null, introduced: null, suspended: false };
+}
+function newListenCard(sentenceId) {
+  const c = newCard(null, 'listen');
+  c.id = listenId(sentenceId); c.sentence_id = sentenceId;
+  return c;
+}
+const sentenceOf = (card) => (card && card.type === 'listen' ? S.sentencesById.get(card.sentence_id) : null);
+/** Words the card belongs to (for block filters/sort): the word itself, or every target word of the sentence. */
+function cardWords(card) {
+  if (card.type === 'listen') { const s = sentenceOf(card); return s ? s.word_ids.map((id) => S.wordsById.get(id)).filter(Boolean) : []; }
+  const w = S.wordsById.get(card.word_id);
+  return w ? [w] : [];
 }
 /** Sorted list of the blocks present in data.json (the settings default and the toggle list derive from it). */
 function dataBlocks() {
@@ -1519,6 +1723,11 @@ async function ensureCards() {
       if (!S.cards.has(id)) { const c = newCard(w.id, t); S.cards.set(id, c); missing.push(c); }
     }
   }
+  for (const s of S.data.sentences) {
+    if (!s.word_ids.length) continue;
+    const id = listenId(s.id);
+    if (!S.cards.has(id)) { const c = newListenCard(s.id); S.cards.set(id, c); missing.push(c); }
+  }
   if (missing.length) await dbBulkPut('cards', missing);
 }
 /** Whitelist + migration: only the v3 keys survive (v1's daily new-word quota and v2's daily chunk limit are
@@ -1535,6 +1744,10 @@ function sanitizeSettings(obj) {
   s.order = s.order === 'block' ? 'block' : 'prio';
   s.autoplay = s.autoplay !== false;
   s.audioBefore = s.audioBefore === true;
+  s.learnAutoplay = s.learnAutoplay === true;
+  s.useCloze = s.useCloze !== false;
+  s.useBuild = s.useBuild !== false;
+  s.useListen = s.useListen !== false;
   s.voice = s.voice !== false;
   const all = dataBlocks();
   const known = new Set(all);
@@ -1555,14 +1768,18 @@ function sanitizeSettings(obj) {
   s.blocks_seen = seen || [];
   return s;
 }
-/** Whitelist a stored/imported chunk record against the derived chunk `chunk`; null when unusable. */
+const sameIds = (a, b) => Array.isArray(a) && Array.isArray(b) && a.length === b.length && a.every((v, i) => Number(v) === Number(b[i]));
+/** Whitelist a stored/imported chunk record against the derived chunk `chunk`; null when unusable. A record
+ *  that remembers its `word_ids` (v4) is only valid for a chunk with exactly these words — after a change of
+ *  „Wörter pro Stapel" the key "<block>:<index>" names other words, so the record is dropped or re-mapped. */
 function sanitizeRecord(chunk, c) {
   if (!chunk || !c || typeof c !== 'object') return null;
   const ids = chunk.word_ids;
+  if (Array.isArray(c.word_ids) && !sameIds(c.word_ids, ids)) return null;
   const seen = {};
   if (c.seen && typeof c.seen === 'object') ids.forEach((id) => { if (c.seen[id]) seen[id] = true; });
   const out = {
-    key: chunk.key, seen,
+    key: chunk.key, word_ids: ids.slice(), seen,
     index: Math.min(ids.length - 1, Math.max(0, c.index | 0)),
     started: Number(c.started) || nowMs(),
     phase: c.phase === 'test' ? 'test' : 'learn',
@@ -1634,8 +1851,16 @@ async function migrateRecords() {
   const out = {};
   let changed = false;
   for (const key of Object.keys(S.chunkRecords)) {
-    const rec = sanitizeRecord(S.chunksByKey.get(key), S.chunkRecords[key]);
-    if (rec) out[key] = rec; else changed = true;
+    const raw = S.chunkRecords[key];
+    let chunk = S.chunksByKey.get(key);
+    // The record's words no longer match this key (chunk size changed): follow them to the chunk that holds
+    // exactly these words (e.g. a data update shifted the indices), otherwise the record is dropped.
+    if (raw && Array.isArray(raw.word_ids) && !(chunk && sameIds(raw.word_ids, chunk.word_ids))) {
+      chunk = S.chunks.find((c) => sameIds(raw.word_ids, c.word_ids)) || null;
+      changed = true;
+    }
+    const rec = chunk && !out[chunk.key] ? sanitizeRecord(chunk, raw) : null;
+    if (rec) { if (rec.key !== key || !Array.isArray(raw.word_ids)) changed = true; out[rec.key] = rec; } else changed = true;
   }
   const legacy = S.legacyChunk;
   if (legacy) {
@@ -1673,9 +1898,10 @@ const STATUS_LABELS = { new: 'neu', learning: 'lernend', learned: 'gelernt', sec
 function blockName(b) { return BLOCK_NAMES[b] || ('Block ' + b); }
 function currentDaily(now) {
   const key = dayKey(now);
-  if (S.daily && S.daily.date === key) return { date: key, new_words: S.daily.new_words || 0, new_cloze: S.daily.new_cloze || 0, new_build: S.daily.new_build || 0 };
-  return { date: key, new_words: 0, new_cloze: 0, new_build: 0 };
+  if (S.daily && S.daily.date === key) return { date: key, new_words: S.daily.new_words || 0, new_cloze: S.daily.new_cloze || 0, new_build: S.daily.new_build || 0, new_listen: S.daily.new_listen || 0 };
+  return { date: key, new_words: 0, new_cloze: 0, new_build: 0, new_listen: 0 };
 }
+const DAILY_KEY = { word: 'new_words', cloze: 'new_cloze', build: 'new_build', listen: 'new_listen' };
 function nextStreak(streak, today) {
   if (!streak || !streak.last_date) return { count: 1, last_date: today };
   if (streak.last_date === today) return { count: streak.count || 1, last_date: today };
@@ -1690,9 +1916,16 @@ function streakDisplay() {
 }
 
 /* ================================================================ queue */
+/** Sort key of a card: (block, id, type). A listen card sorts by the lowest block of its words and by its
+ *  sentence id after every word of the data (words first). */
+function cardSortKey(c) {
+  if (c.type !== 'listen') { const w = S.wordsById.get(c.word_id); return { block: w ? w.block : 99, id: w ? w.id : 0 }; }
+  const words = cardWords(c);
+  return { block: words.length ? Math.min(...words.map((w) => w.block)) : 99, id: 1000000 + (c.sentence_id || 0) };
+}
 function cardOrder(a, b) {
-  const wa = S.wordsById.get(a.word_id), wb = S.wordsById.get(b.word_id);
-  return (wa.block - wb.block) || (wa.id - wb.id) || (a.type < b.type ? -1 : 1);
+  const ka = cardSortKey(a), kb = cardSortKey(b);
+  return (ka.block - kb.block) || (ka.id - kb.id) || (a.type < b.type ? -1 : a.type > b.type ? 1 : 0);
 }
 /** Words first: a sentence is ready for a word once every other list word in it has been learned (word card reps ≥ 1). */
 function sentenceReady(sentence, targetId) {
@@ -1711,6 +1944,23 @@ function clozeUnlocked(c) {
 function buildUnlocked(c, learned) {
   const wc = S.cards.get(cardId(c.word_id, 'word'));
   return !!wc && wc.state === fsrs.State.Review && learned >= 3;
+}
+/** Words of a sentence that are not learned yet (word card reps < 1); unknown ids are ignored. */
+function unknownWords(sentence) { return sentence.word_ids.filter((id) => S.wordsById.has(id) && !isLearnedWord(id)); }
+/** „Satz verstehen" unlock (words first): every target word of the sentence has been learned. */
+function sentenceUnlocked(sentence) {
+  const ids = sentence.word_ids.filter((id) => S.wordsById.has(id));
+  return ids.length > 0 && ids.every(isLearnedWord);
+}
+function listenUnlocked(c) { const s = sentenceOf(c); return !!s && sentenceUnlocked(s); }
+/** A listen card counts as „verstanden" once it was reviewed and the last rating was Gut or Leicht. */
+function isUnderstood(c) { return !!c && c.type === 'listen' && (c.reps || 0) >= 1 && (c.last_rating || 0) >= 3; }
+/** Which card types the review queue may contain (settings toggles; word cards are always on). */
+function typeEnabled(type) {
+  if (type === 'cloze') return S.settings.useCloze !== false;
+  if (type === 'build') return S.settings.useBuild !== false;
+  if (type === 'listen') return S.settings.useListen !== false;
+  return true;
 }
 /** Insert `minor` evenly into `major` at positions ≥ 1 (deterministic). */
 function spread(major, minor) {
@@ -1732,13 +1982,14 @@ function interleave(due, news) {
   out.unshift(due[0]);
   return out;
 }
-/** Cards of enabled blocks that are not suspended. */
+/** Cards of enabled blocks (a listen card: any of its words' blocks) and enabled types that are not suspended. */
 function activeCards() {
   const blocks = enabledBlocks();
   const out = [];
   for (const c of S.cards.values()) {
-    const w = S.wordsById.get(c.word_id);
-    if (!w || c.suspended || !blocks.has(w.block)) continue;
+    if (c.suspended || !typeEnabled(c.type)) continue;
+    const words = cardWords(c);
+    if (!words.length || !words.some((w) => blocks.has(w.block))) continue;
     out.push(c);
   }
   return out;
@@ -1755,8 +2006,9 @@ function computeQueue(now) {
   const quota = (used) => Math.max(0, S.settings.chunkSize - (used || 0));
   const newCloze = active.filter((c) => c.type === 'cloze' && c.state === 0 && clozeUnlocked(c)).sort(cardOrder).slice(0, quota(daily.new_cloze));
   const newBuild = active.filter((c) => c.type === 'build' && c.state === 0 && buildUnlocked(c, learned)).sort(cardOrder).slice(0, quota(daily.new_build));
-  const news = newCloze.concat(newBuild);
-  return { due, newCloze, newBuild, queue: interleave(due, news).map((c) => c.id) };
+  const newListen = active.filter((c) => c.type === 'listen' && c.state === 0 && listenUnlocked(c)).sort(cardOrder).slice(0, quota(daily.new_listen));
+  const news = newCloze.concat(newBuild, newListen);
+  return { due, newCloze, newBuild, newListen, queue: interleave(due, news).map((c) => c.id) };
 }
 /** „Wiederholen vorziehen": the `limit` learned cards closest to being due (not due yet). */
 function aheadCards(limit) {
@@ -1805,12 +2057,13 @@ function getRecord(key) { return S.chunkRecords[key] || null; }
 function openRecords() { return Object.keys(S.chunkRecords).map((k) => S.chunkRecords[k]).filter((r) => S.chunksByKey.has(r.key)).sort((a, b) => (b.started - a.started) || (a.key < b.key ? -1 : 1)); }
 async function saveRecords() { await metaSet('chunks', S.chunkRecords); }
 async function deleteRecord(key) { delete S.chunkRecords[key]; await saveRecords(); }
-/** Create (or reuse) the learn record of a chunk: position + seen flags, later the test queue. */
-async function ensureRecord(key) {
+/** Create (or reuse) the learn record of a chunk in memory — synchronous, so the first card renders inside
+ *  the tap (iOS keyboard); the caller persists with saveRecords(). The record remembers its word_ids. */
+function ensureRecord(key) {
   const chunk = S.chunksByKey.get(key);
   if (!chunk) throw new Error('Stapel nicht gefunden: ' + key);
   let rec = getRecord(key);
-  if (!rec) { rec = { key, phase: 'learn', seen: {}, index: 0, started: nowMs(), test: null }; S.chunkRecords[key] = rec; await saveRecords(); }
+  if (!rec) { rec = { key, word_ids: chunk.word_ids.slice(), phase: 'learn', seen: {}, index: 0, started: nowMs(), test: null }; S.chunkRecords[key] = rec; }
   return rec;
 }
 function recordSeenCount(chunk, rec) { return rec ? chunk.word_ids.filter((id) => rec.seen[id]).length : 0; }
@@ -1835,7 +2088,26 @@ function chunkProgress(chunk) {
   else if (learned === n) { status = 'fertig'; statusClass = 'done'; }
   else if (!learned) status = 'neu';
   else status = 'gelernt ' + learned + '/' + n;
-  return { key: chunk.key, block: chunk.block, index: chunk.index, prio: chunk.prio, title: chunk.title, name: chunk.name, word_ids: chunk.word_ids, n, learned, due, secured, seen, record: rec ? rec.phase : null, status, statusClass, finished: learned === n && !rec };
+  const sent = chunkSentenceStats(chunk);
+  return { key: chunk.key, block: chunk.block, index: chunk.index, prio: chunk.prio, title: chunk.title, name: chunk.name, word_ids: chunk.word_ids, n, learned, due, secured, seen, record: rec ? rec.phase : null, status, statusClass, finished: learned === n && !rec, sentences: sent.total, sentencesUnlocked: sent.unlocked, sentencesUnderstood: sent.understood };
+}
+/** Sentences touching the chunk's words: how many are unlocked (all words learned) and understood (listen card). */
+function chunkSentenceStats(chunk) {
+  const seen = new Set();
+  let total = 0, unlocked = 0, understood = 0;
+  for (const id of chunk.word_ids) {
+    for (const s of S.sentencesByWord.get(id) || []) {
+      if (seen.has(s.id)) continue;
+      seen.add(s.id);
+      total++;
+      if (sentenceUnlocked(s)) { unlocked++; if (isUnderstood(S.cards.get(listenId(s.id)))) understood++; }
+    }
+  }
+  return { total, unlocked, understood };
+}
+/** Sentences of a block: those whose target words include at least one word of the block, ordered by id. */
+function blockSentences(block) {
+  return S.data.sentences.filter((s) => s.word_ids.some((id) => { const w = S.wordsById.get(id); return !!w && w.block === block; }));
 }
 /** „Nächster Stapel": the first chunk in learning order (enabled blocks) whose words are not all learned and that has no open record. */
 function nextChunk() {
@@ -1912,6 +2184,7 @@ function renderStart() {
   const extra = [];
   if (q.newCloze.length) extra.push(plural(q.newCloze.length, 'neuer Lückensatz', 'neue Lückensätze'));
   if (q.newBuild.length) extra.push(plural(q.newBuild.length, 'neue Satzbau-Karte', 'neue Satzbau-Karten'));
+  if (q.newListen.length) extra.push(plural(q.newListen.length, 'neuer Satz zum Verstehen', 'neue Sätze zum Verstehen'));
   let sub = extra.length ? 'davon ' + extra.join(', ') : '';
   if (!dueCount) {
     const n = nextDueIn();
@@ -2000,22 +2273,23 @@ function startSession(ahead) {
   nextCard();
 }
 /** Chunk test for `key`: shuffled word cards of the chunk (record phase → 'test'), or resume the remaining queue.
- *  Allowed any time (overview „Testen"); every answer is a normal review. */
-async function startChunkTest(key) {
+ *  Allowed any time (overview „Testen"); every answer is a normal review. Synchronous up to the first card so
+ *  the input is focused inside the tap (iOS shows the keyboard only then); the record is saved afterwards. */
+function startChunkTest(key) {
   const chunk = S.chunksByKey.get(key);
   if (!chunk) { toast('Stapel nicht gefunden.'); return; }
   audio.unlock();
-  const rec = await ensureRecord(key);
+  const rec = ensureRecord(key);
   if (rec.phase !== 'test' || !rec.test) {
     rec.phase = 'test';
     rec.test = { queue: shuffle(chunk.word_ids.map((id) => cardId(id, 'word'))), round: 1, firstTry: {}, asked: {} };
-    await saveRecords();
   }
   const now = nowMs();
   S.session = newSession(rec.test.queue, now, 'chunk');
   S.session.chunkKey = key;
   showScreen('session');
   nextCard();
+  saveRecords().catch(reportError);
 }
 /** Leaving is always safe: reviews are committed one by one; a chunk test keeps its remaining queue. */
 function leaveSession() {
@@ -2057,13 +2331,18 @@ function nextCard() {
   while (ses.queue.length) {
     const id = ses.queue.shift();
     const card = S.cards.get(id);
-    if (card && wordOf(card)) { showCard(card); return; }
+    if (card && (card.type === 'listen' ? sentenceOf(card) : wordOf(card))) { showCard(card); return; }
   }
   endSession();
 }
 function buildCardContext(card, word) {
-  const ctx = { audioNames: [], sentence: null, cloze: null, buildWords: null };
-  if (card.type === 'word') {
+  const ctx = { audioNames: [], sentence: null, cloze: null, buildWords: null, highlightHtml: '' };
+  if (card.type === 'listen') {
+    const s = sentenceOf(card);
+    ctx.sentence = s;
+    ctx.audioNames = ['s_' + s.id];
+    ctx.highlightHtml = highlightSentence(s.spanish, s.word_ids.map((id) => S.wordsById.get(id)).filter(Boolean).map((w) => w.spanish));
+  } else if (card.type === 'word') {
     ctx.audioNames = ['w_' + word.id];
   } else if (card.type === 'cloze') {
     const ready = readySentences(word.id);
@@ -2091,6 +2370,8 @@ function renderPrompt(card, word, ctx) {
   setHidden('p-word', card.type !== 'word');
   setHidden('p-cloze', card.type !== 'cloze');
   setHidden('p-build', card.type !== 'build');
+  setHidden('p-listen', card.type !== 'listen');
+  if (card.type === 'listen') return; // only the speaker and „Hör zu …" until „Aufdecken"
   if (card.type === 'word') {
     $('p-german').textContent = word.german;
     $('p-note').textContent = word.note || '';
@@ -2138,9 +2419,12 @@ function showCard(card) {
   setHidden('prompt', true);
   setHidden('no-audio', true);
   $('speaker').classList.add('big');
+  $('speaker').dataset.play = ctx.audioNames.join(' '); // lights up while one of these clips plays
   setHidden('answer-form', true);
   setHidden('feedback', true);
   setHidden('rating', true);
+  setHidden('listen-actions', true);
+  resetRepeat();
   $('answer').value = '';
   $('btn-check').disabled = false;
   document.querySelectorAll('.rate').forEach((b) => b.classList.remove('selected'));
@@ -2148,6 +2432,15 @@ function showCard(card) {
   const primary = card.type === 'build' ? ctx.audioNames.every(audio.isKnownMissing) : audio.isKnownMissing(ctx.audioNames[0]);
   if (primary) setHidden('no-audio', false);
 
+  if (card.type === 'listen') {
+    // Listening comprehension: big speaker + hint, „Aufdecken" reveals sentence, translation and the rating.
+    ses.phase = 'listen';
+    setHidden('prompt', false);
+    setHidden('listen-actions', false);
+    ses.latencyStart = performance.now();
+    if (S.settings.autoplay) replayAudio();
+    return;
+  }
   if (card.type === 'build') {
     revealPrompt(token);
     if (S.settings.autoplay) audio.playSequence(ctx.audioNames, 400).then((r) => { if (S.session && S.session.token === token && !r.ok && !r.cancelled) setHidden('no-audio', false); });
@@ -2187,7 +2480,6 @@ function revealPrompt(token) {
     input.placeholder = 'Dein Satz …';
     setHidden('btn-check', true);
     renderRatingRow(card, null);
-    setHidden('btn-next', true);
     setHidden('rating', false);
   } else {
     ses.phase = 'prompt';
@@ -2201,11 +2493,33 @@ function replayAudio() {
   const ses = S.session;
   if (!ses || !ses.ctx || !ses.ctx.audioNames.length) return;
   const token = ses.token;
-  if (ses.card.type === 'build') {
-    audio.playSequence(ses.ctx.audioNames, 400).then((r) => { if (S.session && S.session.token === token && !r.ok && !r.cancelled) setHidden('no-audio', false); });
-  } else {
-    audio.play(ses.ctx.audioNames[0]).then((r) => { if (S.session && S.session.token === token && !r.ok && !r.cancelled) setHidden('no-audio', false); });
-  }
+  const tag = (r) => { if (S.session && S.session.token === token && !r.ok && !r.cancelled && !r.blocked && !r.timeout) setHidden('no-audio', false); };
+  if (ses.card.type === 'build') audio.playSequence(ses.ctx.audioNames, 400).then(tag);
+  else audio.play(ses.ctx.audioNames[0]).then(tag);
+}
+/** Listen card, „Aufdecken": the sentence (target words in accent colour), the translation, the rating row
+ *  („Weiter" = Gut; the four buttons grade finer) and the optional „Nachsprechen". */
+function revealListen() {
+  const ses = S.session;
+  if (!ses || ses.phase !== 'listen') return;
+  const card = ses.card;
+  const latency = Math.max(0, Math.round(performance.now() - ses.latencyStart));
+  ses.result = { input: '', latency, match: null, target: ses.ctx.sentence.spanish, correct: null, transcript: '' };
+  ses.phase = 'reveal';
+  setHidden('listen-actions', true);
+  setHidden('prompt', true);
+  $('speaker').classList.remove('big');
+  const tEl = $('fb-target'), subEl = $('fb-sub');
+  setHidden('fb-result', true);
+  tEl.className = 'fb-target sentence-mode';
+  tEl.innerHTML = ses.ctx.highlightHtml || escapeHtml(ses.ctx.sentence.spanish);
+  subEl.textContent = ses.ctx.sentence.german;
+  setHidden('fb-sub', false);
+  setHidden('fb-input', true);
+  setHidden('repeat-box', !micAvailable());
+  setHidden('feedback', false);
+  renderRatingRow(card, null);
+  setHidden('rating', false);
 }
 /** Accepted answer forms: the dictionary form, plus the inflected surface form gapped in a cloze sentence. */
 function answerTargets(ses) {
@@ -2240,6 +2554,9 @@ function submitAnswer() {
   // The clip plays after the answer (audio-first mode already played it: repeat only when something was off).
   if (S.settings.autoplay && !(S.settings.audioBefore && m.result === 'exact')) replayAudio();
 }
+/** Rating buttons with their „+N Karten" previews. `preselect` = the auto rating (highlighted, „Weiter"
+ *  confirms it); for self-rated cards (build, listen) nothing is highlighted but „Weiter (Gut)" always
+ *  continues — a plain way on for whoever does not want to grade finer. */
 function renderRatingRow(card, preselect) {
   const prev = fsrs.preview(card, nowMs(), S.counter, S.settings.reviewsPerDay);
   document.querySelectorAll('.rate').forEach((b) => {
@@ -2247,13 +2564,17 @@ function renderRatingRow(card, preselect) {
     b.querySelector('small').textContent = prev[g] ? prev[g].label : '';
     b.classList.toggle('selected', preselect === g);
   });
-  if (S.session) S.session.selectedRating = preselect || null;
+  if (S.session) S.session.selectedRating = preselect || 3;
+  $('btn-next').textContent = preselect ? 'Weiter' : 'Weiter (Gut)';
+  setHidden('btn-next', false);
 }
 function renderFeedback() {
   const ses = S.session;
   const card = ses.card, word = wordOf(card), r = ses.result;
   const resEl = $('fb-result'), tEl = $('fb-target'), subEl = $('fb-sub'), inEl = $('fb-input');
   resEl.className = 'fb-result';
+  setHidden('fb-result', false);
+  setHidden('repeat-box', !micAvailable());
   const target = r.target || word.spanish;
   if (r.match.result === 'exact') { resEl.textContent = 'richtig'; resEl.classList.add('ok'); }
   else if (r.match.result === 'phonetic') { resEl.textContent = 'richtig — Schreibweise: ' + target; resEl.classList.add('ok'); }
@@ -2284,78 +2605,95 @@ function renderFeedback() {
   try { $('answer').blur(); } catch (e) { /* ignore */ }
   setHidden('feedback', false);
   renderRatingRow(card, ses.autoRating);
-  setHidden('btn-next', false);
   setHidden('rating', false);
 }
+/** „Weiter": the pre-selected rating (feedback) or Gut (self-rated cards). */
 function confirmRating() {
   const ses = S.session;
-  if (!ses || ses.phase !== 'feedback' || !ses.selectedRating) return;
-  commitReview(ses.selectedRating).catch(reportError);
+  if (!ses || !RATE_PHASES[ses.phase]) return;
+  commitReview(ses.selectedRating || 3).catch(reportError);
 }
 function rate(g) {
   const ses = S.session;
   if (!ses) return;
-  if (ses.phase === 'feedback' || ses.phase === 'build') commitReview(g).catch(reportError);
+  if (RATE_PHASES[ses.phase]) commitReview(g).catch(reportError);
 }
-async function commitReview(rating) {
+/** After a failed write: the stored state is authoritative again (cards, meta, chunk records). */
+async function reloadState() {
+  await loadMeta();
+  await ensureCards();
+  await finishLoad();
+  ov.initialised = false;
+  refreshUI();
+}
+/** Commit one answer. The scheduling result is applied in memory and the next card is rendered
+ *  synchronously — still inside the rating tap, so the input's focus() opens the iOS keyboard — and only
+ *  then the transaction runs; a failing write is reported and the stored state is reloaded. */
+function commitReview(rating) {
   const ses = S.session;
-  if (!ses || (ses.phase !== 'feedback' && ses.phase !== 'build')) return;
+  if (!ses || !RATE_PHASES[ses.phase]) return Promise.resolve();
   const phase = ses.phase;
   ses.phase = 'committing';
   stopListening();
-  try {
-    const now = nowMs();
-    const card = ses.card;
-    const wasNew = card.state === 0;
-    let latency, correct, input, matchResult = null;
-    if (phase === 'build') {
-      latency = Math.max(0, Math.round(performance.now() - ses.latencyStart));
-      correct = null;
-      input = $('answer').value.trim();
-    } else {
-      latency = ses.result.latency; correct = ses.result.correct; input = ses.result.input; matchResult = ses.result.match.result;
+  const now = nowMs();
+  const card = ses.card;
+  const wasNew = card.state === 0;
+  let latency, correct, input, matchResult = null;
+  if (phase === 'build') {
+    latency = Math.max(0, Math.round(performance.now() - ses.latencyStart));
+    correct = null;
+    input = $('answer').value.trim();
+  } else if (phase === 'reveal') {
+    latency = ses.result.latency; correct = null; input = ses.result.transcript || '';
+  } else {
+    latency = ses.result.latency; correct = ses.result.correct; input = ses.result.input; matchResult = ses.result.match.result;
+  }
+  // This answer becomes number counter + 1; the card's due_n counts on from there.
+  const counter = S.counter;
+  const next = fsrs.schedule(card, rating, now, counter, S.settings.reviewsPerDay);
+  if (wasNew || !next.introduced) next.introduced = card.introduced || now;
+  next.last_rating = rating;
+  const review = { ts: now, card_id: card.id, type: card.type, latency_ms: latency, correct, rating, input: input || '', n: counter + 1 };
+  const daily = currentDaily(now);
+  if (wasNew) daily[DAILY_KEY[card.type] || 'new_words'] += 1;
+  const streak = nextStreak(S.streak, dayKey(now));
+  S.cards.set(next.id, next);
+  S.daily = daily;
+  S.streak = streak;
+  S.counter = counter + 1;
+  ses.done++;
+  ses.reviews.push({ rating, correct, latency_ms: latency, type: card.type, result: matchResult });
+  let recordsChanged = false;
+  if (ses.mode === 'chunk') {
+    // Chunk test bookkeeping: first-try flag, ask counter (a word returns through its count-based step, at
+    // most CHUNK_TEST_MAX_ASKS times — see pullDue), the remaining queue so leaving mid-test resumes here.
+    const rec = getRecord(ses.chunkKey);
+    if (rec && rec.test) {
+      const t = rec.test;
+      const wid = card.word_id;
+      if (t.firstTry[wid] === undefined) t.firstTry[wid] = correct === true;
+      t.asked[wid] = (t.asked[wid] || 0) + 1;
+      t.round = Math.max(t.round, t.asked[wid]);
+      t.queue = ses.queue.slice();
+      recordsChanged = true;
     }
-    // This answer becomes number counter + 1; the card's due_n counts on from there.
-    const counter = S.counter;
-    const next = fsrs.schedule(card, rating, now, counter, S.settings.reviewsPerDay);
-    if (wasNew || !next.introduced) next.introduced = card.introduced || now;
-    const review = { ts: now, card_id: card.id, type: card.type, latency_ms: latency, correct, rating, input: input || '', n: counter + 1 };
-    const daily = currentDaily(now);
-    if (wasNew) daily[card.type === 'word' ? 'new_words' : card.type === 'cloze' ? 'new_cloze' : 'new_build'] += 1;
-    const streak = nextStreak(S.streak, dayKey(now));
-    await runTx(['cards', 'reviews', 'meta'], 'readwrite', (tx) => {
-      tx.objectStore('cards').put(next);
-      tx.objectStore('reviews').add(review);
-      tx.objectStore('meta').put({ key: 'daily', value: daily });
-      tx.objectStore('meta').put({ key: 'streak', value: streak });
-      tx.objectStore('meta').put({ key: 'counter', value: counter + 1 });
-    });
-    S.cards.set(next.id, next);
-    S.daily = daily;
-    S.streak = streak;
-    S.counter = counter + 1;
-    ses.done++;
-    ses.reviews.push({ rating, correct, latency_ms: latency, type: card.type, result: matchResult });
-    if (ses.mode === 'chunk') {
-      // Chunk test bookkeeping: first-try flag, ask counter (a word returns through its count-based step, at
-      // most CHUNK_TEST_MAX_ASKS times — see pullDue), persist the remaining queue so leaving mid-test resumes
-      // here. The review itself is already committed, so a failing record write is only reported.
-      const rec = getRecord(ses.chunkKey);
-      if (rec && rec.test) {
-        const t = rec.test;
-        const wid = card.word_id;
-        if (t.firstTry[wid] === undefined) t.firstTry[wid] = correct === true;
-        t.asked[wid] = (t.asked[wid] || 0) + 1;
-        t.round = Math.max(t.round, t.asked[wid]);
-        t.queue = ses.queue.slice();
-        saveRecords().catch(reportError);
-      }
-    }
-  } catch (err) {
-    ses.phase = phase; // allow retry
-    throw err;
   }
   nextCard();
+  const records = S.chunkRecords;
+  return runTx(['cards', 'reviews', 'meta'], 'readwrite', (tx) => {
+    tx.objectStore('cards').put(next);
+    tx.objectStore('reviews').add(review);
+    tx.objectStore('meta').put({ key: 'daily', value: daily });
+    tx.objectStore('meta').put({ key: 'streak', value: streak });
+    tx.objectStore('meta').put({ key: 'counter', value: counter + 1 });
+    if (recordsChanged) tx.objectStore('meta').put({ key: 'chunks', value: records });
+  }).then(() => {
+    // The user may have left meanwhile: the start/overview counts must reflect this answer.
+    if (S.session !== ses) refreshUI();
+  }, (err) => {
+    reportError(err);
+    return reloadState();
+  });
 }
 function endSession() {
   const ses = S.session;
@@ -2366,7 +2704,7 @@ function endSession() {
   const right = rv.filter((r) => r.result === 'exact' || r.result === 'phonetic').length;
   const near = rv.filter((r) => r.result === 'near').length;
   const wrong = rv.filter((r) => r.result === 'wrong').length;
-  const self = rv.filter((r) => r.type === 'build').length;
+  const self = rv.filter((r) => r.type === 'build' || r.type === 'listen').length;
   const lat = rv.filter((r) => r.latency_ms > 0);
   const mean = lat.length ? lat.reduce((a, r) => a + r.latency_ms, 0) / lat.length : 0;
   const now = nowMs();
@@ -2412,7 +2750,11 @@ function endSession() {
 
 /* ================================================================ speech input */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
-const speech = { rec: null, listening: false, lang: 'es-AR' };
+// mode 'answer' = the mic next to the input (word/cloze/build); 'repeat' = „Nachsprechen" on the feedback
+// panel / revealed listen card. Recognition never blocks the flow: any failure only clears the listening
+// state (plus a short toast) — typing, „Prüfen" and „Weiter" always work.
+const speech = { rec: null, listening: false, mode: 'answer', lang: 'es-AR', timer: 0 };
+const SPEECH_TIMEOUT = 8000; // ms without a result → give up quietly
 const SPEECH_ERRORS = {
   'no-speech': 'Nichts gehört',
   'not-allowed': 'Spracheingabe nicht erlaubt',
@@ -2420,13 +2762,16 @@ const SPEECH_ERRORS = {
   'audio-capture': 'Kein Mikrofon',
   'network': 'Spracheingabe: keine Verbindung'
 };
+const REPEAT_FAIL_MSG = 'Nicht verstanden – einfach Weiter drücken';
 function setListening(on) {
   speech.listening = on;
-  const b = $('btn-mic');
-  if (b) b.classList.toggle('listening', on);
+  const mic = $('btn-mic'), rep = $('btn-repeat');
+  if (mic) mic.classList.toggle('listening', on && speech.mode === 'answer');
+  if (rep) { rep.classList.toggle('listening', on && speech.mode === 'repeat'); rep.textContent = on && speech.mode === 'repeat' ? 'Aufnahme stoppen' : 'Nachsprechen'; }
 }
 function stopListening() {
-  if (speech.rec) { const r = speech.rec; speech.rec = null; try { r.onresult = null; r.onend = null; r.onerror = null; r.abort(); } catch (e) { /* ignore */ } }
+  if (speech.timer) { clearTimeout(speech.timer); speech.timer = 0; }
+  if (speech.rec) { const r = speech.rec; speech.rec = null; try { r.onresult = null; r.onend = null; r.onerror = null; r.onnomatch = null; r.abort(); } catch (e) { /* ignore */ } }
   setListening(false);
 }
 function startListening() {
@@ -2435,19 +2780,40 @@ function startListening() {
   if (!ses || (ses.phase !== 'prompt' && ses.phase !== 'build')) return;
   if (speech.listening) { stopListening(); return; }
   audio.stop();
-  launchRecognition(speech.lang);
+  launchRecognition(speech.lang, 'answer');
 }
-function launchRecognition(lang) {
+/** „Nachsprechen": optional, informative only (never changes the rating). Tap again = stop. */
+function startRepeat() {
+  if (!SR) return;
+  const ses = S.session;
+  if (!ses || (ses.phase !== 'feedback' && ses.phase !== 'reveal')) return;
+  if (speech.listening) { stopListening(); return; }
+  audio.stop();
+  $('repeat-result').textContent = 'Sprich jetzt …';
+  $('repeat-result').className = 'repeat-result muted';
+  $('repeat-transcript').textContent = '';
+  launchRecognition(speech.lang, 'repeat');
+}
+/** Failure while repeating: card stays as it is, one short toast. */
+function repeatFailed(msg) {
+  stopListening();
+  const el = $('repeat-result');
+  if (el && (el.textContent === 'Sprich jetzt …' || !el.textContent)) el.textContent = '';
+  toast(msg || REPEAT_FAIL_MSG);
+}
+function launchRecognition(lang, mode) {
   let rec;
-  try { rec = new SR(); } catch (e) { toast('Spracheingabe nicht verfügbar'); return; }
+  try { rec = new SR(); } catch (e) { if (mode === 'repeat') repeatFailed(); else toast('Spracheingabe nicht verfügbar'); return; }
+  speech.mode = mode;
   rec.lang = lang;
   rec.interimResults = true;
   rec.maxAlternatives = 3;
   rec.continuous = false;
   const token = S.session ? S.session.token : -1;
   let gotFinal = false;
+  const mine = () => speech.rec === rec && S.session && S.session.token === token;
   rec.onresult = (e) => {
-    if (!S.session || S.session.token !== token) return;
+    if (!mine()) return;
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
       const r = e.results[i];
@@ -2455,29 +2821,72 @@ function launchRecognition(lang) {
         gotFinal = true;
         const alts = [];
         for (let j = 0; j < r.length; j++) if (r[j] && r[j].transcript) alts.push(String(r[j].transcript).trim());
-        acceptSpeech(alts);
+        if (mode === 'repeat') acceptRepeat(alts); else acceptSpeech(alts);
       } else if (r[0]) interim += r[0].transcript;
     }
-    if (!gotFinal && interim) $('answer').value = interim;
+    if (!gotFinal && interim) {
+      if (mode === 'repeat') $('repeat-transcript').textContent = interim + ' …';
+      else $('answer').value = interim;
+    }
   };
+  rec.onnomatch = () => { if (mine()) { if (mode === 'repeat') repeatFailed(); else { stopListening(); toast('Nichts verstanden'); } } };
   rec.onerror = (e) => {
     const code = e && e.error;
     if (code === 'language-not-supported' && lang === 'es-AR') {
       // Retry once with the generic Latin-American locale; detach this recogniser first so its onend
       // cannot switch the pulse off for the replacement session.
       speech.lang = 'es-419';
-      rec.onresult = rec.onend = rec.onerror = null;
+      rec.onresult = rec.onend = rec.onerror = rec.onnomatch = null;
       if (speech.rec === rec) speech.rec = null;
-      launchRecognition('es-419');
+      launchRecognition('es-419', mode);
       return;
     }
     if (code === 'aborted') return;
+    if (mode === 'repeat') { repeatFailed(code === 'not-allowed' || code === 'service-not-allowed' ? SPEECH_ERRORS[code] : undefined); return; }
+    stopListening();
     toast(SPEECH_ERRORS[code] || ('Spracheingabe: ' + (code || 'Fehler')));
   };
-  rec.onend = () => { if (speech.rec === rec) { speech.rec = null; setListening(false); } };
+  rec.onend = () => {
+    if (speech.rec !== rec) return;
+    speech.rec = null;
+    setListening(false);
+    if (speech.timer) { clearTimeout(speech.timer); speech.timer = 0; }
+    if (mode === 'repeat' && !gotFinal) repeatFailed();
+  };
   speech.rec = rec;
   setListening(true);
-  try { rec.start(); } catch (e) { speech.rec = null; setListening(false); toast('Spracheingabe: ' + errMessage(e)); }
+  try { rec.start(); } catch (e) { speech.rec = null; setListening(false); if (mode === 'repeat') repeatFailed(); else toast('Spracheingabe: ' + errMessage(e)); return; }
+  // ≈8 s without a result: give up quietly (the card stays exactly as it was).
+  speech.timer = setTimeout(() => { speech.timer = 0; if (speech.rec === rec && !gotFinal) { if (mode === 'repeat') repeatFailed(); else { stopListening(); toast('Nichts gehört'); } } }, SPEECH_TIMEOUT);
+}
+/** What „Nachsprechen" is compared with: the sentence (listen, cloze with a sentence) or the word. */
+function repeatTarget(ses) {
+  if (!ses || !ses.card) return '';
+  if (ses.card.type === 'listen' || (ses.card.type === 'cloze' && ses.ctx.sentence)) return ses.ctx.sentence.spanish;
+  const w = wordOf(ses.card);
+  return w ? w.spanish : '';
+}
+/** Best alternative by phonetic-key similarity → „Nachgesprochen: 92 %" (green from 80 %) with the transcript. */
+function acceptRepeat(alts) {
+  const ses = S.session;
+  stopListening();
+  if (!ses || !alts.length) return;
+  const target = keyEs(repeatTarget(ses));
+  let best = alts[0], bestScore = -1;
+  for (const a of alts) { const sc = similarity(keyEs(a), target); if (sc > bestScore) { bestScore = sc; best = a; } }
+  const pct = Math.round(Math.max(0, bestScore) * 100);
+  if (ses.result) ses.result.transcript = best;
+  const el = $('repeat-result');
+  el.textContent = 'Nachgesprochen: ' + pct + ' %';
+  el.className = 'repeat-result' + (pct >= REPEAT_GOOD ? ' good' : '');
+  $('repeat-transcript').textContent = best;
+}
+function resetRepeat() {
+  setHidden('repeat-box', true);
+  const el = $('repeat-result');
+  if (el) { el.textContent = ''; el.className = 'repeat-result'; }
+  const t = $('repeat-transcript');
+  if (t) t.textContent = '';
 }
 /** Pick the alternative that matches best (exact beats near beats the first), fill the input and submit. */
 function acceptSpeech(alts) {
@@ -2513,6 +2922,10 @@ async function renderStats() {
     '<div class="stat"><b>' + todayCount + '</b><span>heute</span></div>' +
     '<div class="stat"><b>' + learnedCount() + '</b><span>Wörter gelernt</span></div>';
   $('stats-counter').textContent = 'Zähler: ' + fmtCount(S.counter) + (S.counter === 1 ? ' Antwort' : ' Antworten') + ' · Karten pro Tag (Abstände): ' + S.settings.reviewsPerDay;
+  // „Sätze verstanden": listen cards reviewed with a last rating of Gut or better, out of all sentences.
+  let understood = 0, listenTotal = 0, listenSeen = 0;
+  for (const c of S.cards.values()) if (c.type === 'listen') { listenTotal++; if ((c.reps || 0) >= 1) listenSeen++; if (isUnderstood(c)) understood++; }
+  $('stats-listen').textContent = 'Sätze verstanden: ' + understood + ' von ' + listenTotal + (listenSeen ? ' (' + listenSeen + ' gehört)' : '');
 
   // This week (Monday–today): reviews, share of correct answers (word/cloze), newly introduced words.
   const ws = startOfWeek(now);
@@ -2582,6 +2995,10 @@ function renderSettings() {
   renderOrderSeg('set-order');
   $('set-autoplay').checked = !!S.settings.autoplay;
   $('set-audio-before').checked = !!S.settings.audioBefore;
+  $('set-learn-autoplay').checked = !!S.settings.learnAutoplay;
+  $('set-use-cloze').checked = S.settings.useCloze !== false;
+  $('set-use-build').checked = S.settings.useBuild !== false;
+  $('set-use-listen').checked = S.settings.useListen !== false;
   $('set-voice').checked = !!S.settings.voice;
   setHidden('row-voice', !SR);
   // Block toggles come from the data (blocks 8–11 appear as soon as data.json carries them).
@@ -2670,7 +3087,7 @@ async function doExport() {
   toast('Export: ' + obj.cards.length + ' Karten, ' + obj.reviews.length + ' Reviews');
 }
 function validCard(c) {
-  return c && typeof c === 'object' && typeof c.id === 'string' && /^\d+:[wcb]$/.test(c.id);
+  return c && typeof c === 'object' && typeof c.id === 'string' && /^(\d+:[wcb]|s\d+:l)$/.test(c.id);
 }
 function validateImport(obj) {
   if (!obj || typeof obj !== 'object') throw new Error('Kein Objekt');
@@ -2682,10 +3099,12 @@ function validateImport(obj) {
 /** Whitelist an imported card through the newCard template: id/word_id/type come from the id, every
  *  scheduling field is coerced, unknown fields are dropped. */
 function sanitizeCard(c) {
+  const listen = c.id.endsWith(':l');
   const wordId = Number(c.id.split(':')[0]);
-  const type = c.id.endsWith(':w') ? 'word' : c.id.endsWith(':c') ? 'cloze' : 'build';
-  const base = newCard(wordId, type);
+  const type = listen ? 'listen' : c.id.endsWith(':w') ? 'word' : c.id.endsWith(':c') ? 'cloze' : 'build';
+  const base = listen ? newListenCard(Number(c.id.slice(1).split(':')[0])) : newCard(wordId, type);
   const num = (v, fb) => (Number.isFinite(Number(v)) ? Number(v) : fb);
+  base.last_rating = [1, 2, 3, 4].indexOf(Number(c.last_rating)) >= 0 ? Number(c.last_rating) : null;
   const msOrNull = (v) => (v == null || !Number.isFinite(Number(v)) ? null : Number(v));
   base.state = Math.min(3, Math.max(0, c.state | 0));
   base.due = msOrNull(c.due);
@@ -2757,7 +3176,7 @@ async function doReset() {
   S.settings = sanitizeSettings({});
   S.daily = null; S.streak = null; S.session = null; S.currentCard = null;
   S.counter = 0; S.sched = null; S.chunkRecords = {}; S.legacyChunk = null; S.learnKey = null; S.returnTo = 'start';
-  ov.initialised = false; ov.open.clear(); ov.words.clear();
+  ov.initialised = false; ov.open.clear(); ov.words.clear(); ov.sents.clear();
   await ensureCards();
   await finishLoad(); // fresh cards need no rewrite; writes counter 0 + the sched flag
   renderStart();
@@ -2770,14 +3189,15 @@ const POS_LABELS = { noun: 'Substantiv', verb: 'Verb', adj: 'Adjektiv', adv: 'Ad
 const learn = { flipped: false, token: 0 };
 /** Open the flashcards of chunk `key` where they were left (creates or reuses the record). Allowed any time,
  *  also for finished chunks and while a test record is open (the test resumes from „Jetzt testen"). */
-async function openLearn(key) {
+function openLearn(key) {
   const chunk = S.chunksByKey.get(key);
   if (!chunk) { toast('Stapel nicht gefunden.'); return; }
   audio.unlock();
-  await ensureRecord(key);
+  ensureRecord(key);
   S.learnKey = key;
   showScreen('learn');
   renderLearnCard(true);
+  saveRecords().catch(reportError);
 }
 function learnChunk() { return S.learnKey ? S.chunksByKey.get(S.learnKey) || null : null; }
 function learnRecord() { return S.learnKey ? getRecord(S.learnKey) : null; }
@@ -2794,9 +3214,17 @@ function renderLearnCard(play) {
   rec.index = Math.min(n - 1, Math.max(0, rec.index | 0));
   const word = learnWord();
   if (!word) { goBack(); return; }
-  learn.flipped = false;
   learn.token++;
-  $('flip').classList.remove('flipped');
+  if (learn.flipped) {
+    // Back to the front without the rotation: the back face would otherwise show the next card's German
+    // (written below) during the 350 ms flip-back.
+    const inner = document.querySelector('#flip .flip-inner');
+    inner.classList.add('noanim');
+    $('flip').classList.remove('flipped');
+    void inner.offsetHeight; // apply the instant state before the transition is switched back on
+    inner.classList.remove('noanim');
+  } else $('flip').classList.remove('flipped');
+  learn.flipped = false;
   $('learn-progress').textContent = chunk.title + ' · ' + (rec.index + 1) + ' / ' + n;
   $('learn-block').textContent = chunk.name;
   $('learn-es').textContent = word.spanish;
@@ -2809,10 +3237,12 @@ function renderLearnCard(play) {
   $('learn-pos').textContent = posNote;
   setHidden('learn-pos', !posNote);
   setHidden('learn-noaudio', !audio.isKnownMissing('w_' + word.id));
+  document.querySelectorAll('.learn-speaker').forEach((b) => { b.dataset.play = 'w_' + word.id; b.classList.remove('playing'); });
   renderLearnDots();
   renderLearnFooter();
   audio.stop();
-  if (play && S.settings.autoplay) learnPlay();
+  // Flashcards are silent unless „Karteikarten automatisch vorlesen" is on; the speaker button always plays.
+  if (play && S.settings.learnAutoplay) learnPlay();
 }
 function renderLearnDots() {
   const chunk = learnChunk(), rec = learnRecord();
@@ -2832,7 +3262,7 @@ function renderLearnFooter() {
   else if (last) { btn.textContent = 'Weiter ›'; $('learn-hint').textContent = 'Alle Karten einmal umdrehen – noch ' + plural(unseen, 'Karte', 'Karten') + ' (Weiter springt dorthin)'; }
   else { btn.textContent = 'Weiter ›'; $('learn-hint').textContent = unseen ? 'Noch ' + plural(unseen, 'Karte', 'Karten') + ' umdrehen' : 'Alle Karten gesehen – Test auf der letzten Karte'; }
 }
-/** Tap = flip. The first flip to the back marks the card as seen; flipping back to the front replays the clip. */
+/** Tap = flip, nothing else (no audio). The first flip to the back marks the card as seen. */
 function flipLearn() {
   const chunk = learnChunk(), rec = learnRecord();
   if (!chunk || !rec || S.screen !== 'learn') return;
@@ -2841,7 +3271,7 @@ function flipLearn() {
   if (learn.flipped) {
     const id = chunk.word_ids[rec.index];
     if (!rec.seen[id]) { rec.seen[id] = true; renderLearnDots(); renderLearnFooter(); saveRecords().catch(reportError); }
-  } else if (S.settings.autoplay) learnPlay();
+  }
 }
 function learnGo(index) {
   const rec = learnRecord();
@@ -2863,15 +3293,24 @@ function learnPlay() {
   const word = learnWord();
   if (!word) return;
   const token = learn.token;
-  audio.play('w_' + word.id).then((r) => { if (S.screen === 'learn' && learn.token === token && !r.ok && !r.cancelled) setHidden('learn-noaudio', false); });
+  // play() is called synchronously (inside the tap) — required on iOS.
+  audio.play('w_' + word.id).then((r) => { if (S.screen === 'learn' && learn.token === token && !r.ok && !r.cancelled && !r.blocked && !r.timeout) setHidden('learn-noaudio', false); });
 }
-/** ✕: back to where the user came from; the record (seen flags, position) is already persisted. */
-function leaveLearn() { audio.stop(); learn.token++; goBack(); }
+/** ✕: back to where the user came from; the record (seen flags, position) is already persisted. A learn
+ *  record in which nothing was flipped is dropped again (opening a finished chunk must not leave it „open"). */
+function leaveLearn() {
+  audio.stop();
+  learn.token++;
+  const chunk = learnChunk(), rec = learnRecord();
+  if (chunk && rec && rec.phase === 'learn' && recordSeenCount(chunk, rec) === 0) deleteRecord(chunk.key).catch(reportError);
+  S.learnKey = null;
+  goBack();
+}
 
 /* ================================================================ overview (Übersicht: blocks → chunks → words) */
 const SPEAKER_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>';
 // Expanded blocks / word lists live in memory only; rows render lazily (chunks when a block is open, words on „Wörter").
-const ov = { open: new Set(), words: new Set(), onlyOpen: false, initialised: false };
+const ov = { open: new Set(), words: new Set(), sents: new Set(), onlyOpen: false, initialised: false };
 function openOverview() {
   if (!ov.initialised) {
     ov.initialised = true;
@@ -2905,20 +3344,40 @@ function renderOverview() {
       '<div class="block-head"><span class="name">' + block + ' · ' + escapeHtml(blockName(block)) + '</span><span class="nums">' +
       (off ? 'Block deaktiviert' : learned + '/' + total + ' gelernt · ' + due + ' fällig') + '</span></div>' +
       '<div class="bar-track"><div class="bar-fill learned" style="width:' + (total ? (100 * learned / total).toFixed(1) : 0) + '%"></div><div class="bar-fill secured" style="width:' + (total ? (100 * secured / total).toFixed(1) : 0) + '%"></div></div></button>' +
-      '<div class="ov-chunks"' + (isOpen ? '>' + shown.map((p) => chunkRowHtml(p, off, nc)).join('') : ' hidden>') + '</div></div>');
+      '<div class="ov-chunks"' + (isOpen ? '>' + sentencesBarHtml(block) + shown.map((p) => chunkRowHtml(p, off, nc)).join('') : ' hidden>') + '</div></div>');
   });
   $('ov-list').innerHTML = html.join('') || '<p class="ov-empty">' + (ov.onlyOpen ? 'Keine offenen Stapel.' : 'Keine Daten.') + '</p>';
+}
+/** Block-level „Sätze" button (free listening practice) with its lazily rendered list. */
+function sentencesBarHtml(block) {
+  const sents = blockSentences(block);
+  if (!sents.length) return '';
+  const open = ov.sents.has(block);
+  return '<div class="ov-sents-bar"><button type="button" class="btn' + (open ? ' on' : '') + '" data-sents="' + block + '" aria-expanded="' + (open ? 'true' : 'false') + '">Sätze (' + sents.length + ')</button></div>' +
+    '<div class="ov-sents"' + (open ? '>' + sentencesHtml(block) : ' hidden>') + '</div>';
+}
+function sentencesHtml(block) {
+  return blockSentences(block).map((s) => {
+    const unknown = unknownWords(s).length;
+    const locked = unknown > 0;
+    return '<div class="ov-sent' + (locked ? ' locked' : '') + '" data-sid="' + s.id + '" role="button" tabindex="0" aria-expanded="false">' +
+      '<button type="button" class="icon-btn" data-play="s_' + s.id + '" aria-label="Audio abspielen">' + SPEAKER_SVG + '</button>' +
+      '<div class="txt"><div class="es">' + escapeHtml(s.spanish) + '</div><div class="de" hidden>' + escapeHtml(s.german) + '</div>' +
+      (locked ? '<div class="lock">noch unbekannte Wörter: ' + unknown + '</div>' : '') + '</div></div>';
+  }).join('');
 }
 function chunkRowHtml(p, off, nc) {
   const isNext = !!nc && nc.key === p.key;
   const wordsOpen = ov.words.has(p.key);
+  const sent = p.sentencesUnlocked ? ' · Sätze ' + p.sentencesUnderstood + '/' + p.sentencesUnlocked + ' verstanden' : '';
   return '<div class="ov-chunk' + (isNext ? ' next' : '') + '" data-key="' + escapeHtml(p.key) + '">' +
     '<div class="ov-line"><span class="ov-title">Stapel ' + p.index + ' · Prio ' + p.prio + (isNext ? ' · nächster' : '') + '</span><span class="ov-status ' + p.statusClass + '">' + escapeHtml(p.status) + '</span></div>' +
-    '<div class="ov-sub">gelernt ' + p.learned + '/' + p.n + ' · ' + p.due + ' fällig · ' + p.secured + ' gesichert</div>' +
+    '<div class="ov-sub">gelernt ' + p.learned + '/' + p.n + ' · ' + p.due + ' fällig · ' + p.secured + ' gesichert' + sent + '</div>' +
     '<div class="btn-row ov-actions">' +
     '<button type="button" class="btn" data-act="learn"' + (off ? ' disabled' : '') + '>Lernen</button>' +
     '<button type="button" class="btn" data-act="test"' + (off ? ' disabled' : '') + '>Testen</button>' +
     '<button type="button" class="btn' + (wordsOpen ? ' on' : '') + '" data-act="words" aria-expanded="' + (wordsOpen ? 'true' : 'false') + '">Wörter</button></div>' +
+    (p.record ? '<div class="ov-close"><button type="button" class="btn link" data-act="close">Stapel schließen</button></div>' : '') +
     '<div class="ov-words"' + (wordsOpen ? '>' + wordsHtml(p.key) : ' hidden>') + '</div></div>';
 }
 function wordsHtml(key) {
@@ -2940,10 +3399,20 @@ async function onOverviewClick(e) {
   const play = t.closest('button[data-play]');
   if (play) {
     audio.unlock();
-    const r = await audio.play(play.dataset.play);
-    if (!r.ok && !r.cancelled) toast('kein Audio');
+    const r = await audio.play(play.dataset.play); // play() itself runs synchronously inside the tap
+    if (!r.ok && !r.cancelled && !r.blocked && !r.timeout) toast('kein Audio');
     return;
   }
+  const sentBtn = t.closest('button[data-sents]');
+  if (sentBtn) {
+    const block = Number(sentBtn.dataset.sents);
+    const box = sentBtn.parentNode.nextElementSibling;
+    if (ov.sents.has(block)) { ov.sents.delete(block); box.hidden = true; box.innerHTML = ''; sentBtn.classList.remove('on'); sentBtn.setAttribute('aria-expanded', 'false'); }
+    else { ov.sents.add(block); box.innerHTML = sentencesHtml(block); box.hidden = false; sentBtn.classList.add('on'); sentBtn.setAttribute('aria-expanded', 'true'); }
+    return;
+  }
+  const sentRow = t.closest('.ov-sent');
+  if (sentRow) { toggleSentenceRow(sentRow); return; }
   const act = t.closest('button[data-act]');
   if (act) {
     const row = act.closest('.ov-chunk');
@@ -2955,10 +3424,18 @@ async function onOverviewClick(e) {
       else { ov.words.add(key); box.innerHTML = wordsHtml(key); box.hidden = false; act.classList.add('on'); act.setAttribute('aria-expanded', 'true'); }
       return;
     }
+    if (act.dataset.act === 'close') {
+      // „Stapel schließen": drop the open learn/test record; the words keep their cards and progress.
+      if (S.learnKey === key) S.learnKey = null;
+      await deleteRecord(key);
+      renderOverview();
+      toast('Stapel geschlossen');
+      return;
+    }
     if (act.disabled) return;
     S.returnTo = 'overview';
-    if (act.dataset.act === 'learn') await openLearn(key);
-    else await startChunkTest(key);
+    if (act.dataset.act === 'learn') openLearn(key);
+    else startChunkTest(key);
     return;
   }
   const head = t.closest('button[data-toggle]');
@@ -2968,16 +3445,29 @@ async function onOverviewClick(e) {
     renderOverview();
   }
 }
+/** Sentence row tap: toggles the German translation. */
+function toggleSentenceRow(row) {
+  const de = row.querySelector('.de');
+  if (!de) return;
+  de.hidden = !de.hidden;
+  row.setAttribute('aria-expanded', de.hidden ? 'false' : 'true');
+}
 
 /* ================================================================ service worker */
 let swReg = null;
 let updateRequested = false;
 let reloading = false;
 let audioStatusWriteFailed = false;
+/** --banner-h = the banner's rendered height, so sticky headers (overview) sit below it, not under it. */
+function updateBannerHeight() {
+  const b = $('update-banner');
+  document.documentElement.style.setProperty('--banner-h', (b && !b.hidden ? b.offsetHeight : 0) + 'px');
+}
 function showUpdateBanner() {
   S.updateAvailable = true;
   setHidden('update-banner', false);
   document.documentElement.classList.add('banner-open'); // the banner carries the safe-area padding now
+  updateBannerHeight();
   renderVersionLine();
 }
 function onSwMessage(e) {
@@ -3098,8 +3588,12 @@ function onKeyDown(e) {
     if (ses.phase === 'prompt') {
       if (e.key === 'Enter' && !isTyping()) { e.preventDefault(); submitAnswer(); return; }
       if (e.key === ' ' && !isTyping()) { e.preventDefault(); replayAudio(); return; }
-    } else if (ses.phase === 'feedback') {
-      if (onRatingButton()) return;
+    } else if (ses.phase === 'listen') {
+      if (onButton() && e.key !== 'Escape') return;
+      if (e.key === 'Enter') { e.preventDefault(); revealListen(); return; }
+      if (e.key === ' ') { e.preventDefault(); replayAudio(); return; }
+    } else if (ses.phase === 'feedback' || ses.phase === 'reveal') {
+      if (onRatingButton() || (onButton() && e.key === ' ')) return;
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); confirmRating(); return; }
       if (/^[1-4]$/.test(e.key)) { e.preventDefault(); rate(Number(e.key)); return; }
     } else if (ses.phase === 'build') {
@@ -3136,6 +3630,10 @@ function bindUI() {
 
   // Overview: delegated clicks (block headers, Lernen/Testen/Wörter, speakers), order + „Nur offene" filters.
   $('ov-list').addEventListener('click', guard(onOverviewClick));
+  $('ov-list').addEventListener('keydown', (e) => {
+    // Sentence rows are focusable divs: Enter/Space toggles the translation like a tap.
+    if ((e.key === 'Enter' || e.key === ' ') && e.target && e.target.classList && e.target.classList.contains('ov-sent')) { e.preventDefault(); toggleSentenceRow(e.target); }
+  });
   $('ov-order').addEventListener('click', guard(async (e) => { const b = e.target.closest('button[data-order]'); if (b) await setOrder(b.dataset.order); }));
   $('ov-open').addEventListener('change', guard(() => { ov.onlyOpen = $('ov-open').checked; renderOverview(); }));
   $('set-order').addEventListener('click', guard(async (e) => { const b = e.target.closest('button[data-order]'); if (b) await setOrder(b.dataset.order); }));
@@ -3157,7 +3655,18 @@ function bindUI() {
   $('btn-learn-close').addEventListener('click', guard(leaveLearn));
   $('answer-form').addEventListener('submit', guard((e) => { e.preventDefault(); submitAnswer(); }));
   $('btn-mic').addEventListener('click', guard(startListening));
+  $('btn-reveal').addEventListener('click', guard(revealListen));
+  $('btn-repeat').addEventListener('click', guard(startRepeat));
   $('btn-next').addEventListener('click', guard(confirmRating));
+  // Speaker feedback: every element with data-play (space-separated clip names) turns accent while its clip plays.
+  audio.subscribe(({ name, playing }) => {
+    document.querySelectorAll('[data-play]').forEach((el) => {
+      const names = String(el.dataset.play || '').split(/\s+/);
+      if (names.indexOf(name) >= 0) el.classList.toggle('playing', !!playing);
+      else if (playing) el.classList.remove('playing');
+    });
+  });
+  window.addEventListener('resize', () => { if (S.updateAvailable) updateBannerHeight(); });
   document.querySelectorAll('.rate').forEach((b) => b.addEventListener('click', guard(() => rate(Number(b.dataset.rating)))));
 
   $('set-chunk').addEventListener('change', guard(async () => {
@@ -3171,6 +3680,10 @@ function bindUI() {
   }));
   $('set-autoplay').addEventListener('change', guard(async () => { S.settings.autoplay = $('set-autoplay').checked; await saveSettings(); }));
   $('set-audio-before').addEventListener('change', guard(async () => { S.settings.audioBefore = $('set-audio-before').checked; await saveSettings(); }));
+  $('set-learn-autoplay').addEventListener('change', guard(async () => { S.settings.learnAutoplay = $('set-learn-autoplay').checked; await saveSettings(); }));
+  [['set-use-cloze', 'useCloze'], ['set-use-build', 'useBuild'], ['set-use-listen', 'useListen']].forEach(([id, key]) => {
+    $(id).addEventListener('change', guard(async () => { S.settings[key] = $(id).checked; await saveSettings(); }));
+  });
   $('set-voice').addEventListener('change', guard(async () => { S.settings.voice = $('set-voice').checked; await saveSettings(); }));
   $('btn-export').addEventListener('click', guard(doExport));
   $('btn-import').addEventListener('click', () => { $('file-import').value = ''; $('file-import').click(); });
@@ -3220,9 +3733,10 @@ window.Tango = {
   db: { openDB, dbGet, dbPut, dbAdd, dbGetAll, dbDelete, dbClear, dbCount, dbBulkPut, runTx, metaGet, metaSet },
   fsrs,
   match,
-  phonetic: { keyEs, keysDe, phoneticMatch },
+  phonetic: { keyEs, keysDe, phoneticMatch, similarity },
   normalize: normalizeAnswer,
   buildCloze,
+  highlightSentence,
   audio,
   state: S,
   nowMs,
@@ -3234,7 +3748,14 @@ window.Tango = {
     getReviews: () => dbGetAll('reviews'),
     setTimeOffsetDays: (n) => { lsSet('tango_time_offset_ms', String(Math.round((Number(n) || 0) * DAY))); refreshUI(); return nowMs(); },
     getTimeOffsetDays: () => (Number(lsGet('tango_time_offset_ms')) || 0) / DAY,
-    getQueuePreview: () => { const q = computeQueue(nowMs()); return { dueCount: q.due.length, newCloze: q.newCloze.length, newBuild: q.newBuild.length, total: q.queue.length, unlearned: unlearnedCount(), ahead: aheadCards(S.settings.chunkSize).length }; },
+    getQueuePreview: () => { const q = computeQueue(nowMs()); return { dueCount: q.due.length, newCloze: q.newCloze.length, newBuild: q.newBuild.length, newListen: q.newListen.length, total: q.queue.length, unlearned: unlearnedCount(), ahead: aheadCards(S.settings.chunkSize).length }; },
+    /** „Satz verstehen": all listen cards; the sentence ids currently unlocked (every word learned). */
+    getListenCards: () => Array.from(S.cards.values()).filter((c) => c.type === 'listen'),
+    unlockedListen: () => S.data.sentences.filter(sentenceUnlocked).map((s) => s.id),
+    /** Runs the audio unlock exactly as a user gesture would. */
+    simulateGesture: () => { audio.unlock(); return audio.unlocked; },
+    revealListen,
+    startRepeat,
     /** Count-based scheduling: the answer counter (every committed review increments it by 1). */
     getCounter: () => S.counter,
     /** Chunk (Stapel) API: derived list with progress, open records, start/open/test one, overview, pull ahead. */
@@ -3242,16 +3763,16 @@ window.Tango = {
     getChunkRecords: () => S.chunkRecords,
     getChunk: () => openRecords()[0] || null,
     nextChunk: () => { const c = nextChunk(); return c ? chunkProgress(c) : null; },
-    startChunk: async (key) => {
+    startChunk: (key) => {
       if (S.session) leaveSession();
       const k = key || (nextChunk() || {}).key;
       if (!k) return null;
       S.returnTo = 'start';
-      await openLearn(k);
+      openLearn(k);
       return getRecord(k);
     },
-    openLearn: async (key) => { if (S.session) leaveSession(); S.returnTo = 'start'; await openLearn(key || S.learnKey || (nextChunk() || {}).key); return S.screen; },
-    startChunkTest: async (key) => { if (S.session) leaveSession(); S.returnTo = 'start'; await startChunkTest(key || S.learnKey || (openRecords()[0] || {}).key); return S.screen; },
+    openLearn: (key) => { if (S.session) leaveSession(); S.returnTo = 'start'; openLearn(key || S.learnKey || (nextChunk() || {}).key); return S.screen; },
+    startChunkTest: (key) => { if (S.session) leaveSession(); S.returnTo = 'start'; startChunkTest(key || S.learnKey || (openRecords()[0] || {}).key); return S.screen; },
     openOverview: () => { if (S.session) leaveSession(); if (S.screen === 'learn') leaveLearn(); openOverview(); return S.screen; },
     pullAhead: () => { if (S.session) leaveSession(); startSession(true); return S.screen; },
     startReview: () => { if (S.session) leaveSession(); startSession(false); return S.screen; },
