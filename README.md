@@ -1,6 +1,6 @@
 # Tango – Vokabeltrainer für Rioplatense-Spanisch
 
-Erst lernen, dann testen. Eine PWA fürs iPhone, komplett offline. Neue Wörter kommen als Karteikarten-Stapel von 10: Karte antippen dreht sie (Spanisch mit Audio ↔ Deutsch); sind alle 10 gesehen, folgt der Test (Deutsch → Spanisch tippen oder sprechen, danach Auflösung mit Audio). Danach übernimmt die FSRS-Wiederholung mit drei Kartentypen (Wort, Lückensatz, Satz bauen). Wörter zuerst: Ein Lückensatz wird erst fällig, wenn sein Zielwort gefestigt ist und alle anderen Listenwörter des Satzes schon gelernt wurden. Antworten dürfen lautschriftlich mit deutschen Buchstaben getippt werden („kaje“ für calle, „tschau“ für chau, „tenes“ ohne Akzent), die richtige Schreibweise wird dann angezeigt. 500 Wörter in 7 Blöcken und über 450 Beispielsätze im Spanisch von Buenos Aires (`vos`, `acá`, `plata`, `colectivo`). Die Audio-Clips werden einmalig lokal mit F5-TTS aus einer Referenzstimme erzeugt und ins Repo committet.
+Erst lernen, dann testen. Eine PWA fürs iPhone, komplett offline. Der Wortschatz (rund 1.350 Wörter in 18 Blöcken, über 1.100 Beispielsätze im Spanisch von Buenos Aires: `vos`, `acá`, `plata`, `colectivo`) ist für einen Schweißer gedacht, der in Buenos Aires arbeitet, Tango tanzt, einkauft und mit Tänzern redet; jedes Wort hat eine Priorität 1–3, die die Lernreihenfolge bestimmt. Neue Wörter kommen als Karteikarten-Stapel von 10 pro Block (Karte antippen dreht sie: Spanisch mit Audio ↔ Deutsch); sind alle gesehen, folgt der Test (Deutsch → Spanisch tippen oder sprechen, danach Auflösung mit Audio). Die Übersicht zeigt alle Blöcke und Stapel mit Fortschritt; jeder Stapel lässt sich jederzeit lernen, testen oder als Wortliste mit Audio durchsehen. Die Wiederholung zählt Karten statt Uhrzeit: Nochmal kommt nach 2 weiteren Karten wieder, Schwer nach 4, Gut nach 8, danach wachsende Abstände (FSRS-Stabilität, umgerechnet mit „Karten pro Tag“). Lückensätze werden erst fällig, wenn ihr Zielwort gefestigt ist und alle anderen Listenwörter des Satzes gelernt wurden. Antworten dürfen lautschriftlich mit deutschen Buchstaben getippt werden („kaje“ für calle, „tschau“ für chau, „tenes“ ohne Akzent). Die Audio-Clips werden einmalig lokal mit F5-TTS aus einer Referenzstimme erzeugt und ins Repo committet.
 
 **App:** https://aeneassoft.github.io/tango-vocab/
 
@@ -14,7 +14,7 @@ Erst lernen, dann testen. Eine PWA fürs iPhone, komplett offline. Neue Wörter 
 
 ## Wörter hinzufügen
 
-1. Zeilen in `data/words.csv` (Verben als gesprochene Formen, IDs fortlaufend) und `data/sentences.csv` (jedes Wort in mindestens einem Satz) ergänzen.
+1. Zeilen in `data/words.csv` (Spalten `id,block,german,spanish,pos,note,prio`; Verben als gesprochene Formen, Nomen ohne Artikel mit `m`/`f` in der Notiz, IDs fortlaufend, `prio` 1–3) und `data/sentences.csv` (jedes Wort in mindestens einem Satz) ergänzen. Blöcke 1–18, Namen stehen in `app/index.html` (`BLOCK_NAMES`).
 2. `python tools/validate_data.py` – muss mit `OK` enden (prüft Dubletten, Rioplatense-Formen, Satzabdeckung und schreibt `app/data.json`).
 3. `python tools/gen_audio.py` erzeugt nur die fehlenden Clips; dann `git add -A && git commit -m "Neue Wörter" && git push` – GitHub Pages veröffentlicht automatisch.
 

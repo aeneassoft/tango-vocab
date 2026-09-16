@@ -2,7 +2,7 @@
 """validate_data.py — sanity-check data/words.csv + data/sentences.csv, then write app/data.json.
 
 Errors (exit code 1):
-  * empty fields, non-integer / duplicate ids, block outside 1-7, unknown pos
+  * empty fields, non-integer / duplicate ids, block outside 1-11, unknown pos, prio not 1-3 (optional column, default 2)
   * the same `spanish` value twice inside one block (raw string; `bailás` and `¿bailás?` are distinct), or the same german+spanish pair anywhere
   * an infinitive stored with pos=verb (verbs are stored as spoken forms: tengo / tenés / tiene)
   * non-Rioplatense forms (aquí, dinero, autobús, vosotros, coche, ordenador, móvil, tú, tienes, ...)
@@ -35,8 +35,8 @@ SENTS_CSV = ROOT / "data" / "sentences.csv"
 DATA_JSON = ROOT / "app" / "data.json"
 
 POS = {"noun", "verb", "adj", "adv", "func", "phrase"}
-BLOCKS = set(range(1, 8))
-WORD_FIELDS = ["id", "block", "german", "spanish", "pos", "note"]
+BLOCKS = set(range(1, 19))
+WORD_FIELDS = ["id", "block", "german", "spanish", "pos", "note"]  # + optional "prio" (1-3)
 SENT_FIELDS = ["id", "word_ids", "spanish", "german"]  # + optional "note"
 
 # token -> Rioplatense replacement. Any of these is an error.
@@ -170,7 +170,14 @@ def validate_words(rows: list[dict], rep: Report) -> dict[int, dict]:
         except ValueError:
             block = -1
         if block not in BLOCKS:
-            rep.error(f"{where}: block »{r['block']}« nicht in 1-7")
+            rep.error(f"{where}: block »{r['block']}« nicht in 1-18")
+        prio_raw = (r.get("prio") or "").strip()
+        try:
+            prio = int(prio_raw) if prio_raw else 2
+        except ValueError:
+            prio = 0
+        if prio not in (1, 2, 3):
+            rep.error(f"{where}: prio »{prio_raw}« muss 1, 2 oder 3 sein")
         if r["pos"] not in POS:
             rep.error(f"{where}: pos »{r['pos']}« unbekannt (erlaubt: {sorted(POS)})")
         form = norm(r["spanish"])
@@ -191,7 +198,7 @@ def validate_words(rows: list[dict], rep: Report) -> dict[int, dict]:
         check_tokens(r["spanish"], where, rep)
         words[wid] = {
             "id": wid, "block": block, "german": r["german"], "spanish": r["spanish"],
-            "pos": r["pos"], "note": r.get("note", ""), "_form": form, "_toks": form.split(),
+            "pos": r["pos"], "note": r.get("note", ""), "prio": prio, "_form": form, "_toks": form.split(),
         }
     for form, blocks in form_blocks.items():
         if len(blocks) > 1:
@@ -257,7 +264,7 @@ def validate_sentences(rows: list[dict], words: dict[int, dict], rep: Report) ->
 
 def write_data_json(words: dict[int, dict], sents: list[dict]) -> str:
     payload = {
-        "words": [{k: w[k] for k in ("id", "block", "german", "spanish", "pos", "note")} for _, w in sorted(words.items())],
+        "words": [{k: w[k] for k in ("id", "block", "german", "spanish", "pos", "note", "prio")} for _, w in sorted(words.items())],
         "sentences": sents,
     }
     raw = json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True)

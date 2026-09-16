@@ -95,6 +95,8 @@ h1, h2, h3, p { margin: 0; }
 .btn.secondary:hover, .btn.secondary:active, .btn:not(.primary):not(.link):active { background: var(--surface2); }
 .btn:disabled { opacity: .4; cursor: default; }
 .btn.big { min-height: 64px; font-size: 22px; }
+.btn.start { min-height: 58px; font-size: 18px; line-height: 1.25; }
+.btn.start.primary { font-size: 20px; }
 .btn.link {
   background: none;
   border: none;
@@ -355,7 +357,7 @@ html.banner-open #app { padding-top: 0; }
   font-size: 15px;
   transition: opacity .15s;
 }
-.rate small { font-size: 12px; color: var(--muted); }
+.rate small { font-size: 12px; color: var(--muted); white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .rate.selected { border-color: var(--accent-hi); background: var(--accent); }
 .rate.selected small { color: var(--text); }
 .rate:active { opacity: .7; }
@@ -460,6 +462,83 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
 .learn-footer { margin-top: auto; }
 .learn-footer .btn.prev { flex: 0 0 64px; font-size: 26px; }
 
+/* ---------------------------------------------------------------- overview (Übersicht) */
+/* The overview header sticks to the top while the long block list scrolls; it paints its own safe-area
+   padding so the title never slides under the translucent status bar. */
+.bar.sticky {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  margin-top: calc(-12px - env(safe-area-inset-top));
+  padding-top: calc(12px + env(safe-area-inset-top));
+  margin-bottom: 0;
+}
+.filter-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 0 4px; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.seg button {
+  min-height: 48px;
+  min-width: 48px;
+  padding: 0 14px;
+  border: none;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 15px;
+  cursor: pointer;
+  transition: opacity .15s;
+}
+.seg button + button { border-left: 1px solid var(--line); }
+.seg button.on { background: var(--accent); color: var(--text); font-weight: 600; }
+.seg-label { color: var(--muted); font-size: 14px; margin-right: 8px; }
+.chk { display: inline-flex; align-items: center; gap: 10px; min-height: 48px; font-size: 15px; cursor: pointer; }
+.ov-block { border-bottom: 1px solid var(--line); }
+.ov-block.off { opacity: .5; }
+.ov-head {
+  display: block;
+  width: 100%;
+  min-height: 56px;
+  padding: 12px 0;
+  border: none;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ov-head .block-head { align-items: baseline; margin-bottom: 6px; }
+.ov-head .block-head .name { font-size: 17px; font-weight: 600; }
+.ov-head .block-head .name::before { content: "›"; display: inline-block; width: 18px; color: var(--muted); transition: transform .15s; }
+.ov-block.open .ov-head .block-head .name::before { transform: rotate(90deg); }
+.ov-chunks { padding: 0 0 6px 18px; }
+.ov-chunk { padding: 10px 0 12px; border-top: 1px solid var(--line); }
+.ov-chunk.next .ov-title { color: var(--accent-hi); }
+.ov-line { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.ov-title { font-weight: 600; }
+.ov-status { color: var(--muted); font-size: 14px; white-space: nowrap; }
+.ov-status.open { color: var(--warn); }
+.ov-status.done { color: var(--ok); }
+.ov-sub { color: var(--muted); font-size: 14px; margin-top: 2px; }
+.ov-actions { margin-top: 10px; }
+.ov-actions .btn { min-height: 48px; padding: 8px 6px; font-size: 16px; }
+.ov-actions .btn.on { border-color: var(--accent-hi); }
+.ov-words { margin-top: 8px; border-top: 1px solid var(--line); }
+.ov-word { display: flex; align-items: center; gap: 8px; min-height: 48px; padding: 2px 0; border-bottom: 1px solid var(--line); }
+.ov-word:last-child { border-bottom: none; }
+.ov-word .txt { flex: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; }
+.ov-word .es { font-weight: 600; }
+.ov-word .de { color: var(--muted); font-size: 14px; }
+.ov-word .icon-btn { min-width: 44px; min-height: 48px; margin-right: -8px; }
+.ov-word .icon-btn svg { width: 22px; height: 22px; }
+.pbadge { flex: none; font-size: 11px; font-weight: 700; color: var(--muted); border: 1px solid var(--line); border-radius: 6px; padding: 1px 5px; min-width: 26px; text-align: center; }
+.pbadge.p1 { color: var(--accent-hi); border-color: var(--accent); }
+.pbadge.p2 { color: var(--warn); }
+.sdot { flex: none; width: 12px; height: 12px; border-radius: 50%; border: 1px solid var(--muted); background: none; }
+.sdot.learning { background: var(--warn); border-color: var(--warn); }
+.sdot.learned { background: var(--muted); }
+.sdot.secured { background: var(--ok); border-color: var(--ok); }
+.ov-legend { display: flex; flex-wrap: wrap; gap: 8px 16px; color: var(--muted); font-size: 13px; padding: 12px 0 4px; align-items: center; }
+.ov-legend .sdot { display: inline-block; margin-right: 5px; vertical-align: -1px; }
+.ov-empty { color: var(--muted); padding: 24px 0; text-align: center; }
+
 /* ---------------------------------------------------------------- error */
 .error-wrap { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; text-align: center; }
 .error-wrap pre { white-space: pre-wrap; color: var(--muted); font-size: 13px; text-align: left; background: var(--surface); padding: 12px; border-radius: 12px; }
@@ -489,15 +568,14 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
       <h1 class="title">Tango</h1>
       <p class="subtitle">Rioplatense · Produktion statt Wiedererkennung</p>
       <p id="today-line" class="today">Fällig: – Karten</p>
-      <p id="today-new" class="today-sub">Neu heute: – Wörter · Stapel –/–</p>
       <p id="today-sub" class="today-sub"></p>
-      <button type="button" id="btn-chunk" class="btn primary big" hidden>Neuen Stapel lernen</button>
-      <button type="button" id="btn-review" class="btn secondary big" hidden>Wiederholen</button>
-      <button type="button" id="btn-nothing" class="btn primary big" disabled hidden>Heute alles erledigt</button>
+      <p id="today-learned" class="today-sub">Gelernt: – von – Wörtern</p>
+      <p id="today-counter" class="today-sub">Zähler: – Antworten</p>
+      <div id="start-buttons"></div>
       <div class="stats-row">
         <span id="st-streak">Streak 0 Tage</span>
         <span>·</span>
-        <span id="st-learned">0 Wörter gelernt</span>
+        <span id="st-new">Heute: 0 Wörter neu</span>
         <span>·</span>
         <span id="st-audio">Audio …</span>
       </div>
@@ -511,8 +589,8 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
   <!-- ============================================================ Kartei (Stapel lernen) -->
   <section id="scr-learn" class="screen" hidden>
     <header class="bar">
-      <button type="button" id="btn-learn-close" class="icon-btn" aria-label="Zurück zum Start">✕</button>
-      <div class="bar-mid"><span id="learn-progress">Stapel · 1 / 10</span></div>
+      <button type="button" id="btn-learn-close" class="icon-btn" aria-label="Zurück">✕</button>
+      <div class="bar-mid"><span id="learn-progress">Block 1 · Stapel 1 · 1 / 10</span></div>
       <span id="learn-block" class="type-label"></span>
     </header>
     <main class="learn-main">
@@ -553,7 +631,7 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
   <section id="scr-session" class="screen" hidden>
     <header class="bar">
       <button type="button" id="btn-leave" class="icon-btn" aria-label="Session verlassen">✕</button>
-      <div class="bar-mid"><span id="progress">1 / 1</span><span class="dot">·</span><span id="block-name"></span></div>
+      <div class="bar-mid"><span id="progress">1 / 1</span><span class="dot">·</span><span id="counter-label">Zähler 0</span></div>
       <span id="type-label" class="type-label"></span>
     </header>
     <main class="session-main">
@@ -628,6 +706,21 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
     </div>
   </section>
 
+  <!-- ============================================================ Übersicht -->
+  <section id="scr-overview" class="screen" hidden>
+    <header class="bar sticky">
+      <button type="button" id="btn-overview-back" class="icon-btn" aria-label="Zurück">‹</button>
+      <div class="bar-mid">Übersicht</div>
+      <span class="type-label"></span>
+    </header>
+    <div class="filter-row">
+      <div><span class="seg-label">Reihenfolge</span><div class="seg" id="ov-order" role="group" aria-label="Reihenfolge"><button type="button" data-order="prio">Priorität</button><button type="button" data-order="block">Blöcke</button></div></div>
+      <label class="chk"><input type="checkbox" id="ov-open" class="switch">Nur offene</label>
+    </div>
+    <div id="ov-list"></div>
+    <div class="ov-legend"><span><i class="sdot"></i>neu</span><span><i class="sdot learning"></i>lernend</span><span><i class="sdot learned"></i>gelernt</span><span><i class="sdot secured"></i>gesichert</span></div>
+  </section>
+
   <!-- ============================================================ Statistik -->
   <section id="scr-stats" class="screen" hidden>
     <header class="bar">
@@ -636,6 +729,7 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
       <span class="type-label"></span>
     </header>
     <div class="totals" id="stats-totals"></div>
+    <p id="stats-counter" class="today-sub" style="margin-top:10px"></p>
     <h3>Diese Woche</h3>
     <div class="totals" id="stats-week"></div>
     <h3>Wörter pro Block</h3>
@@ -655,7 +749,8 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
       <span class="type-label"></span>
     </header>
     <label class="row"><span class="lbl">Wörter pro Stapel</span><input id="set-chunk" type="number" min="5" max="20" step="1" inputmode="numeric"></label>
-    <label class="row"><span class="lbl">Stapel pro Tag</span><input id="set-chunks" type="number" min="1" max="3" step="1" inputmode="numeric"></label>
+    <label class="row"><span class="lbl">Karten pro Tag (für die Abstände)</span><input id="set-rpd" type="number" min="5" max="100" step="1" inputmode="numeric"></label>
+    <div class="row"><span class="lbl">Reihenfolge</span><div class="seg" id="set-order" role="group" aria-label="Reihenfolge"><button type="button" data-order="prio">Priorität</button><button type="button" data-order="block">Blöcke</button></div></div>
     <label class="row"><span class="lbl">Auto-Play</span><input id="set-autoplay" type="checkbox" class="switch"></label>
     <label class="row"><span class="lbl">Audio vor der Antwort abspielen</span><input id="set-audio-before" type="checkbox" class="switch"></label>
     <label class="row" id="row-voice"><span class="lbl">Spracheingabe</span><input id="set-voice" type="checkbox" class="switch"></label>
@@ -706,12 +801,16 @@ h3 { font-size: 15px; font-weight: 600; color: var(--muted); text-transform: upp
 /* ================================================================ constants & utils */
 const DAY = 86400000;
 const MIN = 60000;
-const BLOCK_NAMES = { 1: 'Skelett', 2: 'Kernverben', 3: 'Fragen & Antworten', 4: 'Stadt, Tag, Zahlen', 5: 'Menschen & Körper', 6: 'Milonga', 7: 'Alltag & Gefühle' };
+const BLOCK_NAMES = { 1: 'Skelett', 2: 'Kernverben', 3: 'Fragen & Antworten', 4: 'Stadt, Tag, Zahlen', 5: 'Menschen & Körper', 6: 'Milonga', 7: 'Alltag & Gefühle', 8: 'Arbeit & Werkstatt', 9: 'Einkaufen', 10: 'Milonga-Gespräche', 11: 'Zahlen, Uhrzeit, Wohnen', 12: 'Lunfardo & Alltagssprache', 13: 'Behörden, Geld & Papiere', 14: 'Essen & Trinken', 15: 'Körper & Gesundheit', 16: 'Weitere Verben', 17: 'Wetter, Verkehr & Zeit', 18: 'Fußball & Smalltalk' };
 const TYPE_LABELS = { word: 'Produktion', cloze: 'Lückensatz', build: 'Satz bauen' };
 const TYPE_SUFFIX = { word: 'w', cloze: 'c', build: 'b' };
-const DEFAULT_SETTINGS = { chunkSize: 10, chunksPerDay: 1, autoplay: true, audioBefore: false, blocks: [1, 2, 3, 4, 5, 6, 7], voice: true };
+// `blocks` = enabled blocks; null = every block present in the data (resolved once the data is known).
+const DEFAULT_SETTINGS = { chunkSize: 10, reviewsPerDay: 20, order: 'prio', autoplay: true, audioBefore: false, blocks: null, voice: true };
 const CHUNK_TEST_MAX_ASKS = 3; // a word is asked at most this often within one chunk test
 const RATING_NAMES = { 1: 'Nochmal', 2: 'Schwer', 3: 'Gut', 4: 'Leicht' };
+// Learning steps in answers (count-based scheduling): New/Learning/Relearning Again → 2, Hard → 4, Good (New) → 8.
+const STEP_ANSWERS = { 1: 2, 2: 4, 3: 8 };
+const SECURED_STABILITY = 21; // Review cards with stability ≥ 21 days count as "gesichert"
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -752,17 +851,10 @@ function escapeHtml(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 }
 function fmtSeconds(ms) { return (Math.max(0, ms) / 1000).toFixed(1).replace('.', ',') + ' s'; }
-function fmtInterval(ms) {
-  if (!(ms > 0)) return '–';
-  const mins = Math.round(ms / MIN);
-  if (mins < 60) return Math.max(1, mins) + ' Min';
-  const hours = ms / 3600000;
-  if (hours < 24) return Math.round(hours) + ' Std';
-  const days = ms / DAY;
-  if (days < 30) return Math.round(days) + ' T';
-  if (days < 365) return Math.round(days / 30) + ' Mo';
-  return (days / 365).toFixed(1).replace('.', ',') + ' J';
-}
+/** "1 254" — thousands separated by a narrow no-break space. */
+function fmtCount(n) { return String(Math.round(Number(n) || 0)).replace(/\B(?=(\d{3})+(?!\d))/g, ' '); }
+/** Rating-button preview: the number of answers until the card returns ("+8 Karten"). */
+function fmtAnswers(n) { return '+' + fmtCount(n) + ' Karten'; }
 function shuffle(arr) {
   for (let i = arr.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); const t = arr[i]; arr[i] = arr[j]; arr[j] = t; }
   return arr;
@@ -896,17 +988,26 @@ const fsrs = (function () {
   const nextForgetStability = (d, s, r) => Math.min(w[11] * Math.pow(d, -w[12]) * (Math.pow(s + 1, w[13]) - 1) * Math.exp((1 - r) * w[14]), s);
   const nextShortTermStability = (s, g) => s * Math.exp(w[17] * (g - 3 + w[18]));
 
-  /** All four candidate outcomes for a card at `now` (pure). */
-  function candidates(card, now) {
+  /** All four candidate outcomes for a card (pure). Count-based scheduling: `counter` = answers given so far
+   *  (this answer becomes number counter + 1 = the card's new `last_n`), `R` = settings.reviewsPerDay converts
+   *  FSRS days into answers (`answers = max(1, round(days * R))`). Elapsed time for the forgetting curve is
+   *  measured in answers too: (counter - last_n) / R days. `due`/`last_review` timestamps are kept for
+   *  logs and statistics only (`due` = an estimate at R answers per day). */
+  function candidates(card, now, counter, R) {
     const state = card.state | 0;
-    const last = card.last_review;
-    const elapsed = (state === State.New || !last) ? 0 : Math.max(0, Math.floor((now - last) / DAY));
+    const rpd = positive(R, 20);
+    const cnt = Math.max(0, counter | 0);
+    const elapsed = (state === State.New || card.last_n == null) ? 0 : Math.max(0, (cnt - card.last_n) / rpd);
+    const toAnswers = (days) => Math.max(1, Math.round(days * rpd));
     const base = (fields) => Object.assign({}, card, {
       reps: (card.reps || 0) + 1,
       lapses: card.lapses || 0,
       last_review: now,
+      last_n: cnt + 1,
       elapsed_days: elapsed
     }, fields);
+    // `answers` = further answers until the card is due again; due_n counts from this answer (cnt + 1).
+    const after = (answers, fields) => base(Object.assign({ answers, due_n: cnt + 1 + answers, due: now + answers / rpd * DAY }, fields));
     const out = {};
     if (state === State.New) {
       for (let g = 1; g <= 4; g++) {
@@ -914,10 +1015,9 @@ const fsrs = (function () {
         const s = initStability(g);
         if (g === Rating.Easy) {
           const ivl = nextInterval(s);
-          out[g] = base({ difficulty: d, stability: s, state: State.Review, scheduled_days: ivl, due: now + ivl * DAY });
+          out[g] = after(toAnswers(ivl), { difficulty: d, stability: s, state: State.Review, scheduled_days: ivl });
         } else {
-          const mins = g === Rating.Again ? 1 : g === Rating.Hard ? 5 : 10;
-          out[g] = base({ difficulty: d, stability: s, state: State.Learning, scheduled_days: 0, due: now + mins * MIN });
+          out[g] = after(STEP_ANSWERS[g], { difficulty: d, stability: s, state: State.Learning, scheduled_days: 0 });
         }
       }
     } else if (state === State.Learning || state === State.Relearning) {
@@ -927,12 +1027,12 @@ const fsrs = (function () {
       for (let g = 1; g <= 4; g++) {
         const d = nextDifficulty(d0, g);
         const s = nextShortTermStability(s0, g);
-        if (g === Rating.Again) out[g] = base({ difficulty: d, stability: s, state, scheduled_days: 0, due: now + 5 * MIN });
-        else if (g === Rating.Hard) out[g] = base({ difficulty: d, stability: s, state, scheduled_days: 0, due: now + 10 * MIN });
-        else if (g === Rating.Good) out[g] = base({ difficulty: d, stability: s, state: State.Review, scheduled_days: goodIvl, due: now + goodIvl * DAY });
+        if (g === Rating.Again) out[g] = after(STEP_ANSWERS[1], { difficulty: d, stability: s, state, scheduled_days: 0 });
+        else if (g === Rating.Hard) out[g] = after(STEP_ANSWERS[2], { difficulty: d, stability: s, state, scheduled_days: 0 });
+        else if (g === Rating.Good) out[g] = after(toAnswers(goodIvl), { difficulty: d, stability: s, state: State.Review, scheduled_days: goodIvl });
         else {
           const ivl = Math.max(nextInterval(s), goodIvl + 1);
-          out[g] = base({ difficulty: d, stability: s, state: State.Review, scheduled_days: ivl, due: now + ivl * DAY });
+          out[g] = after(toAnswers(ivl), { difficulty: d, stability: s, state: State.Review, scheduled_days: ivl });
         }
       }
     } else {
@@ -949,26 +1049,30 @@ const fsrs = (function () {
       hard = Math.min(hard, good);
       good = Math.max(good, hard + 1);
       easy = Math.max(easy, good + 1);
-      out[1] = base({ difficulty: nextDifficulty(d0, 1), stability: sAgain, state: State.Relearning, scheduled_days: 0, due: now + 5 * MIN, lapses: (card.lapses || 0) + 1 });
-      out[2] = base({ difficulty: nextDifficulty(d0, 2), stability: sHard, state: State.Review, scheduled_days: hard, due: now + hard * DAY });
-      out[3] = base({ difficulty: nextDifficulty(d0, 3), stability: sGood, state: State.Review, scheduled_days: good, due: now + good * DAY });
-      out[4] = base({ difficulty: nextDifficulty(d0, 4), stability: sEasy, state: State.Review, scheduled_days: easy, due: now + easy * DAY });
+      out[1] = after(STEP_ANSWERS[1], { difficulty: nextDifficulty(d0, 1), stability: sAgain, state: State.Relearning, scheduled_days: 0, lapses: (card.lapses || 0) + 1 });
+      out[2] = after(toAnswers(hard), { difficulty: nextDifficulty(d0, 2), stability: sHard, state: State.Review, scheduled_days: hard });
+      out[3] = after(toAnswers(good), { difficulty: nextDifficulty(d0, 3), stability: sGood, state: State.Review, scheduled_days: good });
+      out[4] = after(toAnswers(easy), { difficulty: nextDifficulty(d0, 4), stability: sEasy, state: State.Review, scheduled_days: easy });
     }
+    for (let g = 1; g <= 4; g++) delete out[g].answers; // helper field, not part of the card record
     return out;
   }
   /** Pure: returns the new card fields for `rating` (1–4). */
-  function schedule(card, rating, now) {
+  function schedule(card, rating, now, counter, R) {
     const g = clamp(rating | 0, 1, 4);
-    return candidates(card, now)[g];
+    return candidates(card, now, counter, R)[g];
   }
-  /** Interval preview for the four rating buttons. */
-  function preview(card, now) {
-    const c = candidates(card, now);
+  /** Preview for the four rating buttons: answers until the card returns ("+8 Karten"). */
+  function preview(card, now, counter, R) {
+    const c = candidates(card, now, counter, R);
     const out = {};
-    for (let g = 1; g <= 4; g++) out[g] = { due: c[g].due, ms: c[g].due - now, label: fmtInterval(c[g].due - now), state: c[g].state };
+    for (let g = 1; g <= 4; g++) {
+      const answers = c[g].due_n - c[g].last_n;
+      out[g] = { answers, due_n: c[g].due_n, due: c[g].due, label: fmtAnswers(answers), state: c[g].state };
+    }
     return out;
   }
-  return { w, REQUEST_RETENTION, MAX_INTERVAL, DECAY, FACTOR, State, Rating, initStability, initDifficulty, forgettingCurve, nextInterval, nextDifficulty, nextRecallStability, nextForgetStability, nextShortTermStability, candidates, schedule, preview };
+  return { w, REQUEST_RETENTION, MAX_INTERVAL, DECAY, FACTOR, State, Rating, STEP_ANSWERS, initStability, initDifficulty, forgettingCurve, nextInterval, nextDifficulty, nextRecallStability, nextForgetStability, nextShortTermStability, candidates, schedule, preview };
 })();
 
 /* ================================================================ answer matching */
@@ -1343,7 +1447,14 @@ const S = {
   screen: 'start',
   session: null,
   currentCard: null,
-  chunk: null                 // the persisted chunk record (meta key `chunk`) or null
+  counter: 0,                 // meta `counter`: total number of answers ever given (count-based scheduling)
+  sched: null,                // meta `sched`: 'count' once the cards carry due_n/last_n (migration guard)
+  chunks: [],                 // derived Stapel list (data + settings), see deriveChunks()
+  chunksByKey: new Map(),
+  chunkRecords: {},           // meta `chunks`: open learn/test records by chunk key (several may be open)
+  legacyChunk: null,          // v2 single `chunk` record awaiting migration into chunkRecords
+  learnKey: null,             // chunk key shown on the learn screen
+  returnTo: 'start'           // where ✕ / „Fertig" lead back to: 'start' | 'overview'
 };
 
 /* ================================================================ data & cards */
@@ -1355,7 +1466,8 @@ async function loadData() {
   try { data = await res.json(); } catch (e) { throw new Error('data.json ist kein gültiges JSON: ' + errMessage(e)); }
   if (!data || !Array.isArray(data.words)) throw new Error('data.json: Feld "words" fehlt');
   const words = data.words.filter((w) => w && Number.isFinite(Number(w.id)) && typeof w.spanish === 'string').map((w) => ({
-    id: Number(w.id), block: Number(w.block) || 1, german: String(w.german || ''), spanish: String(w.spanish), pos: String(w.pos || ''), note: String(w.note || '')
+    id: Number(w.id), block: Number(w.block) || 1, german: String(w.german || ''), spanish: String(w.spanish), pos: String(w.pos || ''), note: String(w.note || ''),
+    prio: [1, 2, 3].indexOf(Number(w.prio)) >= 0 ? Number(w.prio) : 2 // missing prio = 2
   }));
   const sentences = (Array.isArray(data.sentences) ? data.sentences : []).filter((s) => s && Number.isFinite(Number(s.id)) && typeof s.spanish === 'string').map((s) => ({
     id: Number(s.id), word_ids: (Array.isArray(s.word_ids) ? s.word_ids : String(s.word_ids || '').split(/[;,]/)).map(Number).filter(Number.isFinite),
@@ -1386,7 +1498,14 @@ async function loadAudioManifest() {
 }
 function cardId(wordId, type) { return wordId + ':' + TYPE_SUFFIX[type]; }
 function newCard(wordId, type) {
-  return { id: cardId(wordId, type), word_id: wordId, type, state: 0, due: null, stability: 0, difficulty: 0, elapsed_days: 0, scheduled_days: 0, reps: 0, lapses: 0, last_review: null, introduced: null, suspended: false };
+  return { id: cardId(wordId, type), word_id: wordId, type, state: 0, due: null, due_n: null, stability: 0, difficulty: 0, elapsed_days: 0, scheduled_days: 0, reps: 0, lapses: 0, last_review: null, last_n: null, introduced: null, suspended: false };
+}
+/** Sorted list of the blocks present in data.json (the settings default and the toggle list derive from it). */
+function dataBlocks() {
+  if (!S.data) return [];
+  const set = new Set();
+  S.data.words.forEach((w) => set.add(w.block));
+  return Array.from(set).sort((a, b) => a - b);
 }
 /** Insert missing card records; never overwrites existing ones. */
 async function ensureCards() {
@@ -1402,27 +1521,48 @@ async function ensureCards() {
   }
   if (missing.length) await dbBulkPut('cards', missing);
 }
-/** Whitelists + migration: stored settings from v1 carry `newPerDay` and no chunk fields → chunkSize 10, chunksPerDay 1. */
+/** Whitelist + migration: only the v3 keys survive (v1's daily new-word quota and v2's daily chunk limit are
+ *  dropped); v3 adds `reviewsPerDay` (5–100, default 20) and `order` ('prio' | 'block'). `blocks` is resolved
+ *  against the data: blocks that vanished from data.json are dropped, blocks the settings have never seen
+ *  (`blocks_seen`) are enabled — so blocks 8–11 appear enabled once they arrive, while the user's own toggles
+ *  stay as they were. */
 function sanitizeSettings(obj) {
-  const s = Object.assign({}, DEFAULT_SETTINGS, obj && typeof obj === 'object' ? obj : {});
+  const src = obj && typeof obj === 'object' ? obj : {};
+  const s = {};
+  Object.keys(DEFAULT_SETTINGS).concat('blocks_seen').forEach((k) => { s[k] = k in src ? src[k] : DEFAULT_SETTINGS[k]; });
   s.chunkSize = Math.min(20, Math.max(5, Math.round(Number(s.chunkSize)) || 10));
-  s.chunksPerDay = Math.min(3, Math.max(1, Math.round(Number(s.chunksPerDay)) || 1));
+  s.reviewsPerDay = Math.min(100, Math.max(5, Math.round(Number(s.reviewsPerDay)) || 20));
+  s.order = s.order === 'block' ? 'block' : 'prio';
   s.autoplay = s.autoplay !== false;
   s.audioBefore = s.audioBefore === true;
   s.voice = s.voice !== false;
-  s.blocks = Array.isArray(s.blocks) ? s.blocks.map(Number).filter((b) => b >= 1 && b <= 7) : DEFAULT_SETTINGS.blocks.slice();
-  delete s.newPerDay;
+  const all = dataBlocks();
+  const known = new Set(all);
+  let blocks = Array.isArray(s.blocks) ? s.blocks.map(Number).filter((b) => Number.isFinite(b) && b >= 1) : null;
+  let seen = Array.isArray(s.blocks_seen) ? s.blocks_seen.map(Number).filter(Number.isFinite) : null;
+  if (all.length) {
+    if (!blocks) blocks = all.slice();
+    else {
+      // Stored settings that predate `blocks_seen` (v2) only know the blocks they list: anything else in the
+      // data is new and gets enabled (so an existing user sees blocks 8–11 without touching the settings).
+      const seenSet = new Set(seen || blocks);
+      all.forEach((b) => { if (!seenSet.has(b) && blocks.indexOf(b) < 0) blocks.push(b); });
+      blocks = blocks.filter((b) => known.has(b));
+    }
+    seen = all.slice();
+  } else if (!blocks) blocks = [];
+  s.blocks = Array.from(new Set(blocks)).sort((a, b) => a - b);
+  s.blocks_seen = seen || [];
   return s;
 }
-/** Whitelist a stored/imported chunk record; null when unusable. */
-function sanitizeChunk(c) {
-  if (!c || typeof c !== 'object' || !Array.isArray(c.word_ids)) return null;
-  const ids = c.word_ids.map(Number).filter((id) => Number.isFinite(id));
-  if (!ids.length) return null;
+/** Whitelist a stored/imported chunk record against the derived chunk `chunk`; null when unusable. */
+function sanitizeRecord(chunk, c) {
+  if (!chunk || !c || typeof c !== 'object') return null;
+  const ids = chunk.word_ids;
   const seen = {};
   if (c.seen && typeof c.seen === 'object') ids.forEach((id) => { if (c.seen[id]) seen[id] = true; });
   const out = {
-    id: String(c.id || ('c' + nowMs())), word_ids: ids, seen,
+    key: chunk.key, seen,
     index: Math.min(ids.length - 1, Math.max(0, c.index | 0)),
     started: Number(c.started) || nowMs(),
     phase: c.phase === 'test' ? 'test' : 'learn',
@@ -1440,23 +1580,101 @@ function sanitizeChunk(c) {
   }
   return out;
 }
+/** Raw meta rows; chunk records are validated later by finishLoad() once the chunk list is derived. */
 async function loadMeta() {
   S.settings = sanitizeSettings(await metaGet('settings'));
   S.daily = (await metaGet('daily')) || null;
   S.streak = (await metaGet('streak')) || null;
-  S.chunk = sanitizeChunk(await metaGet('chunk'));
+  S.counter = Math.max(0, Math.round(Number(await metaGet('counter'))) || 0);
+  S.sched = (await metaGet('sched')) === 'count' ? 'count' : null;
+  const raw = await metaGet('chunks');
+  S.chunkRecords = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const legacy = await metaGet('chunk'); // v2 single record
+  S.legacyChunk = legacy && typeof legacy === 'object' && Array.isArray(legacy.word_ids) ? legacy : null;
   const st = await metaGet('audio_status');
   if (st && (st.total || st.synced)) S.audioStatus = st;
 }
 async function saveSettings() { S.settings = sanitizeSettings(S.settings); await metaSet('settings', S.settings); }
+/** Chunk list + migrations, after data, settings and cards are in memory (boot, import, reset). */
+async function finishLoad() {
+  deriveChunks();
+  await migrateSched();
+  await migrateRecords();
+}
+/** One-off migration from wall-clock due times to the answer counter (guarded by meta `sched`): the counter
+ *  starts at the number of logged reviews; each reviewed card gets `last_n`/`due_n` back-computed at R answers
+ *  per day — cards that were overdue become due now. */
+async function migrateSched() {
+  if (S.sched === 'count') return;
+  const now = nowMs();
+  const R = S.settings.reviewsPerDay;
+  const counter = Math.max(S.counter, await dbCount('reviews'));
+  const updates = [];
+  for (const c of S.cards.values()) {
+    const next = Object.assign({}, c);
+    next.last_n = c.last_review != null ? Math.max(0, counter - Math.round((now - c.last_review) / DAY * R)) : null;
+    if (c.state === 0) next.due_n = null;
+    else next.due_n = c.due != null ? Math.max(counter, counter + Math.round((c.due - now) / DAY * R)) : counter;
+    S.cards.set(c.id, next);
+    // Untouched New cards keep null/null in memory; only reviewed cards need the stored record rewritten.
+    if (c.state !== 0 || c.last_review != null) updates.push(next);
+  }
+  S.counter = counter;
+  S.sched = 'count';
+  await runTx(['cards', 'meta'], 'readwrite', (tx) => {
+    const cs = tx.objectStore('cards');
+    updates.forEach((u) => cs.put(u));
+    tx.objectStore('meta').put({ key: 'counter', value: counter });
+    tx.objectStore('meta').put({ key: 'sched', value: 'count' });
+  });
+}
+/** Validate the stored chunk records against the derived chunks; fold a v2 single `chunk` record into the
+ *  chunk that contains its first word (dropped when no chunk matches), then delete meta `chunk`. */
+async function migrateRecords() {
+  const out = {};
+  let changed = false;
+  for (const key of Object.keys(S.chunkRecords)) {
+    const rec = sanitizeRecord(S.chunksByKey.get(key), S.chunkRecords[key]);
+    if (rec) out[key] = rec; else changed = true;
+  }
+  const legacy = S.legacyChunk;
+  if (legacy) {
+    const first = Number(legacy.word_ids[0]);
+    const chunk = S.chunks.find((c) => c.word_ids.indexOf(first) >= 0);
+    if (chunk && !out[chunk.key]) {
+      const rec = sanitizeRecord(chunk, legacy);
+      if (rec) { rec.started = Number(legacy.started) || nowMs(); out[chunk.key] = rec; }
+    }
+    changed = true;
+  }
+  S.chunkRecords = out;
+  S.legacyChunk = null;
+  if (changed || legacy) {
+    await runTx(['meta'], 'readwrite', (tx) => {
+      tx.objectStore('meta').put({ key: 'chunks', value: out });
+      tx.objectStore('meta').delete('chunk');
+    });
+  }
+}
 const wordOf = (card) => S.wordsById.get(card.word_id);
 function enabledBlocks() { return new Set(S.settings.blocks); }
 function isLearnedWord(wordId) { const wc = S.cards.get(cardId(wordId, 'word')); return !!wc && (wc.reps || 0) >= 1; }
 function learnedCount() { let n = 0; for (const w of S.data.words) if (isLearnedWord(w.id)) n++; return n; }
+/** Due = the answer counter has reached the card's due_n (New cards have none). Wall-clock time plays no part. */
+function isDue(c) { return c.due_n != null && c.due_n <= S.counter; }
+function isSecured(wc) { return !!wc && wc.state === fsrs.State.Review && wc.stability >= SECURED_STABILITY; }
+/** Word status for the overview dots: new | learning | learned | secured. */
+function wordStatus(wc) {
+  if (!wc || !(wc.reps >= 1)) return 'new';
+  if (isSecured(wc)) return 'secured';
+  return wc.state === fsrs.State.Review ? 'learned' : 'learning';
+}
+const STATUS_LABELS = { new: 'neu', learning: 'lernend', learned: 'gelernt', secured: 'gesichert' };
+function blockName(b) { return BLOCK_NAMES[b] || ('Block ' + b); }
 function currentDaily(now) {
   const key = dayKey(now);
-  if (S.daily && S.daily.date === key) return { date: key, new_words: S.daily.new_words || 0, new_cloze: S.daily.new_cloze || 0, new_build: S.daily.new_build || 0, chunks_started: S.daily.chunks_started || 0 };
-  return { date: key, new_words: 0, new_cloze: 0, new_build: 0, chunks_started: 0 };
+  if (S.daily && S.daily.date === key) return { date: key, new_words: S.daily.new_words || 0, new_cloze: S.daily.new_cloze || 0, new_build: S.daily.new_build || 0 };
+  return { date: key, new_words: 0, new_cloze: 0, new_build: 0 };
 }
 function nextStreak(streak, today) {
   if (!streak || !streak.last_date) return { count: 1, last_date: today };
@@ -1514,19 +1732,25 @@ function interleave(due, news) {
   out.unshift(due[0]);
   return out;
 }
-/** The exact queue a review session would start with at `now`: due cards only, plus the unlocked new
- *  cloze/build cards (capped per day by chunkSize). New word cards never enter here — words are introduced
- *  through chunks (Stapel). */
-function computeQueue(now) {
+/** Cards of enabled blocks that are not suspended. */
+function activeCards() {
   const blocks = enabledBlocks();
-  const daily = currentDaily(now);
-  const active = [];
+  const out = [];
   for (const c of S.cards.values()) {
     const w = S.wordsById.get(c.word_id);
     if (!w || c.suspended || !blocks.has(w.block)) continue;
-    active.push(c);
+    out.push(c);
   }
-  const due = active.filter((c) => c.state !== 0 && c.due != null && c.due <= now).sort((a, b) => (a.due - b.due) || cardOrder(a, b));
+  return out;
+}
+const dueOrder = (a, b) => (a.due_n - b.due_n) || cardOrder(a, b);
+/** The exact queue a review session would start with: due cards (by due_n, then block/id), plus the unlocked
+ *  new cloze/build cards (capped per day by chunkSize). New word cards never enter here — words are introduced
+ *  through chunks (Stapel). */
+function computeQueue(now) {
+  const daily = currentDaily(now);
+  const active = activeCards();
+  const due = active.filter(isDue).sort(dueOrder);
   const learned = learnedCount();
   const quota = (used) => Math.max(0, S.settings.chunkSize - (used || 0));
   const newCloze = active.filter((c) => c.type === 'cloze' && c.state === 0 && clozeUnlocked(c)).sort(cardOrder).slice(0, quota(daily.new_cloze));
@@ -1534,60 +1758,98 @@ function computeQueue(now) {
   const news = newCloze.concat(newBuild);
   return { due, newCloze, newBuild, queue: interleave(due, news).map((c) => c.id) };
 }
-/* ---- chunks (Stapel): unlearned words come in blocks of chunkSize, learned on flip cards, then tested */
-const chunkHas = (chunk, wordId) => !!chunk && chunk.word_ids.indexOf(wordId) >= 0;
-/** Word cards still New in enabled blocks, block order then id order, excluding the current chunk's words. */
-function unlearnedWords() {
-  const blocks = enabledBlocks();
-  const out = [];
-  for (const c of S.cards.values()) {
-    if (c.type !== 'word' || c.state !== 0 || c.suspended) continue;
-    const w = S.wordsById.get(c.word_id);
-    if (!w || !blocks.has(w.block) || chunkHas(S.chunk, w.id)) continue;
-    out.push(c);
-  }
-  return out.sort(cardOrder).map((c) => c.word_id);
+/** „Wiederholen vorziehen": the `limit` learned cards closest to being due (not due yet). */
+function aheadCards(limit) {
+  return activeCards().filter((c) => c.state !== 0 && c.due_n != null && c.due_n > S.counter).sort(dueOrder).slice(0, limit);
 }
-function chunksStartedToday(now) { return currentDaily(now).chunks_started; }
-function canStartChunk(now) {
-  return !S.chunk && chunksStartedToday(now) < S.settings.chunksPerDay && unlearnedWords().length > 0;
-}
-function chunkSeenCount(chunk) { return chunk ? chunk.word_ids.filter((id) => chunk.seen[id]).length : 0; }
-function chunkAllSeen(chunk) { return !!chunk && chunkSeenCount(chunk) === chunk.word_ids.length; }
-/** Words of the current chunk whose word card has not been reviewed yet (for the "Neu heute" line). */
-function chunkPendingWords(chunk) { return chunk ? chunk.word_ids.filter((id) => { const c = S.cards.get(cardId(id, 'word')); return !c || c.state === 0; }).length : 0; }
-async function saveChunk() { if (S.chunk) await metaSet('chunk', S.chunk); else await dbDelete('meta', 'chunk'); }
-/** Create and persist a new chunk (counts against the daily limit). Returns the record or null. */
-async function startChunk() {
-  const now = nowMs();
-  if (!canStartChunk(now)) return null;
-  const ids = unlearnedWords().slice(0, S.settings.chunkSize);
-  const chunk = { id: 'c' + now, word_ids: ids, seen: {}, index: 0, started: now, phase: 'learn', test: null };
-  const daily = currentDaily(now);
-  daily.chunks_started += 1;
-  await runTx(['meta'], 'readwrite', (tx) => {
-    tx.objectStore('meta').put({ key: 'chunk', value: chunk });
-    tx.objectStore('meta').put({ key: 'daily', value: daily });
-  });
-  S.chunk = chunk;
-  S.daily = daily;
-  return chunk;
-}
-async function deleteChunk() { S.chunk = null; await dbDelete('meta', 'chunk'); }
-/** Earliest future due time among active cards (null when nothing is scheduled) — for the "fällig in …" hints. */
-function nextDueMs(now) {
-  const blocks = enabledBlocks();
+/** Answers until the next card becomes due (null when nothing is scheduled) — for the "fällig in …" hints. */
+function nextDueIn() {
   let best = null;
-  for (const c of S.cards.values()) {
-    const w = S.wordsById.get(c.word_id);
-    if (!w || c.suspended || !blocks.has(w.block) || c.state === 0 || c.due == null) continue;
-    if (c.due > now && (best === null || c.due < best)) best = c.due;
+  for (const c of activeCards()) {
+    if (c.state === 0 || c.due_n == null || c.due_n <= S.counter) continue;
+    if (best === null || c.due_n < best) best = c.due_n;
   }
-  return best;
+  return best === null ? null : best - S.counter;
 }
 
+/* ---- chunks (Stapel): a fixed structure derived from data + settings — per block the words are ordered by
+   (prio, id) and cut into groups of chunkSize; key "<block>:<index>". Progress is derived from the cards; only
+   open learn/test records are stored (meta `chunks`), several may be open at once. */
+function deriveChunks() {
+  const size = S.settings.chunkSize;
+  const byBlock = new Map();
+  for (const w of S.data.words) { if (!byBlock.has(w.block)) byBlock.set(w.block, []); byBlock.get(w.block).push(w); }
+  const chunks = [];
+  Array.from(byBlock.keys()).sort((a, b) => a - b).forEach((block) => {
+    const words = byBlock.get(block).slice().sort((a, b) => (a.prio - b.prio) || (a.id - b.id));
+    for (let i = 0; i * size < words.length; i++) {
+      const part = words.slice(i * size, (i + 1) * size);
+      const freq = {};
+      part.forEach((w) => { freq[w.prio] = (freq[w.prio] || 0) + 1; });
+      const prio = [1, 2, 3].reduce((best, p) => ((freq[p] || 0) > (freq[best] || 0) ? p : best), 1); // most common, ties → smallest
+      const index = i + 1;
+      chunks.push({ key: block + ':' + index, block, index, word_ids: part.map((w) => w.id), prio, title: 'Block ' + block + ' · Stapel ' + index, name: blockName(block) });
+    }
+  });
+  S.chunks = chunks;
+  S.chunksByKey = new Map(chunks.map((c) => [c.key, c]));
+}
+/** Learning order: (prio, block, index) or (block, index) per the `order` setting. */
+function chunkOrder(a, b) {
+  if (S.settings.order === 'block') return (a.block - b.block) || (a.index - b.index);
+  return (a.prio - b.prio) || (a.block - b.block) || (a.index - b.index);
+}
+function orderedChunks() { return S.chunks.slice().sort(chunkOrder); }
+function getRecord(key) { return S.chunkRecords[key] || null; }
+/** Open records, newest first. */
+function openRecords() { return Object.keys(S.chunkRecords).map((k) => S.chunkRecords[k]).filter((r) => S.chunksByKey.has(r.key)).sort((a, b) => (b.started - a.started) || (a.key < b.key ? -1 : 1)); }
+async function saveRecords() { await metaSet('chunks', S.chunkRecords); }
+async function deleteRecord(key) { delete S.chunkRecords[key]; await saveRecords(); }
+/** Create (or reuse) the learn record of a chunk: position + seen flags, later the test queue. */
+async function ensureRecord(key) {
+  const chunk = S.chunksByKey.get(key);
+  if (!chunk) throw new Error('Stapel nicht gefunden: ' + key);
+  let rec = getRecord(key);
+  if (!rec) { rec = { key, phase: 'learn', seen: {}, index: 0, started: nowMs(), test: null }; S.chunkRecords[key] = rec; await saveRecords(); }
+  return rec;
+}
+function recordSeenCount(chunk, rec) { return rec ? chunk.word_ids.filter((id) => rec.seen[id]).length : 0; }
+function recordAllSeen(chunk, rec) { return !!rec && recordSeenCount(chunk, rec) === chunk.word_ids.length; }
+/** Derived progress of one chunk (cards + record): learned / due / secured counts and the status label. */
+function chunkProgress(chunk) {
+  const rec = getRecord(chunk.key);
+  let learned = 0, due = 0, secured = 0;
+  for (const id of chunk.word_ids) {
+    const wc = S.cards.get(cardId(id, 'word'));
+    if (!wc) continue;
+    if ((wc.reps || 0) >= 1) learned++;
+    if (isDue(wc)) due++;
+    if (isSecured(wc)) secured++;
+  }
+  const n = chunk.word_ids.length;
+  const seen = recordSeenCount(chunk, rec);
+  let status, statusClass = '';
+  if (rec && rec.phase === 'test') { status = 'Test offen'; statusClass = 'open'; }
+  else if (rec) { status = 'in Arbeit ' + seen + '/' + n; statusClass = 'open'; }
+  else if (secured === n) { status = 'gesichert'; statusClass = 'done'; }
+  else if (learned === n) { status = 'fertig'; statusClass = 'done'; }
+  else if (!learned) status = 'neu';
+  else status = 'gelernt ' + learned + '/' + n;
+  return { key: chunk.key, block: chunk.block, index: chunk.index, prio: chunk.prio, title: chunk.title, name: chunk.name, word_ids: chunk.word_ids, n, learned, due, secured, seen, record: rec ? rec.phase : null, status, statusClass, finished: learned === n && !rec };
+}
+/** „Nächster Stapel": the first chunk in learning order (enabled blocks) whose words are not all learned and that has no open record. */
+function nextChunk() {
+  const blocks = enabledBlocks();
+  for (const c of orderedChunks()) {
+    if (!blocks.has(c.block) || getRecord(c.key)) continue;
+    if (c.word_ids.some((id) => !isLearnedWord(id))) return c;
+  }
+  return null;
+}
+function unlearnedCount() { let n = 0; for (const w of S.data.words) if (!isLearnedWord(w.id)) n++; return n; }
+
 /* ================================================================ screens */
-const SCREENS = ['loading', 'start', 'learn', 'session', 'end', 'stats', 'settings', 'error'];
+const SCREENS = ['loading', 'start', 'learn', 'session', 'end', 'overview', 'stats', 'settings', 'error'];
 function showScreen(name) {
   for (const s of SCREENS) {
     const el = $('scr-' + s);
@@ -1635,90 +1897,123 @@ function audioStatusText() {
   if (st.failed) return 'Audio ' + st.done + '/' + st.total + ' (' + st.failed + ' fehlen)';
   return 'offline bereit ✓';
 }
-/** Start screen: "Fällig: Y Karten" (everything a review session would ask, new cloze/build included),
- *  "Neu heute: N Wörter · Stapel s/S", and the buttons per state: chunk in progress → primary chunk button;
- *  else due cards → primary „Wiederholen" (chunk button secondary); nothing due → chunk button primary or,
- *  when the daily chunk limit is used up too, a disabled „Heute alles erledigt". */
+/** Start screen: „Fällig: Y Karten" (everything a review session would ask, new cloze/build included) with a
+ *  „davon …" sub-line, „Gelernt: L von T Wörtern", „Zähler: C Antworten", then the buttons: one per open chunk
+ *  record (newest first, at most 3), „Nächster Stapel", „Wiederholen (Y fällig)" / „Wiederholen vorziehen (10)",
+ *  „Übersicht". Primary = open chunk > due reviews > next chunk. */
 function renderStart() {
   if (!S.data) return;
   const now = nowMs();
   const q = computeQueue(now);
   const dueCount = q.queue.length;
   const daily = currentDaily(now);
-  const chunk = S.chunk;
   const size = S.settings.chunkSize;
-  const canStart = canStartChunk(now);
-  const remainingChunks = Math.max(0, S.settings.chunksPerDay - daily.chunks_started);
-  const available = chunk ? 0 : Math.min(unlearnedWords().length, remainingChunks * size);
-  const newToday = daily.new_words + chunkPendingWords(chunk) + available;
   $('today-line').textContent = 'Fällig: ' + plural(dueCount, 'Karte', 'Karten');
-  $('today-new').textContent = 'Neu heute: ' + plural(newToday, 'Wort', 'Wörter') + ' · Stapel ' + daily.chunks_started + '/' + S.settings.chunksPerDay;
   const extra = [];
   if (q.newCloze.length) extra.push(plural(q.newCloze.length, 'neuer Lückensatz', 'neue Lückensätze'));
   if (q.newBuild.length) extra.push(plural(q.newBuild.length, 'neue Satzbau-Karte', 'neue Satzbau-Karten'));
   let sub = extra.length ? 'davon ' + extra.join(', ') : '';
-  if (!dueCount && !chunk && !canStart) {
-    const nd = nextDueMs(now);
-    sub = nd ? 'Nächste Karte fällig in ' + fmtDuration(nd - now)
-      : (!S.settings.blocks.length ? 'Keine Blöcke aktiv – siehe Einstellungen.' : unlearnedWords().length ? 'Morgen gibt es einen neuen Stapel.' : 'Alle Wörter sind gelernt.');
+  if (!dueCount) {
+    const n = nextDueIn();
+    sub = n != null ? 'Nächste Karte fällig in ' + plural(n, 'Antwort', 'Antworten')
+      : (!S.settings.blocks.length ? 'Keine Blöcke aktiv – siehe Einstellungen.' : unlearnedCount() ? '' : 'Alle Wörter sind gelernt.');
   }
   $('today-sub').textContent = sub;
+  const learned = learnedCount();
+  $('today-learned').textContent = 'Gelernt: ' + learned + ' von ' + plural(S.data.words.length, 'Wort', 'Wörtern');
+  $('today-counter').textContent = 'Zähler: ' + fmtCount(S.counter) + (S.counter === 1 ? ' Antwort' : ' Antworten');
 
-  const bChunk = $('btn-chunk'), bReview = $('btn-review'), bNothing = $('btn-nothing');
-  let chunkLabel = null;
-  if (chunk && chunk.phase === 'test') chunkLabel = 'Test fortsetzen';
-  else if (chunk) chunkLabel = chunkAllSeen(chunk) ? 'Stapel testen' : 'Stapel weiter lernen (' + chunkSeenCount(chunk) + '/' + chunk.word_ids.length + ')';
-  else if (canStart) chunkLabel = 'Neuen Stapel lernen (' + plural(Math.min(size, unlearnedWords().length), 'Wort', 'Wörter') + ')';
-  bChunk.hidden = !chunkLabel;
-  bChunk.textContent = chunkLabel || '';
-  const chunkPrimary = !!chunk || !dueCount;
-  bChunk.className = 'btn big ' + (chunkPrimary ? 'primary' : 'secondary');
-  bReview.hidden = !dueCount;
-  bReview.textContent = 'Wiederholen (' + dueCount + ' fällig)';
-  bReview.className = 'btn big ' + (!chunkLabel || !chunkPrimary ? 'primary' : 'secondary');
-  bNothing.hidden = !!chunkLabel || !!dueCount;
+  const rows = [];
+  const open = openRecords().slice(0, 3);
+  open.forEach((rec) => {
+    const chunk = S.chunksByKey.get(rec.key);
+    let label;
+    if (rec.phase === 'test') label = 'Test fortsetzen: ' + chunk.title;
+    else if (recordAllSeen(chunk, rec)) label = 'Stapel testen: ' + chunk.title;
+    else label = 'Stapel weiter: ' + chunk.title + ' (' + recordSeenCount(chunk, rec) + '/' + chunk.word_ids.length + ')';
+    rows.push({ act: 'chunk', key: rec.key, label });
+  });
+  const nc = nextChunk();
+  if (nc) rows.push({ act: 'next', key: nc.key, label: 'Nächster Stapel: ' + nc.title + ' · Prio ' + nc.prio });
+  const ahead = dueCount ? 0 : aheadCards(size).length;
+  if (dueCount) rows.push({ act: 'review', label: 'Wiederholen (' + dueCount + ' fällig)' });
+  else if (ahead) rows.push({ act: 'ahead', label: 'Wiederholen vorziehen (' + ahead + ')' });
+  const primaryAct = open.length ? 'chunk' : dueCount ? 'review' : nc ? 'next' : null;
+  if (!primaryAct && !ahead) rows.unshift({ act: 'none', label: S.settings.blocks.length ? 'Alles gelernt' : 'Keine Blöcke aktiv', disabled: true });
+  rows.push({ act: 'overview', label: 'Übersicht' });
+  let primaryDone = false;
+  $('start-buttons').innerHTML = rows.map((r) => {
+    const primary = (!primaryDone && r.act === primaryAct) || r.disabled;
+    if (primary) primaryDone = true;
+    return '<button type="button" class="btn start ' + (primary ? 'primary' : 'secondary') + '" data-act="' + r.act + '"' +
+      (r.key ? ' data-key="' + escapeHtml(r.key) + '"' : '') + (r.disabled ? ' disabled' : '') + '>' + escapeHtml(r.label) + '</button>';
+  }).join('');
   const streak = streakDisplay();
   $('st-streak').textContent = 'Streak ' + streak + (streak === 1 ? ' Tag' : ' Tage');
-  const learned = learnedCount();
-  $('st-learned').textContent = learned + (learned === 1 ? ' Wort gelernt' : ' Wörter gelernt');
+  $('st-new').textContent = 'Heute: ' + plural(daily.new_words, 'Wort', 'Wörter') + ' neu';
   $('st-audio').textContent = audioStatusText();
 }
 function refreshUI() {
   if (S.screen === 'start') renderStart();
+  else if (S.screen === 'overview') renderOverview();
   else if (S.screen === 'stats') renderStats().catch(reportError);
   else if (S.screen === 'settings') renderSettings();
 }
+/** Start-screen buttons (delegated): open chunk records, next chunk, review / pull ahead, overview. */
+async function onStartButton(b) {
+  const act = b.dataset.act, key = b.dataset.key;
+  S.returnTo = 'start';
+  if (act === 'chunk') { const rec = getRecord(key); if (rec && rec.phase === 'test') await startChunkTest(key); else await openLearn(key); }
+  else if (act === 'next') await openLearn(key);
+  else if (act === 'review') startSession(false);
+  else if (act === 'ahead') startSession(true);
+  else if (act === 'overview') openOverview();
+}
+/** ✕ / „Fertig": back to where the user came from (start or overview). */
+function goBack() { if (S.returnTo === 'overview') openOverview(); else goHome(); }
 
 /* ================================================================ session */
 function setHidden(id, hidden) { const el = $(id); if (el) el.hidden = !!hidden; }
 function micAvailable() { return !!SR && S.settings.voice !== false; }
 
-/** mode 'review' = the normal due-card session; 'chunk' = the chunk test (Abfrage) over S.chunk.test.queue. */
+/** mode 'review' = the normal due-card session (or „vorziehen" when `ahead`); 'chunk' = the chunk test (Abfrage)
+ *  over the record's test queue (`chunkKey`). */
 function newSession(queue, now, mode) {
-  return { mode: mode || 'review', queue: queue.slice(), pending: [], done: 0, reviews: [], startedAt: now, token: 0, phase: 'idle', card: null, ctx: null, latencyStart: 0, autoRating: null, selectedRating: null, result: null };
+  return { mode: mode || 'review', ahead: false, chunkKey: null, queue: queue.slice(), done: 0, reviews: [], startedAt: now, token: 0, phase: 'idle', card: null, ctx: null, latencyStart: 0, autoRating: null, selectedRating: null, result: null };
 }
-function startSession() {
+/** Review session over the due cards; `ahead` pulls the chunkSize cards closest to due instead (nothing due). */
+function startSession(ahead) {
   audio.unlock();
   const now = nowMs();
-  const q = computeQueue(now);
-  if (!q.queue.length) { toast('Nichts fällig.'); renderStart(); return; }
-  S.session = newSession(q.queue, now, 'review');
+  let queue;
+  if (ahead) {
+    queue = aheadCards(S.settings.chunkSize).map((c) => c.id);
+    if (!queue.length) { toast('Keine gelernten Karten zum Vorziehen.'); renderStart(); return; }
+  } else {
+    queue = computeQueue(now).queue;
+    if (!queue.length) { toast('Nichts fällig.'); renderStart(); return; }
+  }
+  S.returnTo = 'start';
+  S.session = newSession(queue, now, 'review');
+  S.session.ahead = !!ahead;
   showScreen('session');
   nextCard();
 }
-/** Chunk test: shuffled word cards of the chunk (phase 'learn' → 'test'), or resume the remaining queue. */
-async function startChunkTest() {
-  const chunk = S.chunk;
-  if (!chunk) { toast('Kein Stapel vorhanden.'); renderStart(); return; }
+/** Chunk test for `key`: shuffled word cards of the chunk (record phase → 'test'), or resume the remaining queue.
+ *  Allowed any time (overview „Testen"); every answer is a normal review. */
+async function startChunkTest(key) {
+  const chunk = S.chunksByKey.get(key);
+  if (!chunk) { toast('Stapel nicht gefunden.'); return; }
   audio.unlock();
-  if (chunk.phase !== 'test' || !chunk.test) {
-    if (!chunkAllSeen(chunk)) { toast('Erst alle Karten einmal umdrehen.'); return; }
-    chunk.phase = 'test';
-    chunk.test = { queue: shuffle(chunk.word_ids.map((id) => cardId(id, 'word'))), round: 1, firstTry: {}, asked: {} };
-    await saveChunk();
+  const rec = await ensureRecord(key);
+  if (rec.phase !== 'test' || !rec.test) {
+    rec.phase = 'test';
+    rec.test = { queue: shuffle(chunk.word_ids.map((id) => cardId(id, 'word'))), round: 1, firstTry: {}, asked: {} };
+    await saveRecords();
   }
   const now = nowMs();
-  S.session = newSession(chunk.test.queue, now, 'chunk');
+  S.session = newSession(rec.test.queue, now, 'chunk');
+  S.session.chunkKey = key;
   showScreen('session');
   nextCard();
 }
@@ -1727,30 +2022,38 @@ function leaveSession() {
   audio.stop();
   stopListening();
   const ses = S.session;
-  if (ses && ses.mode === 'chunk' && S.chunk && S.chunk.test) {
-    const unanswered = ses.card && ses.phase !== 'committing' && ses.phase !== 'idle' ? [ses.card.id] : [];
-    S.chunk.test.queue = unanswered.concat(ses.queue);
-    saveChunk().catch(reportError);
+  if (ses && ses.mode === 'chunk') {
+    const rec = getRecord(ses.chunkKey);
+    if (rec && rec.test) {
+      const unanswered = ses.card && ses.phase !== 'committing' && ses.phase !== 'idle' ? [ses.card.id] : [];
+      rec.test.queue = unanswered.concat(ses.queue.filter((id) => unanswered.indexOf(id) < 0));
+      saveRecords().catch(reportError);
+    }
   }
   S.session = null;
   S.currentCard = null;
-  renderStart();
-  showScreen('start');
+  goBack();
+}
+/** Count-based returns: cards whose due_n the counter has reached since the queue was built go to the front,
+ *  so a learning-step card comes back after exactly its step (Again 2, Hard 4, Good 8 answers). A review
+ *  session pulls from all active cards, a chunk test only from its own words (asked < CHUNK_TEST_MAX_ASKS). */
+function pullDue(ses) {
+  const inQueue = new Set(ses.queue);
+  let pool;
+  if (ses.mode === 'chunk') {
+    const chunk = S.chunksByKey.get(ses.chunkKey);
+    if (!chunk) return;
+    const rec = getRecord(ses.chunkKey);
+    const asked = rec && rec.test ? rec.test.asked : {};
+    pool = chunk.word_ids.map((id) => S.cards.get(cardId(id, 'word'))).filter((c) => c && (asked[c.word_id] || 0) < CHUNK_TEST_MAX_ASKS);
+  } else pool = activeCards();
+  const fresh = pool.filter((c) => isDue(c) && !inQueue.has(c.id)).sort(dueOrder);
+  if (fresh.length) ses.queue.unshift(...fresh.map((c) => c.id));
 }
 function nextCard() {
   const ses = S.session;
   if (!ses) return;
-  const now = nowMs();
-  if (ses.mode === 'review') {
-    // Learning cards that came due during the session go to the end of the queue.
-    ses.pending.sort((a, b) => a.due - b.due);
-    const ready = ses.pending.filter((p) => p.due <= now);
-    if (ready.length) { ready.forEach((p) => ses.queue.push(p.id)); ses.pending = ses.pending.filter((p) => p.due > now); }
-    if (!ses.queue.length) {
-      const soon = ses.pending.filter((p) => p.due <= now + 60000);
-      if (soon.length) { ses.queue.push(soon[0].id); ses.pending = ses.pending.filter((p) => p !== soon[0]); }
-    }
-  }
+  pullDue(ses);
   while (ses.queue.length) {
     const id = ses.queue.shift();
     const card = S.cards.get(id);
@@ -1826,7 +2129,7 @@ function showCard(card) {
   audio.stop();
 
   $('progress').textContent = (ses.done + 1) + ' / ' + (ses.done + 1 + ses.queue.length);
-  $('block-name').textContent = BLOCK_NAMES[word.block] || ('Block ' + word.block);
+  $('counter-label').textContent = 'Zähler ' + fmtCount(S.counter);
   $('type-label').textContent = ses.mode === 'chunk' ? 'Abfrage' : (TYPE_LABELS[card.type] || '');
 
   const ctx = buildCardContext(card, word);
@@ -1938,7 +2241,7 @@ function submitAnswer() {
   if (S.settings.autoplay && !(S.settings.audioBefore && m.result === 'exact')) replayAudio();
 }
 function renderRatingRow(card, preselect) {
-  const prev = fsrs.preview(card, nowMs());
+  const prev = fsrs.preview(card, nowMs(), S.counter, S.settings.reviewsPerDay);
   document.querySelectorAll('.rate').forEach((b) => {
     const g = Number(b.dataset.rating);
     b.querySelector('small').textContent = prev[g] ? prev[g].label : '';
@@ -2012,9 +2315,11 @@ async function commitReview(rating) {
     } else {
       latency = ses.result.latency; correct = ses.result.correct; input = ses.result.input; matchResult = ses.result.match.result;
     }
-    const next = fsrs.schedule(card, rating, now);
+    // This answer becomes number counter + 1; the card's due_n counts on from there.
+    const counter = S.counter;
+    const next = fsrs.schedule(card, rating, now, counter, S.settings.reviewsPerDay);
     if (wasNew || !next.introduced) next.introduced = card.introduced || now;
-    const review = { ts: now, card_id: card.id, type: card.type, latency_ms: latency, correct, rating, input: input || '' };
+    const review = { ts: now, card_id: card.id, type: card.type, latency_ms: latency, correct, rating, input: input || '', n: counter + 1 };
     const daily = currentDaily(now);
     if (wasNew) daily[card.type === 'word' ? 'new_words' : card.type === 'cloze' ? 'new_cloze' : 'new_build'] += 1;
     const streak = nextStreak(S.streak, dayKey(now));
@@ -2023,27 +2328,29 @@ async function commitReview(rating) {
       tx.objectStore('reviews').add(review);
       tx.objectStore('meta').put({ key: 'daily', value: daily });
       tx.objectStore('meta').put({ key: 'streak', value: streak });
+      tx.objectStore('meta').put({ key: 'counter', value: counter + 1 });
     });
     S.cards.set(next.id, next);
     S.daily = daily;
     S.streak = streak;
+    S.counter = counter + 1;
     ses.done++;
     ses.reviews.push({ rating, correct, latency_ms: latency, type: card.type, result: matchResult });
     if (ses.mode === 'chunk') {
-      // Chunk test bookkeeping: first-try flag, re-ask Again-rated words (at most CHUNK_TEST_MAX_ASKS times),
-      // persist the remaining queue so leaving mid-test resumes exactly here. The review itself is already
-      // committed, so a failing chunk write is only reported (never retried as a second review).
-      const chunk = S.chunk;
-      if (chunk && chunk.test) {
-        const t = chunk.test;
+      // Chunk test bookkeeping: first-try flag, ask counter (a word returns through its count-based step, at
+      // most CHUNK_TEST_MAX_ASKS times — see pullDue), persist the remaining queue so leaving mid-test resumes
+      // here. The review itself is already committed, so a failing record write is only reported.
+      const rec = getRecord(ses.chunkKey);
+      if (rec && rec.test) {
+        const t = rec.test;
         const wid = card.word_id;
         if (t.firstTry[wid] === undefined) t.firstTry[wid] = correct === true;
         t.asked[wid] = (t.asked[wid] || 0) + 1;
-        if (rating === fsrs.Rating.Again && t.asked[wid] < CHUNK_TEST_MAX_ASKS) { ses.queue.push(card.id); t.round = Math.max(t.round, t.asked[wid] + 1); }
+        t.round = Math.max(t.round, t.asked[wid]);
         t.queue = ses.queue.slice();
-        saveChunk().catch(reportError);
+        saveRecords().catch(reportError);
       }
-    } else if (next.state === fsrs.State.Learning || next.state === fsrs.State.Relearning) ses.pending.push({ id: next.id, due: next.due });
+    }
   } catch (err) {
     ses.phase = phase; // allow retry
     throw err;
@@ -2064,18 +2371,23 @@ function endSession() {
   const mean = lat.length ? lat.reduce((a, r) => a + r.latency_ms, 0) / lat.length : 0;
   const now = nowMs();
   if (ses.mode === 'chunk') {
-    // Chunk finished: summary of the first attempts, then the chunk record is gone for good.
-    const chunk = S.chunk;
+    // Chunk test finished: summary of the first attempts, then the record is gone (words continue in the
+    // normal rotation; a word still inside its learning step shows up as due on the start screen).
+    const chunk = S.chunksByKey.get(ses.chunkKey);
+    const rec = getRecord(ses.chunkKey);
     const ids = chunk ? chunk.word_ids : [];
-    const ft = chunk && chunk.test ? chunk.test.firstTry : {};
+    const ft = rec && rec.test ? rec.test.firstTry : {};
     const firstRight = ids.filter((id) => ft[id] === true).length;
     $('end-title').textContent = 'Stapel abgeschlossen';
     $('end-first').textContent = firstRight + ' von ' + ids.length + ' beim ersten Versuch richtig';
     setHidden('end-first', false);
     setHidden('end-grid', true);
-    $('end-meta').textContent = [plural(rv.length, 'Antwort', 'Antworten') + ' in ' + fmtDuration(now - ses.startedAt), 'mittlere Latenz ' + fmtSeconds(mean)].join(' · ');
+    const parts = [plural(rv.length, 'Antwort', 'Antworten') + ' in ' + fmtDuration(now - ses.startedAt), 'mittlere Latenz ' + fmtSeconds(mean)];
+    const pending = ids.filter((id) => { const c = S.cards.get(cardId(id, 'word')); return c && isDue(c); }).length;
+    if (pending) parts.push(pending === 1 ? '1 Wort ist jetzt fällig' : pending + ' Wörter sind jetzt fällig');
+    $('end-meta').textContent = parts.join(' · ');
     setHidden('btn-again', true);
-    deleteChunk().catch(reportError);
+    if (rec) deleteRecord(ses.chunkKey).catch(reportError);
   } else {
     $('end-title').textContent = 'Session beendet';
     setHidden('end-first', true);
@@ -2088,7 +2400,7 @@ function endSession() {
     parts.push('mittlere Latenz ' + fmtSeconds(mean));
     const dueNow = computeQueue(now).due.length;
     if (dueNow) parts.push(dueNow === 1 ? '1 Karte ist jetzt fällig' : dueNow + ' Karten sind jetzt fällig');
-    else { const nd = nextDueMs(now); if (nd) parts.push('nächste Karte fällig in ' + fmtDuration(nd - now)); }
+    else { const n = nextDueIn(); if (n != null) parts.push('nächste Karte fällig in ' + plural(n, 'Antwort', 'Antworten')); }
     $('end-meta').textContent = parts.join(' · ');
     setHidden('btn-again', dueNow === 0);
     $('btn-again').textContent = 'Nochmal fällige (' + dueNow + ')';
@@ -2200,6 +2512,7 @@ async function renderStats() {
     '<div class="stat"><b>' + reviews.length + '</b><span>Reviews gesamt</span></div>' +
     '<div class="stat"><b>' + todayCount + '</b><span>heute</span></div>' +
     '<div class="stat"><b>' + learnedCount() + '</b><span>Wörter gelernt</span></div>';
+  $('stats-counter').textContent = 'Zähler: ' + fmtCount(S.counter) + (S.counter === 1 ? ' Antwort' : ' Antworten') + ' · Karten pro Tag (Abstände): ' + S.settings.reviewsPerDay;
 
   // This week (Monday–today): reviews, share of correct answers (word/cloze), newly introduced words.
   const ws = startOfWeek(now);
@@ -2265,17 +2578,19 @@ async function renderStats() {
 /* ================================================================ settings */
 function renderSettings() {
   $('set-chunk').value = S.settings.chunkSize;
-  $('set-chunks').value = S.settings.chunksPerDay;
+  $('set-rpd').value = S.settings.reviewsPerDay;
+  renderOrderSeg('set-order');
   $('set-autoplay').checked = !!S.settings.autoplay;
   $('set-audio-before').checked = !!S.settings.audioBefore;
   $('set-voice').checked = !!S.settings.voice;
   setHidden('row-voice', !SR);
+  // Block toggles come from the data (blocks 8–11 appear as soon as data.json carries them).
   const counts = {}, learned = {};
   S.data.words.forEach((w) => { counts[w.block] = (counts[w.block] || 0) + 1; if (isLearnedWord(w.id)) learned[w.block] = (learned[w.block] || 0) + 1; });
-  const blocks = Object.keys(Object.assign({}, BLOCK_NAMES, counts)).map(Number).sort((a, b) => a - b);
+  const blocks = dataBlocks();
   const enabled = enabledBlocks();
   $('block-toggles').innerHTML = blocks.map((b) =>
-    '<label class="row"><span class="lbl">' + b + ' · ' + escapeHtml(BLOCK_NAMES[b] || 'Block ' + b) +
+    '<label class="row"><span class="lbl">' + b + ' · ' + escapeHtml(blockName(b)) +
     '<span class="cnt">' + plural(counts[b] || 0, 'Wort', 'Wörter') + ' · ' + (learned[b] || 0) + ' gelernt</span></span>' +
     '<input type="checkbox" class="switch block-toggle" data-block="' + b + '"' + (enabled.has(b) ? ' checked' : '') + '></label>'
   ).join('');
@@ -2292,6 +2607,28 @@ function renderSettings() {
   setHidden('reset-confirm', true);
   renderVersionLine();
 }
+/** Segmented „Reihenfolge" control (settings + overview mirror the same setting). */
+function renderOrderSeg(id) {
+  const box = $(id);
+  if (!box) return;
+  box.querySelectorAll('button').forEach((b) => { const on = b.dataset.order === S.settings.order; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on ? 'true' : 'false'); });
+}
+async function setOrder(order) {
+  S.settings.order = order === 'block' ? 'block' : 'prio';
+  await saveSettings();
+  renderOrderSeg('set-order');
+  renderOrderSeg('ov-order');
+  refreshUI();
+}
+/** Changing „Wörter pro Stapel" re-cuts the chunks; open records are re-validated against the new cut. */
+async function setChunkSize(v) {
+  S.settings.chunkSize = v;
+  await saveSettings();
+  deriveChunks();
+  await migrateRecords();
+  ov.initialised = false;
+  refreshUI();
+}
 function renderVersionLine() {
   const el = $('version-line');
   if (!el) return;
@@ -2306,8 +2643,8 @@ async function buildExport() {
   const cards = await dbGetAll('cards');
   const reviews = await dbGetAll('reviews');
   return {
-    app: 'tango', schema: 1, exported_at: new Date(nowMs()).toISOString(), data_version: S.data ? S.data.version : null,
-    settings: S.settings, cards, reviews, meta: { daily: S.daily, streak: S.streak, chunk: S.chunk }
+    app: 'tango', schema: 2, exported_at: new Date(nowMs()).toISOString(), data_version: S.data ? S.data.version : null,
+    settings: S.settings, cards, reviews, meta: { daily: S.daily, streak: S.streak, chunks: S.chunkRecords, counter: S.counter, sched: S.sched }
   };
 }
 async function doExport() {
@@ -2361,6 +2698,9 @@ function sanitizeCard(c) {
   base.last_review = msOrNull(c.last_review);
   base.introduced = msOrNull(c.introduced);
   base.suspended = !!c.suspended;
+  // Count-based fields (v3); a v2 export has none → null, filled in by migrateSched() after the import.
+  base.due_n = msOrNull(c.due_n);
+  base.last_n = msOrNull(c.last_n);
   return base;
 }
 /** Replace the whole state with the export object (no confirmation here). */
@@ -2368,9 +2708,14 @@ async function applyImport(obj) {
   validateImport(obj);
   const cards = (obj.cards || []).filter(validCard).map(sanitizeCard);
   const reviews = (obj.reviews || []).filter((r) => r && typeof r === 'object' && Number.isFinite(Number(r.ts)));
-  const settings = obj.settings ? sanitizeSettings(obj.settings) : null; // v1 exports (newPerDay) are migrated here
+  const settings = obj.settings ? sanitizeSettings(obj.settings) : null; // v1/v2 exports are migrated here (old quota keys dropped)
   const meta = obj.meta && typeof obj.meta === 'object' ? obj.meta : {};
-  const chunk = sanitizeChunk(meta.chunk);
+  // v3 meta: chunk records, counter, sched flag. A v2 export carries a single `chunk` and time-based cards:
+  // stored as-is, then finishLoad() runs the same migration as a v2 database on first load.
+  const chunksRaw = meta.chunks && typeof meta.chunks === 'object' && !Array.isArray(meta.chunks) ? meta.chunks : null;
+  const legacyChunk = meta.chunk && typeof meta.chunk === 'object' && Array.isArray(meta.chunk.word_ids) ? meta.chunk : null;
+  const sched = meta.sched === 'count' ? 'count' : null;
+  const counter = Math.max(0, Math.round(Number(meta.counter)) || 0);
   await runTx(['cards', 'reviews', 'meta'], 'readwrite', (tx) => {
     const cs = tx.objectStore('cards'), rs = tx.objectStore('reviews'), ms = tx.objectStore('meta');
     cs.clear(); rs.clear(); ms.clear();
@@ -2379,12 +2724,16 @@ async function applyImport(obj) {
     if (settings) ms.put({ key: 'settings', value: settings });
     if (meta.daily) ms.put({ key: 'daily', value: meta.daily });
     if (meta.streak) ms.put({ key: 'streak', value: meta.streak });
-    if (chunk) ms.put({ key: 'chunk', value: chunk });
+    if (chunksRaw) ms.put({ key: 'chunks', value: chunksRaw });
+    if (legacyChunk) ms.put({ key: 'chunk', value: legacyChunk });
+    if (sched) { ms.put({ key: 'sched', value: sched }); ms.put({ key: 'counter', value: counter }); }
     if (S.audioStatus) ms.put({ key: 'audio_status', value: S.audioStatus }); // device-local, not part of the export
   });
   await loadMeta();
   await ensureCards();
-  S.session = null; S.currentCard = null;
+  await finishLoad();
+  ov.initialised = false;
+  S.session = null; S.currentCard = null; S.learnKey = null; S.returnTo = 'start';
   renderStart();
   showScreen('start');
   toast('Import: ' + cards.length + ' Karten, ' + reviews.length + ' Reviews');
@@ -2405,9 +2754,12 @@ async function importFromFile(file) {
 async function doReset() {
   audio.stop();
   await runTx(['cards', 'reviews', 'meta'], 'readwrite', (tx) => { tx.objectStore('cards').clear(); tx.objectStore('reviews').clear(); tx.objectStore('meta').clear(); });
-  S.settings = Object.assign({}, DEFAULT_SETTINGS);
-  S.daily = null; S.streak = null; S.session = null; S.currentCard = null; S.chunk = null;
+  S.settings = sanitizeSettings({});
+  S.daily = null; S.streak = null; S.session = null; S.currentCard = null;
+  S.counter = 0; S.sched = null; S.chunkRecords = {}; S.legacyChunk = null; S.learnKey = null; S.returnTo = 'start';
+  ov.initialised = false; ov.open.clear(); ov.words.clear();
   await ensureCards();
+  await finishLoad(); // fresh cards need no rewrite; writes counter 0 + the sched flag
   renderStart();
   showScreen('start');
   toast('Alles gelöscht – ' + S.cards.size + ' Karten neu angelegt');
@@ -2416,53 +2768,37 @@ async function doReset() {
 /* ================================================================ learn screen (Kartei: flip cards of the current chunk) */
 const POS_LABELS = { noun: 'Substantiv', verb: 'Verb', adj: 'Adjektiv', adv: 'Adverb', func: 'Funktionswort', phrase: 'Wendung' };
 const learn = { flipped: false, token: 0 };
-/** Start-screen chunk button: continue/test the current chunk or start a new one. */
-async function onChunkButton() {
-  if (S.chunk) { openLearn(); return; }
-  await startNewChunk();
-}
-async function startNewChunk() {
+/** Open the flashcards of chunk `key` where they were left (creates or reuses the record). Allowed any time,
+ *  also for finished chunks and while a test record is open (the test resumes from „Jetzt testen"). */
+async function openLearn(key) {
+  const chunk = S.chunksByKey.get(key);
+  if (!chunk) { toast('Stapel nicht gefunden.'); return; }
   audio.unlock();
-  const chunk = await startChunk();
-  if (!chunk) { toast('Heute kein neuer Stapel mehr.'); renderStart(); return; }
+  await ensureRecord(key);
+  S.learnKey = key;
   showScreen('learn');
   renderLearnCard(true);
 }
-/** Open the current chunk where it was left (phase 'test' resumes the test directly). */
-function openLearn() {
-  const chunk = S.chunk;
-  if (!chunk) { goHome(); return; }
-  if (chunk.phase === 'test') { startChunkTest().catch(reportError); return; }
-  audio.unlock();
-  showScreen('learn');
-  renderLearnCard(true);
-}
-function learnWord() { const c = S.chunk; return c ? S.wordsById.get(c.word_ids[c.index]) : null; }
+function learnChunk() { return S.learnKey ? S.chunksByKey.get(S.learnKey) || null : null; }
+function learnRecord() { return S.learnKey ? getRecord(S.learnKey) : null; }
+function learnWord() { const c = learnChunk(), r = learnRecord(); return c && r ? S.wordsById.get(c.word_ids[r.index]) : null; }
 /** First note segment when it is a pure grammar tag (m, f, yo, vos, él/ella, imperativo vos, pretérito yo …), else ''. */
 function grammarTag(note) {
   const first = String(note || '').split(';')[0].trim();
   return /^(m|f|m\/f|yo|vos|él\/ella|imperativo vos|pretérito yo(\s*\(.*\))?|unpersönlich|Fragewort)$/i.test(first) ? first : '';
 }
 function renderLearnCard(play) {
-  const chunk = S.chunk;
-  if (!chunk) { goHome(); return; }
+  const chunk = learnChunk(), rec = learnRecord();
+  if (!chunk || !rec) { goBack(); return; }
   const n = chunk.word_ids.length;
-  chunk.index = Math.min(n - 1, Math.max(0, chunk.index | 0));
+  rec.index = Math.min(n - 1, Math.max(0, rec.index | 0));
   const word = learnWord();
-  if (!word) {
-    // data.json changed underneath a stored chunk: drop unknown ids, or the whole chunk when nothing is left.
-    chunk.word_ids = chunk.word_ids.filter((id) => S.wordsById.has(id));
-    if (!chunk.word_ids.length) { deleteChunk().catch(reportError); goHome(); return; }
-    chunk.index = 0;
-    saveChunk().catch(reportError);
-    renderLearnCard(play);
-    return;
-  }
+  if (!word) { goBack(); return; }
   learn.flipped = false;
   learn.token++;
   $('flip').classList.remove('flipped');
-  $('learn-progress').textContent = 'Stapel · ' + (chunk.index + 1) + ' / ' + n;
-  $('learn-block').textContent = BLOCK_NAMES[word.block] || ('Block ' + word.block);
+  $('learn-progress').textContent = chunk.title + ' · ' + (rec.index + 1) + ' / ' + n;
+  $('learn-block').textContent = chunk.name;
   $('learn-es').textContent = word.spanish;
   // Front side: only grammatical tags (gender, person, imperative); explanatory notes contain German and belong to the back.
   const frontNote = grammarTag(word.note);
@@ -2479,18 +2815,18 @@ function renderLearnCard(play) {
   if (play && S.settings.autoplay) learnPlay();
 }
 function renderLearnDots() {
-  const chunk = S.chunk;
-  $('learn-dots').innerHTML = chunk.word_ids.map((id, i) => '<span class="pdot' + (chunk.seen[id] ? ' seen' : '') + (i === chunk.index ? ' cur' : '') + '"></span>').join('');
+  const chunk = learnChunk(), rec = learnRecord();
+  $('learn-dots').innerHTML = chunk.word_ids.map((id, i) => '<span class="pdot' + (rec.seen[id] ? ' seen' : '') + (i === rec.index ? ' cur' : '') + '"></span>').join('');
 }
 /** Footer: „Weiter ›" moves on; on the last card it becomes „Jetzt testen" once every card was flipped,
  *  otherwise it jumps to the first card that is still unseen (the hint says so). */
 function renderLearnFooter() {
-  const chunk = S.chunk;
+  const chunk = learnChunk(), rec = learnRecord();
   const n = chunk.word_ids.length;
-  const last = chunk.index === n - 1;
-  const unseen = n - chunkSeenCount(chunk);
+  const last = rec.index === n - 1;
+  const unseen = n - recordSeenCount(chunk, rec);
   const btn = $('btn-learn-next');
-  $('btn-learn-prev').disabled = chunk.index === 0;
+  $('btn-learn-prev').disabled = rec.index === 0;
   btn.disabled = false;
   if (last && !unseen) { btn.textContent = 'Jetzt testen'; $('learn-hint').textContent = 'Alle Karten gesehen'; }
   else if (last) { btn.textContent = 'Weiter ›'; $('learn-hint').textContent = 'Alle Karten einmal umdrehen – noch ' + plural(unseen, 'Karte', 'Karten') + ' (Weiter springt dorthin)'; }
@@ -2498,39 +2834,140 @@ function renderLearnFooter() {
 }
 /** Tap = flip. The first flip to the back marks the card as seen; flipping back to the front replays the clip. */
 function flipLearn() {
-  const chunk = S.chunk;
-  if (!chunk || S.screen !== 'learn') return;
+  const chunk = learnChunk(), rec = learnRecord();
+  if (!chunk || !rec || S.screen !== 'learn') return;
   learn.flipped = !learn.flipped;
   $('flip').classList.toggle('flipped', learn.flipped);
   if (learn.flipped) {
-    const id = chunk.word_ids[chunk.index];
-    if (!chunk.seen[id]) { chunk.seen[id] = true; renderLearnDots(); renderLearnFooter(); saveChunk().catch(reportError); }
+    const id = chunk.word_ids[rec.index];
+    if (!rec.seen[id]) { rec.seen[id] = true; renderLearnDots(); renderLearnFooter(); saveRecords().catch(reportError); }
   } else if (S.settings.autoplay) learnPlay();
 }
 function learnGo(index) {
-  const chunk = S.chunk;
-  if (!chunk) return;
-  chunk.index = index;
-  saveChunk().catch(reportError);
+  const rec = learnRecord();
+  if (!rec) return;
+  rec.index = index;
+  saveRecords().catch(reportError);
   renderLearnCard(true);
 }
 function learnNext() {
-  const chunk = S.chunk;
-  if (!chunk || S.screen !== 'learn') return;
-  if (chunk.index < chunk.word_ids.length - 1) { learnGo(chunk.index + 1); return; }
-  if (chunkAllSeen(chunk)) { learn.token++; startChunkTest().catch(reportError); return; }
-  const first = chunk.word_ids.findIndex((id) => !chunk.seen[id]);
+  const chunk = learnChunk(), rec = learnRecord();
+  if (!chunk || !rec || S.screen !== 'learn') return;
+  if (rec.index < chunk.word_ids.length - 1) { learnGo(rec.index + 1); return; }
+  if (recordAllSeen(chunk, rec)) { learn.token++; startChunkTest(chunk.key).catch(reportError); return; }
+  const first = chunk.word_ids.findIndex((id) => !rec.seen[id]);
   learnGo(first < 0 ? 0 : first);
 }
-function learnPrev() { const c = S.chunk; if (c && S.screen === 'learn' && c.index > 0) learnGo(c.index - 1); }
+function learnPrev() { const r = learnRecord(); if (r && S.screen === 'learn' && r.index > 0) learnGo(r.index - 1); }
 function learnPlay() {
   const word = learnWord();
   if (!word) return;
   const token = learn.token;
   audio.play('w_' + word.id).then((r) => { if (S.screen === 'learn' && learn.token === token && !r.ok && !r.cancelled) setHidden('learn-noaudio', false); });
 }
-/** ✕: back to the start screen; the chunk (seen flags, position) is already persisted. */
-function leaveLearn() { audio.stop(); learn.token++; goHome(); }
+/** ✕: back to where the user came from; the record (seen flags, position) is already persisted. */
+function leaveLearn() { audio.stop(); learn.token++; goBack(); }
+
+/* ================================================================ overview (Übersicht: blocks → chunks → words) */
+const SPEAKER_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16 8.5a5 5 0 0 1 0 7"/><path d="M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>';
+// Expanded blocks / word lists live in memory only; rows render lazily (chunks when a block is open, words on „Wörter").
+const ov = { open: new Set(), words: new Set(), onlyOpen: false, initialised: false };
+function openOverview() {
+  if (!ov.initialised) {
+    ov.initialised = true;
+    ov.open.clear(); ov.words.clear();
+    openRecords().forEach((r) => ov.open.add(Number(String(r.key).split(':')[0])));
+    const nc = nextChunk();
+    if (nc) ov.open.add(nc.block);
+  }
+  renderOverview();
+  showScreen('overview');
+}
+function renderOverview() {
+  if (!S.data) return;
+  renderOrderSeg('ov-order');
+  $('ov-open').checked = ov.onlyOpen;
+  const enabled = enabledBlocks();
+  const nc = nextChunk();
+  const byBlock = new Map();
+  S.chunks.forEach((c) => { if (!byBlock.has(c.block)) byBlock.set(c.block, []); byBlock.get(c.block).push(c); });
+  const html = [];
+  byBlock.forEach((chunks, block) => {
+    const progs = chunks.map(chunkProgress);
+    const shown = ov.onlyOpen ? progs.filter((p) => !p.finished) : progs;
+    if (ov.onlyOpen && !shown.length) return;
+    let total = 0, learned = 0, secured = 0, due = 0;
+    progs.forEach((p) => { total += p.n; learned += p.learned; secured += p.secured; due += p.due; });
+    const off = !enabled.has(block);
+    const isOpen = ov.open.has(block);
+    html.push('<div class="ov-block' + (off ? ' off' : '') + (isOpen ? ' open' : '') + '" data-block="' + block + '">' +
+      '<button type="button" class="ov-head" data-toggle="' + block + '" aria-expanded="' + (isOpen ? 'true' : 'false') + '">' +
+      '<div class="block-head"><span class="name">' + block + ' · ' + escapeHtml(blockName(block)) + '</span><span class="nums">' +
+      (off ? 'Block deaktiviert' : learned + '/' + total + ' gelernt · ' + due + ' fällig') + '</span></div>' +
+      '<div class="bar-track"><div class="bar-fill learned" style="width:' + (total ? (100 * learned / total).toFixed(1) : 0) + '%"></div><div class="bar-fill secured" style="width:' + (total ? (100 * secured / total).toFixed(1) : 0) + '%"></div></div></button>' +
+      '<div class="ov-chunks"' + (isOpen ? '>' + shown.map((p) => chunkRowHtml(p, off, nc)).join('') : ' hidden>') + '</div></div>');
+  });
+  $('ov-list').innerHTML = html.join('') || '<p class="ov-empty">' + (ov.onlyOpen ? 'Keine offenen Stapel.' : 'Keine Daten.') + '</p>';
+}
+function chunkRowHtml(p, off, nc) {
+  const isNext = !!nc && nc.key === p.key;
+  const wordsOpen = ov.words.has(p.key);
+  return '<div class="ov-chunk' + (isNext ? ' next' : '') + '" data-key="' + escapeHtml(p.key) + '">' +
+    '<div class="ov-line"><span class="ov-title">Stapel ' + p.index + ' · Prio ' + p.prio + (isNext ? ' · nächster' : '') + '</span><span class="ov-status ' + p.statusClass + '">' + escapeHtml(p.status) + '</span></div>' +
+    '<div class="ov-sub">gelernt ' + p.learned + '/' + p.n + ' · ' + p.due + ' fällig · ' + p.secured + ' gesichert</div>' +
+    '<div class="btn-row ov-actions">' +
+    '<button type="button" class="btn" data-act="learn"' + (off ? ' disabled' : '') + '>Lernen</button>' +
+    '<button type="button" class="btn" data-act="test"' + (off ? ' disabled' : '') + '>Testen</button>' +
+    '<button type="button" class="btn' + (wordsOpen ? ' on' : '') + '" data-act="words" aria-expanded="' + (wordsOpen ? 'true' : 'false') + '">Wörter</button></div>' +
+    '<div class="ov-words"' + (wordsOpen ? '>' + wordsHtml(p.key) : ' hidden>') + '</div></div>';
+}
+function wordsHtml(key) {
+  const chunk = S.chunksByKey.get(key);
+  if (!chunk) return '';
+  return chunk.word_ids.map((id) => {
+    const w = S.wordsById.get(id);
+    const st = wordStatus(S.cards.get(cardId(id, 'word')));
+    return '<div class="ov-word"><span class="pbadge p' + w.prio + '">P' + w.prio + '</span>' +
+      '<span class="txt"><span class="es">' + escapeHtml(w.spanish) + '</span><span class="de">' + escapeHtml(w.german) + (w.note ? ' · ' + escapeHtml(w.note) : '') + '</span></span>' +
+      '<i class="sdot ' + st + '" title="' + STATUS_LABELS[st] + '"></i>' +
+      '<button type="button" class="icon-btn" data-play="w_' + id + '" aria-label="Audio abspielen">' + SPEAKER_SVG + '</button></div>';
+  }).join('');
+}
+/** Delegated clicks: speaker, Lernen / Testen / Wörter, block header. */
+async function onOverviewClick(e) {
+  const t = e.target;
+  if (!t || !t.closest) return;
+  const play = t.closest('button[data-play]');
+  if (play) {
+    audio.unlock();
+    const r = await audio.play(play.dataset.play);
+    if (!r.ok && !r.cancelled) toast('kein Audio');
+    return;
+  }
+  const act = t.closest('button[data-act]');
+  if (act) {
+    const row = act.closest('.ov-chunk');
+    const key = row ? row.dataset.key : null;
+    if (!key) return;
+    if (act.dataset.act === 'words') {
+      const box = row.querySelector('.ov-words');
+      if (ov.words.has(key)) { ov.words.delete(key); box.hidden = true; box.innerHTML = ''; act.classList.remove('on'); act.setAttribute('aria-expanded', 'false'); }
+      else { ov.words.add(key); box.innerHTML = wordsHtml(key); box.hidden = false; act.classList.add('on'); act.setAttribute('aria-expanded', 'true'); }
+      return;
+    }
+    if (act.disabled) return;
+    S.returnTo = 'overview';
+    if (act.dataset.act === 'learn') await openLearn(key);
+    else await startChunkTest(key);
+    return;
+  }
+  const head = t.closest('button[data-toggle]');
+  if (head) {
+    const b = Number(head.dataset.toggle);
+    if (ov.open.has(b)) ov.open.delete(b); else ov.open.add(b);
+    renderOverview();
+  }
+}
 
 /* ================================================================ service worker */
 let swReg = null;
@@ -2640,7 +3077,7 @@ function onButton() { const el = document.activeElement; return !!el && el.tagNa
 function onKeyDown(e) {
   if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
   if (!$('dialog').hidden) { if (e.key === 'Escape' && dialogState.close) { e.preventDefault(); dialogState.close(false); } return; }
-  if (S.screen === 'learn' && S.chunk) {
+  if (S.screen === 'learn' && learnRecord()) {
     if (isTyping()) return;
     if (e.key === 'Escape') { e.preventDefault(); leaveLearn(); return; }
     if (e.key === 'ArrowRight') { e.preventDefault(); learnNext(); return; }
@@ -2648,8 +3085,8 @@ function onKeyDown(e) {
     if (onButton()) return; // a focused footer/speaker button keeps its native Enter/Space click
     if (e.key === 'Enter') {
       e.preventDefault();
-      const c = S.chunk;
-      if (c.index === c.word_ids.length - 1 && chunkAllSeen(c)) learnNext(); else flipLearn();
+      const c = learnChunk(), r = learnRecord();
+      if (r.index === c.word_ids.length - 1 && recordAllSeen(c, r)) learnNext(); else flipLearn();
       return;
     }
     if (e.key === ' ') { e.preventDefault(); flipLearn(); return; }
@@ -2673,25 +3110,35 @@ function onKeyDown(e) {
       }
     }
   } else if (S.screen === 'end') {
-    if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); goHome(); }
-  } else if (S.screen === 'stats' || S.screen === 'settings') {
+    if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); goBack(); }
+  } else if (S.screen === 'stats' || S.screen === 'settings' || S.screen === 'overview') {
     if (e.key === 'Escape' && !isTyping()) { e.preventDefault(); goHome(); }
   }
 }
 
 /* ================================================================ UI binding */
-function goHome() { renderStart(); showScreen('start'); }
+function goHome() { S.returnTo = 'start'; renderStart(); showScreen('start'); }
 function bindUI() {
-  $('btn-chunk').addEventListener('click', guard(onChunkButton));
-  $('btn-review').addEventListener('click', guard(startSession));
+  $('start-buttons').addEventListener('click', guard(async (e) => {
+    const b = e.target && e.target.closest ? e.target.closest('button[data-act]') : null;
+    if (!b || b.disabled) return;
+    await onStartButton(b);
+  }));
   $('nav-stats').addEventListener('click', guard(async () => { showScreen('stats'); await renderStats(); }));
   $('nav-settings').addEventListener('click', guard(() => { renderSettings(); showScreen('settings'); }));
   $('btn-stats-back').addEventListener('click', guard(goHome));
   $('btn-settings-back').addEventListener('click', guard(goHome));
+  $('btn-overview-back').addEventListener('click', guard(goHome));
   $('btn-leave').addEventListener('click', guard(leaveSession));
-  $('btn-done').addEventListener('click', guard(goHome));
-  $('btn-again').addEventListener('click', guard(startSession));
+  $('btn-done').addEventListener('click', guard(goBack));
+  $('btn-again').addEventListener('click', guard(() => startSession(false)));
   $('btn-reload').addEventListener('click', () => location.reload());
+
+  // Overview: delegated clicks (block headers, Lernen/Testen/Wörter, speakers), order + „Nur offene" filters.
+  $('ov-list').addEventListener('click', guard(onOverviewClick));
+  $('ov-order').addEventListener('click', guard(async (e) => { const b = e.target.closest('button[data-order]'); if (b) await setOrder(b.dataset.order); }));
+  $('ov-open').addEventListener('change', guard(() => { ov.onlyOpen = $('ov-open').checked; renderOverview(); }));
+  $('set-order').addEventListener('click', guard(async (e) => { const b = e.target.closest('button[data-order]'); if (b) await setOrder(b.dataset.order); }));
 
   $('card').addEventListener('click', guard((e) => {
     if (e.target && e.target.closest && e.target.closest('button, input, a')) return;
@@ -2715,11 +3162,12 @@ function bindUI() {
 
   $('set-chunk').addEventListener('change', guard(async () => {
     const v = Math.min(20, Math.max(5, Math.round(Number($('set-chunk').value)) || 10));
-    $('set-chunk').value = v; S.settings.chunkSize = v; await saveSettings(); renderStart();
+    $('set-chunk').value = v;
+    if (v !== S.settings.chunkSize) await setChunkSize(v);
   }));
-  $('set-chunks').addEventListener('change', guard(async () => {
-    const v = Math.min(3, Math.max(1, Math.round(Number($('set-chunks').value)) || 1));
-    $('set-chunks').value = v; S.settings.chunksPerDay = v; await saveSettings(); renderStart();
+  $('set-rpd').addEventListener('change', guard(async () => {
+    const v = Math.min(100, Math.max(5, Math.round(Number($('set-rpd').value)) || 20));
+    $('set-rpd').value = v; S.settings.reviewsPerDay = v; await saveSettings();
   }));
   $('set-autoplay').addEventListener('change', guard(async () => { S.settings.autoplay = $('set-autoplay').checked; await saveSettings(); }));
   $('set-audio-before').addEventListener('change', guard(async () => { S.settings.audioBefore = $('set-audio-before').checked; await saveSettings(); }));
@@ -2750,10 +3198,12 @@ async function boot() {
   try {
     bindUI();
     step = 'Datenbank öffnen'; await openDB();
-    step = 'Einstellungen laden'; await loadMeta();
+    // Data before settings: the block list and the chunk structure derive from data.json.
     step = 'data.json laden'; S.data = await loadData();
     indexData();
+    step = 'Einstellungen laden'; await loadMeta();
     step = 'Karten anlegen'; await ensureCards();
+    step = 'Stapel ableiten'; await finishLoad();
     step = 'Audio-Manifest'; await loadAudioManifest();
     renderStart();
     showScreen('start');
@@ -2784,12 +3234,27 @@ window.Tango = {
     getReviews: () => dbGetAll('reviews'),
     setTimeOffsetDays: (n) => { lsSet('tango_time_offset_ms', String(Math.round((Number(n) || 0) * DAY))); refreshUI(); return nowMs(); },
     getTimeOffsetDays: () => (Number(lsGet('tango_time_offset_ms')) || 0) / DAY,
-    getQueuePreview: () => { const q = computeQueue(nowMs()); return { dueCount: q.due.length, newCloze: q.newCloze.length, newBuild: q.newBuild.length, total: q.queue.length, unlearned: unlearnedWords().length }; },
-    /** Chunk (Stapel) API: the persisted record, start one when the daily limit allows, open/test it. */
-    getChunk: () => S.chunk,
-    startChunk: async () => { const c = await startChunk(); refreshUI(); return c; },
-    openLearn: () => { if (S.session) leaveSession(); openLearn(); return S.screen; },
-    startChunkTest: async () => { if (S.session) leaveSession(); await startChunkTest(); return S.screen; },
+    getQueuePreview: () => { const q = computeQueue(nowMs()); return { dueCount: q.due.length, newCloze: q.newCloze.length, newBuild: q.newBuild.length, total: q.queue.length, unlearned: unlearnedCount(), ahead: aheadCards(S.settings.chunkSize).length }; },
+    /** Count-based scheduling: the answer counter (every committed review increments it by 1). */
+    getCounter: () => S.counter,
+    /** Chunk (Stapel) API: derived list with progress, open records, start/open/test one, overview, pull ahead. */
+    getChunks: () => S.chunks.map(chunkProgress),
+    getChunkRecords: () => S.chunkRecords,
+    getChunk: () => openRecords()[0] || null,
+    nextChunk: () => { const c = nextChunk(); return c ? chunkProgress(c) : null; },
+    startChunk: async (key) => {
+      if (S.session) leaveSession();
+      const k = key || (nextChunk() || {}).key;
+      if (!k) return null;
+      S.returnTo = 'start';
+      await openLearn(k);
+      return getRecord(k);
+    },
+    openLearn: async (key) => { if (S.session) leaveSession(); S.returnTo = 'start'; await openLearn(key || S.learnKey || (nextChunk() || {}).key); return S.screen; },
+    startChunkTest: async (key) => { if (S.session) leaveSession(); S.returnTo = 'start'; await startChunkTest(key || S.learnKey || (openRecords()[0] || {}).key); return S.screen; },
+    openOverview: () => { if (S.session) leaveSession(); if (S.screen === 'learn') leaveLearn(); openOverview(); return S.screen; },
+    pullAhead: () => { if (S.session) leaveSession(); startSession(true); return S.screen; },
+    startReview: () => { if (S.session) leaveSession(); startSession(false); return S.screen; },
     /** Phonetic assertions from the spec → failures (empty array = ok). */
     selfTest: phoneticSelfTest,
     /** Drive one specific card in a one-card session (tests cloze/build flows directly). */
@@ -2807,8 +3272,9 @@ window.Tango = {
       const c = S.cards.get(id);
       if (!c) throw new Error('Karte nicht gefunden: ' + id);
       const now = nowMs();
-      const next = Object.assign({}, c, { due: now - 1000 });
-      if (next.state === 0) { next.state = fsrs.State.Learning; next.stability = fsrs.initStability(3); next.difficulty = fsrs.initDifficulty(3); next.last_review = now - 10 * MIN; next.introduced = next.introduced || now - 10 * MIN; }
+      // Due = the counter has reached due_n; a New card is put into Learning as if reviewed one answer ago.
+      const next = Object.assign({}, c, { due: now - 1000, due_n: S.counter });
+      if (next.state === 0) { next.state = fsrs.State.Learning; next.stability = fsrs.initStability(3); next.difficulty = fsrs.initDifficulty(3); next.last_review = now - 10 * MIN; next.last_n = Math.max(0, S.counter - 1); next.introduced = next.introduced || now - 10 * MIN; }
       await dbPut('cards', next);
       S.cards.set(id, next);
       refreshUI();
